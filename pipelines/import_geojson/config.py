@@ -1,5 +1,5 @@
 """Configuration for geographic level mappings."""
-from typing import Dict, Optional
+from typing import Dict
 from dataclasses import dataclass
 
 
@@ -7,9 +7,10 @@ from dataclasses import dataclass
 class LevelConfig:
     """Configuration for a geographic level."""
     file_suffix: str  # Pluralized version of the level (e.g., "Countries", "Regions")
-    parent_level: Optional[str]  # Parent level name (e.g., "Country" for Region)
+    parent_level: str | None  # Parent level name (e.g., "Country" for Region)
     title_property: str  # Property name in GeoJSON to map to "Title"
     code_property: str  # Property name in GeoJSON to map to "Code"
+    parent_property: str | None = None # Property name in GeoJSON to map to Parent.Code
 
 
 # Configuration map for each level
@@ -26,11 +27,12 @@ LEVEL_CONFIGS: Dict[str, LevelConfig] = {
         title_property="name",
         code_property="region_code",
     ),
-    "Township": LevelConfig(
-        file_suffix="townships",
-        parent_level="Region",
-        title_property="",
-        code_property="",
+    "Municipality": LevelConfig(
+        file_suffix="municipalities",
+        parent_level="Country",
+        title_property="COMM_NAME",
+        code_property="COMM_ID",
+        parent_property="CNTR_CODE"
     ),
 }
 
