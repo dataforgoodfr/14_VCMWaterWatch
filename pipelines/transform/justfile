@@ -3,8 +3,12 @@ _default:
   @echo ""
   @echo "Run 'just <recipe>' to execute a task."
 
-set working-directory := "../.."
+# Convert downloaded GeoJSON files to the staging format.
+[working-directory("../..")]
+geojson:
+  uv run python -m pipelines.extract.geojson
 
 # Prepare distribution zones from water company data.
+[working-directory("../..")]
 create-distribution-zones:
   uv run python -m pipelines.transform.create_distribution_zones

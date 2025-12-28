@@ -17,3 +17,7 @@ This will install:
 
  - Python dependencies, using `uv`
  - pre-commit hooks, using `pre-commit`
+
+## Running Python ETL
+
+See [Pipelines Documentation](pipelines/README.md)

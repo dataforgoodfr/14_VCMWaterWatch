@@ -1,3 +1,10 @@
+"""
+Prefect workflow for downloading data from DE WasserPortal API.
+Uses the data in data/staging/Municipality.ndjson to get the latitude and longitude of the municipalities.
+Then uses the DE WasserPortal API to get the water company for each municipality.
+The data is saved as JSON (line delimited) in data/staging/WaterCompany_de_wasserportal.ndjson.
+"""
+
 import json
 from pathlib import Path
 import httpx
@@ -6,7 +13,6 @@ from shapely.geometry import shape
 from prefect import flow, get_run_logger, task
 from prefect.concurrency.sync import rate_limit
 import polars as pl
-
 
 
 @task(name="get_water_company", cache_policy=INPUTS)
@@ -92,21 +98,6 @@ def get_existing_de_municipalities_task(
     return pl.read_ndjson(data_directory / "staging" / "Municipality.ndjson").filter(
         pl.col("CountryCode") == country_code
     )
-    # db_helper = services.db_helper()
-    # country_df = db_helper.load_all_records(
-    #     table_name="Country",
-    #     fields=["Code", "Id"],
-    #     condition={"Code": country_code},
-    # )
-    # if country_df.is_empty():
-    #     raise ValueError(f"Country {country_code} not found")
-    # country_id = country_df.item(0, "Id")
-    # df = db_helper.load_all_records(
-    #     table_name="Municipality",
-    #     fields=["Name", "Geometry"],
-    #     condition={"Country_id": country_id},
-    # )
-    # return df
 
 
 @task(name="merge_water_companies", cache_policy=NO_CACHE)
@@ -146,18 +137,10 @@ def download_de_wasserportal(data_directory: Path):
         if muni:
             companies.append({**muni, "Municipality": row["Code"]})
 
-    # companies = []
-    # for i, (future, municipality_name) in enumerate(futures):
-    #     get_run_logger().info(f"Processing municipality {i+1}: {municipality_name}")
-    #     water_company = future.result()
-    #     if water_company:
-    #         companies.append({**water_company, "Municipality": municipality_name})
     water_companies_df = pl.DataFrame(companies)
-
-    # water_companies_df = get_water_companies_task(municipalities_df)
     water_companies_df = merge_water_companies_task(water_companies_df)
     water_companies_df.write_ndjson(
-        data_directory / "staging" / "WaterCompany_de_wasserportal.ndjson"
+        data_directory / "raw" / "WaterCompany_de_wasserportal.ndjson"
     )
 
 

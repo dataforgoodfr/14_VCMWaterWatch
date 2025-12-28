@@ -1,1 +1,1 @@
-Process data in the staging area into further tables.
+Process data from raw into staging folder, or perform additional processing on the staging data.

@@ -13,12 +13,6 @@ pipelines-test:
 	uv run pytest pipelines
 
 mod extract 'pipelines/extract'
-# import-countries:
-#   uv run python -m pipelines.load_zones.import_geojson Country data/countries.geojson
-
-# import-municipalities:
-#   uv run python -m pipelines.load_zones.download_municipalities
-#   uv run python -m pipelines.load_zones.import_geojson Municipality data/municipalities.geojson
-
-# import-water-companies:
-#   uv run python -m pipelines.load_water_companies.load_water_companies
+mod transform 'pipelines/transform'
+mod load 'pipelines/load'
+mod task 'pipelines/tasks'
