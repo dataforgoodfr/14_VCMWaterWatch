@@ -1,0 +1,2825 @@
+{
+  "openapi": "3.0.0",
+  "info": { "title": "nocodb", "version": "2.0" },
+  "servers": [
+    { "url": "https://noco.services.dataforgood.fr" },
+    {
+      "url": "{customUrl}",
+      "variables": {
+        "customUrl": {
+          "default": "https://noco.services.dataforgood.fr",
+          "description": "Provide custom nocodb app base url"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/api/v2/tables/mwrdhg9mg60fykj/records": {
+      "get": {
+        "summary": "Zone list",
+        "operationId": "zone-db-table-row-list",
+        "description": "List of all rows from Zone table and response data fields can be filtered based on query params.",
+        "tags": ["Zone"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "vw43dwdr3xswhbsv",
+                "vwqj5ccgz7x02y3i",
+                "vw27vufl67az4v5h",
+                "vw74ss2146qnca71"
+              ]
+            },
+            "description": "Allows you to fetch records that are currently visible within a specific view.\n\nViews:\n* vw43dwdr3xswhbsv - Default view\n* vwqj5ccgz7x02y3i - Countries\n* vw27vufl67az4v5h - Distribution Zones\n* vw74ss2146qnca71 - Townships",
+            "name": "viewId",
+            "in": "query",
+            "required": false
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "fields",
+            "description": "Array of field names or comma separated filed names to include in the response objects. In array syntax pass it like `fields[]=field1&fields[]=field2` or alternately `fields=field1,field2`."
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "sort",
+            "description": "Comma separated field names to sort rows, rows will sort in ascending order based on provided columns. To sort in descending order provide `-` prefix along with column name, like `-field`. Example : `sort=field1,-field2`"
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "where",
+            "description": "This can be used for filtering rows, which accepts complicated where conditions. For more info visit [here](https://docs.nocodb.com/developer-resources/rest-apis#comparison-operators). Example : `where=(field1,eq,value)`"
+          },
+          {
+            "schema": { "type": "number", "minimum": 1 },
+            "in": "query",
+            "name": "limit",
+            "description": "The `limit` parameter used for pagination, the response collection size depends on limit value with default value `25` and maximum value `1000`, which can be overridden by environment variables `DB_QUERY_LIMIT_DEFAULT` and `DB_QUERY_LIMIT_MAX` respectively.",
+            "example": 25
+          },
+          {
+            "schema": { "type": "number", "minimum": 0, "maximum": 1 },
+            "in": "query",
+            "name": "shuffle",
+            "description": "The `shuffle` parameter used for pagination, the response will be shuffled if it is set to 1.",
+            "example": 0
+          },
+          {
+            "schema": { "type": "number", "minimum": 0 },
+            "in": "query",
+            "name": "offset",
+            "description": "The `offset` parameter used for pagination, the value helps to select collection from a certain index.",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "list": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ZoneResponse" }
+                    },
+                    "PageInfo": { "$ref": "#/components/schemas/Paginated" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Zone create",
+        "description": "Insert a new row in table by providing a key value pair object where key refers to the column alias. All the required fields should be included with payload excluding `autoincrement` and column with default value.",
+        "operationId": "zone-create",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ZoneResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["Zone"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/ZoneRequest" },
+                  {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/ZoneRequest" }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Zone update",
+        "operationId": "zone-update",
+        "description": "Partial update row in table by providing a key value pair object where key refers to the column alias. You need to only include columns which you want to update.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["Zone"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/ZoneRequest" },
+                  {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/ZoneRequest" }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Zone delete",
+        "operationId": "zone-delete",
+        "responses": { "200": { "description": "OK" } },
+        "tags": ["Zone"],
+        "description": "Delete a row by using the **primary key** column value.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/ZoneIdRequest" },
+                  {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/ZoneIdRequest" }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/tables/mwrdhg9mg60fykj/records/{recordId}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "example": 1,
+            "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "fields",
+            "description": "Array of field names or comma separated filed names to include in the response objects. In array syntax pass it like `fields[]=field1&fields[]=field2` or alternately `fields=field1,field2`."
+          }
+        ],
+        "summary": "Zone read",
+        "description": "Read a row data by using the **primary key** column value.",
+        "operationId": "zone-read",
+        "tags": ["Zone"],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ZoneResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/tables/mwrdhg9mg60fykj/records/count": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string",
+            "enum": [
+              "vw43dwdr3xswhbsv",
+              "vwqj5ccgz7x02y3i",
+              "vw27vufl67az4v5h",
+              "vw74ss2146qnca71"
+            ]
+          },
+          "description": "Allows you to fetch records that are currently visible within a specific view.\n\nViews:\n* vw43dwdr3xswhbsv - Default view\n* vwqj5ccgz7x02y3i - Countries\n* vw27vufl67az4v5h - Distribution Zones\n* vw74ss2146qnca71 - Townships",
+          "name": "viewId",
+          "in": "query",
+          "required": false
+        }
+      ],
+      "get": {
+        "summary": "Zone count",
+        "operationId": "zone-count",
+        "description": "Get rows count of a table by applying optional filters.",
+        "tags": ["Zone"],
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "where",
+            "description": "This can be used for filtering rows, which accepts complicated where conditions. For more info visit [here](https://docs.nocodb.com/developer-resources/rest-apis#comparison-operators). Example : `where=(field1,eq,value)`"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "count": { "type": "number" } },
+                  "required": ["list", "pageInfo"]
+                },
+                "examples": { "Example 1": { "value": { "count": 3 } } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/api/v2/tables/mwrdhg9mg60fykj/links/{linkFieldId}/records/{recordId}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string",
+            "enum": [
+              "ce19bme4uy6d5h9",
+              "crchwow9pqhe78o",
+              "cvy23o27xc6bz9n",
+              "co92u1gp84qx6qn"
+            ]
+          },
+          "name": "linkFieldId",
+          "in": "path",
+          "required": true,
+          "description": "**Links Field Identifier** corresponding to the relation field `Links` established between tables.\n\nLink Columns:\n* ce19bme4uy6d5h9 - Contains Areas\n* crchwow9pqhe78o - Actors\n* cvy23o27xc6bz9n - Analysis\n* co92u1gp84qx6qn - Interactions"
+        },
+        {
+          "schema": { "type": "string" },
+          "name": "recordId",
+          "in": "path",
+          "required": true,
+          "example": 1,
+          "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+        }
+      ],
+      "get": {
+        "summary": "Link Records list",
+        "operationId": "zone-nested-list",
+        "description": "This API endpoint allows you to retrieve list of linked records for a specific `Link field` and `Record ID`. The response is an array of objects containing Primary Key and its corresponding display value.",
+        "tags": ["Zone"],
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "fields",
+            "description": "Array of field names or comma separated filed names to include in the response objects. In array syntax pass it like `fields[]=field1&fields[]=field2` or alternately `fields=field1,field2`."
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "sort",
+            "description": "Comma separated field names to sort rows, rows will sort in ascending order based on provided columns. To sort in descending order provide `-` prefix along with column name, like `-field`. Example : `sort=field1,-field2`"
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "where",
+            "description": "This can be used for filtering rows, which accepts complicated where conditions. For more info visit [here](https://docs.nocodb.com/developer-resources/rest-apis#comparison-operators). Example : `where=(field1,eq,value)`"
+          },
+          {
+            "schema": { "type": "number", "minimum": 1 },
+            "in": "query",
+            "name": "limit",
+            "description": "The `limit` parameter used for pagination, the response collection size depends on limit value with default value `25` and maximum value `1000`, which can be overridden by environment variables `DB_QUERY_LIMIT_DEFAULT` and `DB_QUERY_LIMIT_MAX` respectively.",
+            "example": 25
+          },
+          {
+            "schema": { "type": "number", "minimum": 0 },
+            "in": "query",
+            "name": "offset",
+            "description": "The `offset` parameter used for pagination, the value helps to select collection from a certain index.",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "list": {
+                      "type": "array",
+                      "description": "List of data objects",
+                      "items": { "type": "object" }
+                    },
+                    "pageInfo": {
+                      "$ref": "#/components/schemas/Paginated",
+                      "description": "Paginated Info"
+                    }
+                  },
+                  "required": ["list", "pageInfo"]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      },
+      "post": {
+        "summary": "Link Records",
+        "operationId": "zone-nested-link",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "examples": { "Example 1": { "value": true } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["Zone"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "type": "object" },
+                  { "type": "array", "items": { "type": "object" } }
+                ]
+              },
+              "examples": {
+                "Example 1": { "value": [{ "Id": 4 }, { "Id": 5 }] },
+                "Example 2": { "value": { "Id": 4 } }
+              }
+            }
+          }
+        },
+        "description": "This API endpoint allows you to link records to a specific `Link field` and `Record ID`. The request payload is an array of record-ids from the adjacent table for linking purposes. Note that any existing links, if present, will be unaffected during this operation.",
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "example": 1,
+            "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Unlink Records",
+        "operationId": "zone-nested-unlink",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "examples": { "Example 1": { "value": true } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["Zone"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [{ "type": "array", "items": { "type": "object" } }]
+              },
+              "examples": {
+                "Example 1": { "value": [{ "Id": 1 }, { "Id": 2 }] }
+              }
+            }
+          }
+        },
+        "description": "This API endpoint allows you to unlink records from a specific `Link field` and `Record ID`. The request payload is an array of record-ids from the adjacent table for unlinking purposes. Note that, \n- duplicated record-ids will be ignored.\n- non-existent record-ids will be ignored.",
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "example": 1,
+            "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+          }
+        ]
+      }
+    },
+    "/api/v2/tables/mwvly9vcygc0j34/records": {
+      "get": {
+        "summary": "Actor list",
+        "operationId": "actor-db-table-row-list",
+        "description": "List of all rows from Actor table and response data fields can be filtered based on query params.",
+        "tags": ["Actor"],
+        "parameters": [
+          {
+            "schema": { "type": "string", "enum": ["vw3iewh0mpimkk1f"] },
+            "description": "Allows you to fetch records that are currently visible within a specific view.\n\nViews:\n* vw3iewh0mpimkk1f - Default view",
+            "name": "viewId",
+            "in": "query",
+            "required": false
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "fields",
+            "description": "Array of field names or comma separated filed names to include in the response objects. In array syntax pass it like `fields[]=field1&fields[]=field2` or alternately `fields=field1,field2`."
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "sort",
+            "description": "Comma separated field names to sort rows, rows will sort in ascending order based on provided columns. To sort in descending order provide `-` prefix along with column name, like `-field`. Example : `sort=field1,-field2`"
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "where",
+            "description": "This can be used for filtering rows, which accepts complicated where conditions. For more info visit [here](https://docs.nocodb.com/developer-resources/rest-apis#comparison-operators). Example : `where=(field1,eq,value)`"
+          },
+          {
+            "schema": { "type": "number", "minimum": 1 },
+            "in": "query",
+            "name": "limit",
+            "description": "The `limit` parameter used for pagination, the response collection size depends on limit value with default value `25` and maximum value `1000`, which can be overridden by environment variables `DB_QUERY_LIMIT_DEFAULT` and `DB_QUERY_LIMIT_MAX` respectively.",
+            "example": 25
+          },
+          {
+            "schema": { "type": "number", "minimum": 0, "maximum": 1 },
+            "in": "query",
+            "name": "shuffle",
+            "description": "The `shuffle` parameter used for pagination, the response will be shuffled if it is set to 1.",
+            "example": 0
+          },
+          {
+            "schema": { "type": "number", "minimum": 0 },
+            "in": "query",
+            "name": "offset",
+            "description": "The `offset` parameter used for pagination, the value helps to select collection from a certain index.",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "list": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ActorResponse" }
+                    },
+                    "PageInfo": { "$ref": "#/components/schemas/Paginated" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Actor create",
+        "description": "Insert a new row in table by providing a key value pair object where key refers to the column alias. All the required fields should be included with payload excluding `autoincrement` and column with default value.",
+        "operationId": "actor-create",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ActorResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["Actor"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/ActorRequest" },
+                  {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/ActorRequest" }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Actor update",
+        "operationId": "actor-update",
+        "description": "Partial update row in table by providing a key value pair object where key refers to the column alias. You need to only include columns which you want to update.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["Actor"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/ActorRequest" },
+                  {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/ActorRequest" }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Actor delete",
+        "operationId": "actor-delete",
+        "responses": { "200": { "description": "OK" } },
+        "tags": ["Actor"],
+        "description": "Delete a row by using the **primary key** column value.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/ActorIdRequest" },
+                  {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/ActorIdRequest" }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/tables/mwvly9vcygc0j34/records/{recordId}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "example": 1,
+            "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "fields",
+            "description": "Array of field names or comma separated filed names to include in the response objects. In array syntax pass it like `fields[]=field1&fields[]=field2` or alternately `fields=field1,field2`."
+          }
+        ],
+        "summary": "Actor read",
+        "description": "Read a row data by using the **primary key** column value.",
+        "operationId": "actor-read",
+        "tags": ["Actor"],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ActorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/tables/mwvly9vcygc0j34/records/count": {
+      "parameters": [
+        {
+          "schema": { "type": "string", "enum": ["vw3iewh0mpimkk1f"] },
+          "description": "Allows you to fetch records that are currently visible within a specific view.\n\nViews:\n* vw3iewh0mpimkk1f - Default view",
+          "name": "viewId",
+          "in": "query",
+          "required": false
+        }
+      ],
+      "get": {
+        "summary": "Actor count",
+        "operationId": "actor-count",
+        "description": "Get rows count of a table by applying optional filters.",
+        "tags": ["Actor"],
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "where",
+            "description": "This can be used for filtering rows, which accepts complicated where conditions. For more info visit [here](https://docs.nocodb.com/developer-resources/rest-apis#comparison-operators). Example : `where=(field1,eq,value)`"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "count": { "type": "number" } },
+                  "required": ["list", "pageInfo"]
+                },
+                "examples": { "Example 1": { "value": { "count": 3 } } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/api/v2/tables/mwvly9vcygc0j34/links/{linkFieldId}/records/{recordId}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string",
+            "enum": ["cl426jurhv4prp1", "c9hswu4xal8fqdv", "c33y0i580vry0b2"]
+          },
+          "name": "linkFieldId",
+          "in": "path",
+          "required": true,
+          "description": "**Links Field Identifier** corresponding to the relation field `Links` established between tables.\n\nLink Columns:\n* cl426jurhv4prp1 - Zones\n* c9hswu4xal8fqdv - Interactions\n* c33y0i580vry0b2 - Contacts"
+        },
+        {
+          "schema": { "type": "string" },
+          "name": "recordId",
+          "in": "path",
+          "required": true,
+          "example": 1,
+          "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+        }
+      ],
+      "get": {
+        "summary": "Link Records list",
+        "operationId": "actor-nested-list",
+        "description": "This API endpoint allows you to retrieve list of linked records for a specific `Link field` and `Record ID`. The response is an array of objects containing Primary Key and its corresponding display value.",
+        "tags": ["Actor"],
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "fields",
+            "description": "Array of field names or comma separated filed names to include in the response objects. In array syntax pass it like `fields[]=field1&fields[]=field2` or alternately `fields=field1,field2`."
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "sort",
+            "description": "Comma separated field names to sort rows, rows will sort in ascending order based on provided columns. To sort in descending order provide `-` prefix along with column name, like `-field`. Example : `sort=field1,-field2`"
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "where",
+            "description": "This can be used for filtering rows, which accepts complicated where conditions. For more info visit [here](https://docs.nocodb.com/developer-resources/rest-apis#comparison-operators). Example : `where=(field1,eq,value)`"
+          },
+          {
+            "schema": { "type": "number", "minimum": 1 },
+            "in": "query",
+            "name": "limit",
+            "description": "The `limit` parameter used for pagination, the response collection size depends on limit value with default value `25` and maximum value `1000`, which can be overridden by environment variables `DB_QUERY_LIMIT_DEFAULT` and `DB_QUERY_LIMIT_MAX` respectively.",
+            "example": 25
+          },
+          {
+            "schema": { "type": "number", "minimum": 0 },
+            "in": "query",
+            "name": "offset",
+            "description": "The `offset` parameter used for pagination, the value helps to select collection from a certain index.",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "list": {
+                      "type": "array",
+                      "description": "List of data objects",
+                      "items": { "type": "object" }
+                    },
+                    "pageInfo": {
+                      "$ref": "#/components/schemas/Paginated",
+                      "description": "Paginated Info"
+                    }
+                  },
+                  "required": ["list", "pageInfo"]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      },
+      "post": {
+        "summary": "Link Records",
+        "operationId": "actor-nested-link",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "examples": { "Example 1": { "value": true } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["Actor"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "type": "object" },
+                  { "type": "array", "items": { "type": "object" } }
+                ]
+              },
+              "examples": {
+                "Example 1": { "value": [{ "Id": 4 }, { "Id": 5 }] },
+                "Example 2": { "value": { "Id": 4 } }
+              }
+            }
+          }
+        },
+        "description": "This API endpoint allows you to link records to a specific `Link field` and `Record ID`. The request payload is an array of record-ids from the adjacent table for linking purposes. Note that any existing links, if present, will be unaffected during this operation.",
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "example": 1,
+            "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Unlink Records",
+        "operationId": "actor-nested-unlink",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "examples": { "Example 1": { "value": true } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["Actor"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [{ "type": "array", "items": { "type": "object" } }]
+              },
+              "examples": {
+                "Example 1": { "value": [{ "Id": 1 }, { "Id": 2 }] }
+              }
+            }
+          }
+        },
+        "description": "This API endpoint allows you to unlink records from a specific `Link field` and `Record ID`. The request payload is an array of record-ids from the adjacent table for unlinking purposes. Note that, \n- duplicated record-ids will be ignored.\n- non-existent record-ids will be ignored.",
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "example": 1,
+            "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+          }
+        ]
+      }
+    },
+    "/api/v2/tables/ml2hj8p7mco22zu/records": {
+      "get": {
+        "summary": "Interaction list",
+        "operationId": "interaction-db-table-row-list",
+        "description": "List of all rows from Interaction table and response data fields can be filtered based on query params.",
+        "tags": ["Interaction"],
+        "parameters": [
+          {
+            "schema": { "type": "string", "enum": ["vwaaoke3oeby9knc"] },
+            "description": "Allows you to fetch records that are currently visible within a specific view.\n\nViews:\n* vwaaoke3oeby9knc - Default view",
+            "name": "viewId",
+            "in": "query",
+            "required": false
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "fields",
+            "description": "Array of field names or comma separated filed names to include in the response objects. In array syntax pass it like `fields[]=field1&fields[]=field2` or alternately `fields=field1,field2`."
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "sort",
+            "description": "Comma separated field names to sort rows, rows will sort in ascending order based on provided columns. To sort in descending order provide `-` prefix along with column name, like `-field`. Example : `sort=field1,-field2`"
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "where",
+            "description": "This can be used for filtering rows, which accepts complicated where conditions. For more info visit [here](https://docs.nocodb.com/developer-resources/rest-apis#comparison-operators). Example : `where=(field1,eq,value)`"
+          },
+          {
+            "schema": { "type": "number", "minimum": 1 },
+            "in": "query",
+            "name": "limit",
+            "description": "The `limit` parameter used for pagination, the response collection size depends on limit value with default value `25` and maximum value `1000`, which can be overridden by environment variables `DB_QUERY_LIMIT_DEFAULT` and `DB_QUERY_LIMIT_MAX` respectively.",
+            "example": 25
+          },
+          {
+            "schema": { "type": "number", "minimum": 0, "maximum": 1 },
+            "in": "query",
+            "name": "shuffle",
+            "description": "The `shuffle` parameter used for pagination, the response will be shuffled if it is set to 1.",
+            "example": 0
+          },
+          {
+            "schema": { "type": "number", "minimum": 0 },
+            "in": "query",
+            "name": "offset",
+            "description": "The `offset` parameter used for pagination, the value helps to select collection from a certain index.",
+            "example": 0
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "nested[Actor][fields]",
+            "description": "Array of field names or comma separated filed names to include in the in nested column `Actor` result. In array syntax pass it like `fields[]=field1&fields[]=field2.`. Example : `nested[Actor][fields]=field1,field2`"
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "nested[Zone][fields]",
+            "description": "Array of field names or comma separated filed names to include in the in nested column `Zone` result. In array syntax pass it like `fields[]=field1&fields[]=field2.`. Example : `nested[Zone][fields]=field1,field2`"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "list": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/InteractionResponse"
+                      }
+                    },
+                    "PageInfo": { "$ref": "#/components/schemas/Paginated" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Interaction create",
+        "description": "Insert a new row in table by providing a key value pair object where key refers to the column alias. All the required fields should be included with payload excluding `autoincrement` and column with default value.",
+        "operationId": "interaction-create",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/InteractionResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["Interaction"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/InteractionRequest" },
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/InteractionRequest"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Interaction update",
+        "operationId": "interaction-update",
+        "description": "Partial update row in table by providing a key value pair object where key refers to the column alias. You need to only include columns which you want to update.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["Interaction"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/InteractionRequest" },
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/InteractionRequest"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Interaction delete",
+        "operationId": "interaction-delete",
+        "responses": { "200": { "description": "OK" } },
+        "tags": ["Interaction"],
+        "description": "Delete a row by using the **primary key** column value.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/InteractionIdRequest" },
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/InteractionIdRequest"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/tables/ml2hj8p7mco22zu/records/{recordId}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "example": 1,
+            "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "fields",
+            "description": "Array of field names or comma separated filed names to include in the response objects. In array syntax pass it like `fields[]=field1&fields[]=field2` or alternately `fields=field1,field2`."
+          }
+        ],
+        "summary": "Interaction read",
+        "description": "Read a row data by using the **primary key** column value.",
+        "operationId": "interaction-read",
+        "tags": ["Interaction"],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/InteractionResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/tables/ml2hj8p7mco22zu/records/count": {
+      "parameters": [
+        {
+          "schema": { "type": "string", "enum": ["vwaaoke3oeby9knc"] },
+          "description": "Allows you to fetch records that are currently visible within a specific view.\n\nViews:\n* vwaaoke3oeby9knc - Default view",
+          "name": "viewId",
+          "in": "query",
+          "required": false
+        }
+      ],
+      "get": {
+        "summary": "Interaction count",
+        "operationId": "interaction-count",
+        "description": "Get rows count of a table by applying optional filters.",
+        "tags": ["Interaction"],
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "where",
+            "description": "This can be used for filtering rows, which accepts complicated where conditions. For more info visit [here](https://docs.nocodb.com/developer-resources/rest-apis#comparison-operators). Example : `where=(field1,eq,value)`"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "count": { "type": "number" } },
+                  "required": ["list", "pageInfo"]
+                },
+                "examples": { "Example 1": { "value": { "count": 3 } } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/api/v2/tables/ml2hj8p7mco22zu/links/{linkFieldId}/records/{recordId}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string",
+            "enum": ["cciu7rawwhhiw0w", "c3myqu8izdqy4hm", "c9v7d0th7wlbuot"]
+          },
+          "name": "linkFieldId",
+          "in": "path",
+          "required": true,
+          "description": "**Links Field Identifier** corresponding to the relation field `Links` established between tables.\n\nLink Columns:\n* cciu7rawwhhiw0w - Attachments\n* c3myqu8izdqy4hm - Actor\n* c9v7d0th7wlbuot - Zone"
+        },
+        {
+          "schema": { "type": "string" },
+          "name": "recordId",
+          "in": "path",
+          "required": true,
+          "example": 1,
+          "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+        }
+      ],
+      "get": {
+        "summary": "Link Records list",
+        "operationId": "interaction-nested-list",
+        "description": "This API endpoint allows you to retrieve list of linked records for a specific `Link field` and `Record ID`. The response is an array of objects containing Primary Key and its corresponding display value.",
+        "tags": ["Interaction"],
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "fields",
+            "description": "Array of field names or comma separated filed names to include in the response objects. In array syntax pass it like `fields[]=field1&fields[]=field2` or alternately `fields=field1,field2`."
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "sort",
+            "description": "Comma separated field names to sort rows, rows will sort in ascending order based on provided columns. To sort in descending order provide `-` prefix along with column name, like `-field`. Example : `sort=field1,-field2`"
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "where",
+            "description": "This can be used for filtering rows, which accepts complicated where conditions. For more info visit [here](https://docs.nocodb.com/developer-resources/rest-apis#comparison-operators). Example : `where=(field1,eq,value)`"
+          },
+          {
+            "schema": { "type": "number", "minimum": 1 },
+            "in": "query",
+            "name": "limit",
+            "description": "The `limit` parameter used for pagination, the response collection size depends on limit value with default value `25` and maximum value `1000`, which can be overridden by environment variables `DB_QUERY_LIMIT_DEFAULT` and `DB_QUERY_LIMIT_MAX` respectively.",
+            "example": 25
+          },
+          {
+            "schema": { "type": "number", "minimum": 0 },
+            "in": "query",
+            "name": "offset",
+            "description": "The `offset` parameter used for pagination, the value helps to select collection from a certain index.",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "list": {
+                      "type": "array",
+                      "description": "List of data objects",
+                      "items": { "type": "object" }
+                    },
+                    "pageInfo": {
+                      "$ref": "#/components/schemas/Paginated",
+                      "description": "Paginated Info"
+                    }
+                  },
+                  "required": ["list", "pageInfo"]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      },
+      "post": {
+        "summary": "Link Records",
+        "operationId": "interaction-nested-link",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "examples": { "Example 1": { "value": true } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["Interaction"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "type": "object" },
+                  { "type": "array", "items": { "type": "object" } }
+                ]
+              },
+              "examples": {
+                "Example 1": { "value": [{ "Id": 4 }, { "Id": 5 }] },
+                "Example 2": { "value": { "Id": 4 } }
+              }
+            }
+          }
+        },
+        "description": "This API endpoint allows you to link records to a specific `Link field` and `Record ID`. The request payload is an array of record-ids from the adjacent table for linking purposes. Note that any existing links, if present, will be unaffected during this operation.",
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "example": 1,
+            "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Unlink Records",
+        "operationId": "interaction-nested-unlink",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "examples": { "Example 1": { "value": true } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["Interaction"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [{ "type": "array", "items": { "type": "object" } }]
+              },
+              "examples": {
+                "Example 1": { "value": [{ "Id": 1 }, { "Id": 2 }] }
+              }
+            }
+          }
+        },
+        "description": "This API endpoint allows you to unlink records from a specific `Link field` and `Record ID`. The request payload is an array of record-ids from the adjacent table for unlinking purposes. Note that, \n- duplicated record-ids will be ignored.\n- non-existent record-ids will be ignored.",
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "example": 1,
+            "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+          }
+        ]
+      }
+    },
+    "/api/v2/tables/m48k3x5avp7wia3/records": {
+      "get": {
+        "summary": "Analysis list",
+        "operationId": "analysis-db-table-row-list",
+        "description": "List of all rows from Analysis table and response data fields can be filtered based on query params.",
+        "tags": ["Analysis"],
+        "parameters": [
+          {
+            "schema": { "type": "string", "enum": ["vwh0xc5evlle6nco"] },
+            "description": "Allows you to fetch records that are currently visible within a specific view.\n\nViews:\n* vwh0xc5evlle6nco - Default view",
+            "name": "viewId",
+            "in": "query",
+            "required": false
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "fields",
+            "description": "Array of field names or comma separated filed names to include in the response objects. In array syntax pass it like `fields[]=field1&fields[]=field2` or alternately `fields=field1,field2`."
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "sort",
+            "description": "Comma separated field names to sort rows, rows will sort in ascending order based on provided columns. To sort in descending order provide `-` prefix along with column name, like `-field`. Example : `sort=field1,-field2`"
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "where",
+            "description": "This can be used for filtering rows, which accepts complicated where conditions. For more info visit [here](https://docs.nocodb.com/developer-resources/rest-apis#comparison-operators). Example : `where=(field1,eq,value)`"
+          },
+          {
+            "schema": { "type": "number", "minimum": 1 },
+            "in": "query",
+            "name": "limit",
+            "description": "The `limit` parameter used for pagination, the response collection size depends on limit value with default value `25` and maximum value `1000`, which can be overridden by environment variables `DB_QUERY_LIMIT_DEFAULT` and `DB_QUERY_LIMIT_MAX` respectively.",
+            "example": 25
+          },
+          {
+            "schema": { "type": "number", "minimum": 0, "maximum": 1 },
+            "in": "query",
+            "name": "shuffle",
+            "description": "The `shuffle` parameter used for pagination, the response will be shuffled if it is set to 1.",
+            "example": 0
+          },
+          {
+            "schema": { "type": "number", "minimum": 0 },
+            "in": "query",
+            "name": "offset",
+            "description": "The `offset` parameter used for pagination, the value helps to select collection from a certain index.",
+            "example": 0
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "nested[Zone][fields]",
+            "description": "Array of field names or comma separated filed names to include in the in nested column `Zone` result. In array syntax pass it like `fields[]=field1&fields[]=field2.`. Example : `nested[Zone][fields]=field1,field2`"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "list": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AnalysisResponse"
+                      }
+                    },
+                    "PageInfo": { "$ref": "#/components/schemas/Paginated" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Analysis create",
+        "description": "Insert a new row in table by providing a key value pair object where key refers to the column alias. All the required fields should be included with payload excluding `autoincrement` and column with default value.",
+        "operationId": "analysis-create",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnalysisResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["Analysis"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/AnalysisRequest" },
+                  {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/AnalysisRequest" }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Analysis update",
+        "operationId": "analysis-update",
+        "description": "Partial update row in table by providing a key value pair object where key refers to the column alias. You need to only include columns which you want to update.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["Analysis"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/AnalysisRequest" },
+                  {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/AnalysisRequest" }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Analysis delete",
+        "operationId": "analysis-delete",
+        "responses": { "200": { "description": "OK" } },
+        "tags": ["Analysis"],
+        "description": "Delete a row by using the **primary key** column value.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/AnalysisIdRequest" },
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/AnalysisIdRequest"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/tables/m48k3x5avp7wia3/records/{recordId}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "example": 1,
+            "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "fields",
+            "description": "Array of field names or comma separated filed names to include in the response objects. In array syntax pass it like `fields[]=field1&fields[]=field2` or alternately `fields=field1,field2`."
+          }
+        ],
+        "summary": "Analysis read",
+        "description": "Read a row data by using the **primary key** column value.",
+        "operationId": "analysis-read",
+        "tags": ["Analysis"],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AnalysisResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/tables/m48k3x5avp7wia3/records/count": {
+      "parameters": [
+        {
+          "schema": { "type": "string", "enum": ["vwh0xc5evlle6nco"] },
+          "description": "Allows you to fetch records that are currently visible within a specific view.\n\nViews:\n* vwh0xc5evlle6nco - Default view",
+          "name": "viewId",
+          "in": "query",
+          "required": false
+        }
+      ],
+      "get": {
+        "summary": "Analysis count",
+        "operationId": "analysis-count",
+        "description": "Get rows count of a table by applying optional filters.",
+        "tags": ["Analysis"],
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "where",
+            "description": "This can be used for filtering rows, which accepts complicated where conditions. For more info visit [here](https://docs.nocodb.com/developer-resources/rest-apis#comparison-operators). Example : `where=(field1,eq,value)`"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "count": { "type": "number" } },
+                  "required": ["list", "pageInfo"]
+                },
+                "examples": { "Example 1": { "value": { "count": 3 } } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/api/v2/tables/m48k3x5avp7wia3/links/{linkFieldId}/records/{recordId}": {
+      "parameters": [
+        {
+          "schema": { "type": "string", "enum": ["cz3mphin1xmgz54"] },
+          "name": "linkFieldId",
+          "in": "path",
+          "required": true,
+          "description": "**Links Field Identifier** corresponding to the relation field `Links` established between tables.\n\nLink Columns:\n* cz3mphin1xmgz54 - Zone"
+        },
+        {
+          "schema": { "type": "string" },
+          "name": "recordId",
+          "in": "path",
+          "required": true,
+          "example": 1,
+          "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+        }
+      ],
+      "get": {
+        "summary": "Link Records list",
+        "operationId": "analysis-nested-list",
+        "description": "This API endpoint allows you to retrieve list of linked records for a specific `Link field` and `Record ID`. The response is an array of objects containing Primary Key and its corresponding display value.",
+        "tags": ["Analysis"],
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "fields",
+            "description": "Array of field names or comma separated filed names to include in the response objects. In array syntax pass it like `fields[]=field1&fields[]=field2` or alternately `fields=field1,field2`."
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "sort",
+            "description": "Comma separated field names to sort rows, rows will sort in ascending order based on provided columns. To sort in descending order provide `-` prefix along with column name, like `-field`. Example : `sort=field1,-field2`"
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "where",
+            "description": "This can be used for filtering rows, which accepts complicated where conditions. For more info visit [here](https://docs.nocodb.com/developer-resources/rest-apis#comparison-operators). Example : `where=(field1,eq,value)`"
+          },
+          {
+            "schema": { "type": "number", "minimum": 1 },
+            "in": "query",
+            "name": "limit",
+            "description": "The `limit` parameter used for pagination, the response collection size depends on limit value with default value `25` and maximum value `1000`, which can be overridden by environment variables `DB_QUERY_LIMIT_DEFAULT` and `DB_QUERY_LIMIT_MAX` respectively.",
+            "example": 25
+          },
+          {
+            "schema": { "type": "number", "minimum": 0 },
+            "in": "query",
+            "name": "offset",
+            "description": "The `offset` parameter used for pagination, the value helps to select collection from a certain index.",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "list": {
+                      "type": "array",
+                      "description": "List of data objects",
+                      "items": { "type": "object" }
+                    },
+                    "pageInfo": {
+                      "$ref": "#/components/schemas/Paginated",
+                      "description": "Paginated Info"
+                    }
+                  },
+                  "required": ["list", "pageInfo"]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      },
+      "post": {
+        "summary": "Link Records",
+        "operationId": "analysis-nested-link",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "examples": { "Example 1": { "value": true } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["Analysis"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "type": "object" },
+                  { "type": "array", "items": { "type": "object" } }
+                ]
+              },
+              "examples": {
+                "Example 1": { "value": [{ "Id": 4 }, { "Id": 5 }] },
+                "Example 2": { "value": { "Id": 4 } }
+              }
+            }
+          }
+        },
+        "description": "This API endpoint allows you to link records to a specific `Link field` and `Record ID`. The request payload is an array of record-ids from the adjacent table for linking purposes. Note that any existing links, if present, will be unaffected during this operation.",
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "example": 1,
+            "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Unlink Records",
+        "operationId": "analysis-nested-unlink",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "examples": { "Example 1": { "value": true } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["Analysis"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [{ "type": "array", "items": { "type": "object" } }]
+              },
+              "examples": {
+                "Example 1": { "value": [{ "Id": 1 }, { "Id": 2 }] }
+              }
+            }
+          }
+        },
+        "description": "This API endpoint allows you to unlink records from a specific `Link field` and `Record ID`. The request payload is an array of record-ids from the adjacent table for unlinking purposes. Note that, \n- duplicated record-ids will be ignored.\n- non-existent record-ids will be ignored.",
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "example": 1,
+            "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+          }
+        ]
+      }
+    },
+    "/api/v2/tables/mfc1dbbmc7jsqu0/records": {
+      "get": {
+        "summary": "Attachment list",
+        "operationId": "attachment-db-table-row-list",
+        "description": "List of all rows from Attachment table and response data fields can be filtered based on query params.",
+        "tags": ["Attachment"],
+        "parameters": [
+          {
+            "schema": { "type": "string", "enum": ["vwiqlcw653c0xifz"] },
+            "description": "Allows you to fetch records that are currently visible within a specific view.\n\nViews:\n* vwiqlcw653c0xifz - Default view",
+            "name": "viewId",
+            "in": "query",
+            "required": false
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "fields",
+            "description": "Array of field names or comma separated filed names to include in the response objects. In array syntax pass it like `fields[]=field1&fields[]=field2` or alternately `fields=field1,field2`."
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "sort",
+            "description": "Comma separated field names to sort rows, rows will sort in ascending order based on provided columns. To sort in descending order provide `-` prefix along with column name, like `-field`. Example : `sort=field1,-field2`"
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "where",
+            "description": "This can be used for filtering rows, which accepts complicated where conditions. For more info visit [here](https://docs.nocodb.com/developer-resources/rest-apis#comparison-operators). Example : `where=(field1,eq,value)`"
+          },
+          {
+            "schema": { "type": "number", "minimum": 1 },
+            "in": "query",
+            "name": "limit",
+            "description": "The `limit` parameter used for pagination, the response collection size depends on limit value with default value `25` and maximum value `1000`, which can be overridden by environment variables `DB_QUERY_LIMIT_DEFAULT` and `DB_QUERY_LIMIT_MAX` respectively.",
+            "example": 25
+          },
+          {
+            "schema": { "type": "number", "minimum": 0, "maximum": 1 },
+            "in": "query",
+            "name": "shuffle",
+            "description": "The `shuffle` parameter used for pagination, the response will be shuffled if it is set to 1.",
+            "example": 0
+          },
+          {
+            "schema": { "type": "number", "minimum": 0 },
+            "in": "query",
+            "name": "offset",
+            "description": "The `offset` parameter used for pagination, the value helps to select collection from a certain index.",
+            "example": 0
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "nested[Interaction][fields]",
+            "description": "Array of field names or comma separated filed names to include in the in nested column `Interaction` result. In array syntax pass it like `fields[]=field1&fields[]=field2.`. Example : `nested[Interaction][fields]=field1,field2`"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "list": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AttachmentResponse"
+                      }
+                    },
+                    "PageInfo": { "$ref": "#/components/schemas/Paginated" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Attachment create",
+        "description": "Insert a new row in table by providing a key value pair object where key refers to the column alias. All the required fields should be included with payload excluding `autoincrement` and column with default value.",
+        "operationId": "attachment-create",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AttachmentResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["Attachment"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/AttachmentRequest" },
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/AttachmentRequest"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Attachment update",
+        "operationId": "attachment-update",
+        "description": "Partial update row in table by providing a key value pair object where key refers to the column alias. You need to only include columns which you want to update.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["Attachment"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/AttachmentRequest" },
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/AttachmentRequest"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Attachment delete",
+        "operationId": "attachment-delete",
+        "responses": { "200": { "description": "OK" } },
+        "tags": ["Attachment"],
+        "description": "Delete a row by using the **primary key** column value.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/AttachmentIdRequest" },
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/AttachmentIdRequest"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/tables/mfc1dbbmc7jsqu0/records/{recordId}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "example": 1,
+            "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "fields",
+            "description": "Array of field names or comma separated filed names to include in the response objects. In array syntax pass it like `fields[]=field1&fields[]=field2` or alternately `fields=field1,field2`."
+          }
+        ],
+        "summary": "Attachment read",
+        "description": "Read a row data by using the **primary key** column value.",
+        "operationId": "attachment-read",
+        "tags": ["Attachment"],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AttachmentResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/tables/mfc1dbbmc7jsqu0/records/count": {
+      "parameters": [
+        {
+          "schema": { "type": "string", "enum": ["vwiqlcw653c0xifz"] },
+          "description": "Allows you to fetch records that are currently visible within a specific view.\n\nViews:\n* vwiqlcw653c0xifz - Default view",
+          "name": "viewId",
+          "in": "query",
+          "required": false
+        }
+      ],
+      "get": {
+        "summary": "Attachment count",
+        "operationId": "attachment-count",
+        "description": "Get rows count of a table by applying optional filters.",
+        "tags": ["Attachment"],
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "where",
+            "description": "This can be used for filtering rows, which accepts complicated where conditions. For more info visit [here](https://docs.nocodb.com/developer-resources/rest-apis#comparison-operators). Example : `where=(field1,eq,value)`"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "count": { "type": "number" } },
+                  "required": ["list", "pageInfo"]
+                },
+                "examples": { "Example 1": { "value": { "count": 3 } } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/api/v2/tables/mfc1dbbmc7jsqu0/links/{linkFieldId}/records/{recordId}": {
+      "parameters": [
+        {
+          "schema": { "type": "string", "enum": ["cg8ewp4l4cd6g81"] },
+          "name": "linkFieldId",
+          "in": "path",
+          "required": true,
+          "description": "**Links Field Identifier** corresponding to the relation field `Links` established between tables.\n\nLink Columns:\n* cg8ewp4l4cd6g81 - Interaction"
+        },
+        {
+          "schema": { "type": "string" },
+          "name": "recordId",
+          "in": "path",
+          "required": true,
+          "example": 1,
+          "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+        }
+      ],
+      "get": {
+        "summary": "Link Records list",
+        "operationId": "attachment-nested-list",
+        "description": "This API endpoint allows you to retrieve list of linked records for a specific `Link field` and `Record ID`. The response is an array of objects containing Primary Key and its corresponding display value.",
+        "tags": ["Attachment"],
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "fields",
+            "description": "Array of field names or comma separated filed names to include in the response objects. In array syntax pass it like `fields[]=field1&fields[]=field2` or alternately `fields=field1,field2`."
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "sort",
+            "description": "Comma separated field names to sort rows, rows will sort in ascending order based on provided columns. To sort in descending order provide `-` prefix along with column name, like `-field`. Example : `sort=field1,-field2`"
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "where",
+            "description": "This can be used for filtering rows, which accepts complicated where conditions. For more info visit [here](https://docs.nocodb.com/developer-resources/rest-apis#comparison-operators). Example : `where=(field1,eq,value)`"
+          },
+          {
+            "schema": { "type": "number", "minimum": 1 },
+            "in": "query",
+            "name": "limit",
+            "description": "The `limit` parameter used for pagination, the response collection size depends on limit value with default value `25` and maximum value `1000`, which can be overridden by environment variables `DB_QUERY_LIMIT_DEFAULT` and `DB_QUERY_LIMIT_MAX` respectively.",
+            "example": 25
+          },
+          {
+            "schema": { "type": "number", "minimum": 0 },
+            "in": "query",
+            "name": "offset",
+            "description": "The `offset` parameter used for pagination, the value helps to select collection from a certain index.",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "list": {
+                      "type": "array",
+                      "description": "List of data objects",
+                      "items": { "type": "object" }
+                    },
+                    "pageInfo": {
+                      "$ref": "#/components/schemas/Paginated",
+                      "description": "Paginated Info"
+                    }
+                  },
+                  "required": ["list", "pageInfo"]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      },
+      "post": {
+        "summary": "Link Records",
+        "operationId": "attachment-nested-link",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "examples": { "Example 1": { "value": true } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["Attachment"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "type": "object" },
+                  { "type": "array", "items": { "type": "object" } }
+                ]
+              },
+              "examples": {
+                "Example 1": { "value": [{ "Id": 4 }, { "Id": 5 }] },
+                "Example 2": { "value": { "Id": 4 } }
+              }
+            }
+          }
+        },
+        "description": "This API endpoint allows you to link records to a specific `Link field` and `Record ID`. The request payload is an array of record-ids from the adjacent table for linking purposes. Note that any existing links, if present, will be unaffected during this operation.",
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "example": 1,
+            "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Unlink Records",
+        "operationId": "attachment-nested-unlink",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "examples": { "Example 1": { "value": true } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["Attachment"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [{ "type": "array", "items": { "type": "object" } }]
+              },
+              "examples": {
+                "Example 1": { "value": [{ "Id": 1 }, { "Id": 2 }] }
+              }
+            }
+          }
+        },
+        "description": "This API endpoint allows you to unlink records from a specific `Link field` and `Record ID`. The request payload is an array of record-ids from the adjacent table for unlinking purposes. Note that, \n- duplicated record-ids will be ignored.\n- non-existent record-ids will be ignored.",
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "example": 1,
+            "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+          }
+        ]
+      }
+    },
+    "/api/v2/tables/mtfvfqwzifltx1v/records": {
+      "get": {
+        "summary": "ContactPerson list",
+        "operationId": "contactperson-db-table-row-list",
+        "description": "List of all rows from ContactPerson table and response data fields can be filtered based on query params.",
+        "tags": ["ContactPerson"],
+        "parameters": [
+          {
+            "schema": { "type": "string", "enum": ["vwrvneriqexypzjm"] },
+            "description": "Allows you to fetch records that are currently visible within a specific view.\n\nViews:\n* vwrvneriqexypzjm - Default view",
+            "name": "viewId",
+            "in": "query",
+            "required": false
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "fields",
+            "description": "Array of field names or comma separated filed names to include in the response objects. In array syntax pass it like `fields[]=field1&fields[]=field2` or alternately `fields=field1,field2`."
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "sort",
+            "description": "Comma separated field names to sort rows, rows will sort in ascending order based on provided columns. To sort in descending order provide `-` prefix along with column name, like `-field`. Example : `sort=field1,-field2`"
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "where",
+            "description": "This can be used for filtering rows, which accepts complicated where conditions. For more info visit [here](https://docs.nocodb.com/developer-resources/rest-apis#comparison-operators). Example : `where=(field1,eq,value)`"
+          },
+          {
+            "schema": { "type": "number", "minimum": 1 },
+            "in": "query",
+            "name": "limit",
+            "description": "The `limit` parameter used for pagination, the response collection size depends on limit value with default value `25` and maximum value `1000`, which can be overridden by environment variables `DB_QUERY_LIMIT_DEFAULT` and `DB_QUERY_LIMIT_MAX` respectively.",
+            "example": 25
+          },
+          {
+            "schema": { "type": "number", "minimum": 0, "maximum": 1 },
+            "in": "query",
+            "name": "shuffle",
+            "description": "The `shuffle` parameter used for pagination, the response will be shuffled if it is set to 1.",
+            "example": 0
+          },
+          {
+            "schema": { "type": "number", "minimum": 0 },
+            "in": "query",
+            "name": "offset",
+            "description": "The `offset` parameter used for pagination, the value helps to select collection from a certain index.",
+            "example": 0
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "nested[Actor][fields]",
+            "description": "Array of field names or comma separated filed names to include in the in nested column `Actor` result. In array syntax pass it like `fields[]=field1&fields[]=field2.`. Example : `nested[Actor][fields]=field1,field2`"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "list": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ContactPersonResponse"
+                      }
+                    },
+                    "PageInfo": { "$ref": "#/components/schemas/Paginated" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "ContactPerson create",
+        "description": "Insert a new row in table by providing a key value pair object where key refers to the column alias. All the required fields should be included with payload excluding `autoincrement` and column with default value.",
+        "operationId": "contactperson-create",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactPersonResponse"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["ContactPerson"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/ContactPersonRequest" },
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ContactPersonRequest"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "ContactPerson update",
+        "operationId": "contactperson-update",
+        "description": "Partial update row in table by providing a key value pair object where key refers to the column alias. You need to only include columns which you want to update.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["ContactPerson"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/ContactPersonRequest" },
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ContactPersonRequest"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "ContactPerson delete",
+        "operationId": "contactperson-delete",
+        "responses": { "200": { "description": "OK" } },
+        "tags": ["ContactPerson"],
+        "description": "Delete a row by using the **primary key** column value.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/ContactPersonIdRequest" },
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ContactPersonIdRequest"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/tables/mtfvfqwzifltx1v/records/{recordId}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "example": 1,
+            "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "fields",
+            "description": "Array of field names or comma separated filed names to include in the response objects. In array syntax pass it like `fields[]=field1&fields[]=field2` or alternately `fields=field1,field2`."
+          }
+        ],
+        "summary": "ContactPerson read",
+        "description": "Read a row data by using the **primary key** column value.",
+        "operationId": "contactperson-read",
+        "tags": ["ContactPerson"],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactPersonResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/tables/mtfvfqwzifltx1v/records/count": {
+      "parameters": [
+        {
+          "schema": { "type": "string", "enum": ["vwrvneriqexypzjm"] },
+          "description": "Allows you to fetch records that are currently visible within a specific view.\n\nViews:\n* vwrvneriqexypzjm - Default view",
+          "name": "viewId",
+          "in": "query",
+          "required": false
+        }
+      ],
+      "get": {
+        "summary": "ContactPerson count",
+        "operationId": "contactperson-count",
+        "description": "Get rows count of a table by applying optional filters.",
+        "tags": ["ContactPerson"],
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "where",
+            "description": "This can be used for filtering rows, which accepts complicated where conditions. For more info visit [here](https://docs.nocodb.com/developer-resources/rest-apis#comparison-operators). Example : `where=(field1,eq,value)`"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "count": { "type": "number" } },
+                  "required": ["list", "pageInfo"]
+                },
+                "examples": { "Example 1": { "value": { "count": 3 } } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/api/v2/tables/mtfvfqwzifltx1v/links/{linkFieldId}/records/{recordId}": {
+      "parameters": [
+        {
+          "schema": { "type": "string", "enum": ["czhttvyt50wtc9b"] },
+          "name": "linkFieldId",
+          "in": "path",
+          "required": true,
+          "description": "**Links Field Identifier** corresponding to the relation field `Links` established between tables.\n\nLink Columns:\n* czhttvyt50wtc9b - Actor"
+        },
+        {
+          "schema": { "type": "string" },
+          "name": "recordId",
+          "in": "path",
+          "required": true,
+          "example": 1,
+          "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+        }
+      ],
+      "get": {
+        "summary": "Link Records list",
+        "operationId": "contactperson-nested-list",
+        "description": "This API endpoint allows you to retrieve list of linked records for a specific `Link field` and `Record ID`. The response is an array of objects containing Primary Key and its corresponding display value.",
+        "tags": ["ContactPerson"],
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "fields",
+            "description": "Array of field names or comma separated filed names to include in the response objects. In array syntax pass it like `fields[]=field1&fields[]=field2` or alternately `fields=field1,field2`."
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "sort",
+            "description": "Comma separated field names to sort rows, rows will sort in ascending order based on provided columns. To sort in descending order provide `-` prefix along with column name, like `-field`. Example : `sort=field1,-field2`"
+          },
+          {
+            "schema": { "type": "string" },
+            "in": "query",
+            "name": "where",
+            "description": "This can be used for filtering rows, which accepts complicated where conditions. For more info visit [here](https://docs.nocodb.com/developer-resources/rest-apis#comparison-operators). Example : `where=(field1,eq,value)`"
+          },
+          {
+            "schema": { "type": "number", "minimum": 1 },
+            "in": "query",
+            "name": "limit",
+            "description": "The `limit` parameter used for pagination, the response collection size depends on limit value with default value `25` and maximum value `1000`, which can be overridden by environment variables `DB_QUERY_LIMIT_DEFAULT` and `DB_QUERY_LIMIT_MAX` respectively.",
+            "example": 25
+          },
+          {
+            "schema": { "type": "number", "minimum": 0 },
+            "in": "query",
+            "name": "offset",
+            "description": "The `offset` parameter used for pagination, the value helps to select collection from a certain index.",
+            "example": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "list": {
+                      "type": "array",
+                      "description": "List of data objects",
+                      "items": { "type": "object" }
+                    },
+                    "pageInfo": {
+                      "$ref": "#/components/schemas/Paginated",
+                      "description": "Paginated Info"
+                    }
+                  },
+                  "required": ["list", "pageInfo"]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      },
+      "post": {
+        "summary": "Link Records",
+        "operationId": "contactperson-nested-link",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "examples": { "Example 1": { "value": true } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["ContactPerson"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "type": "object" },
+                  { "type": "array", "items": { "type": "object" } }
+                ]
+              },
+              "examples": {
+                "Example 1": { "value": [{ "Id": 4 }, { "Id": 5 }] },
+                "Example 2": { "value": { "Id": 4 } }
+              }
+            }
+          }
+        },
+        "description": "This API endpoint allows you to link records to a specific `Link field` and `Record ID`. The request payload is an array of record-ids from the adjacent table for linking purposes. Note that any existing links, if present, will be unaffected during this operation.",
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "example": 1,
+            "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Unlink Records",
+        "operationId": "contactperson-nested-unlink",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "examples": { "Example 1": { "value": true } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        },
+        "tags": ["ContactPerson"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [{ "type": "array", "items": { "type": "object" } }]
+              },
+              "examples": {
+                "Example 1": { "value": [{ "Id": 1 }, { "Id": 2 }] }
+              }
+            }
+          }
+        },
+        "description": "This API endpoint allows you to unlink records from a specific `Link field` and `Record ID`. The request payload is an array of record-ids from the adjacent table for unlinking purposes. Note that, \n- duplicated record-ids will be ignored.\n- non-existent record-ids will be ignored.",
+        "parameters": [
+          {
+            "schema": { "type": "string" },
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "example": 1,
+            "description": "Primary key of the record you want to read. If the table have composite primary key then combine them by using `___` and pass it as primary key."
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Paginated": {
+        "title": "Paginated",
+        "type": "object",
+        "properties": {
+          "pageSize": { "type": "integer" },
+          "totalRows": { "type": "integer" },
+          "isFirstPage": { "type": "boolean" },
+          "isLastPage": { "type": "boolean" },
+          "page": { "type": "number" }
+        }
+      },
+      "Attachment": {
+        "title": "Attachment",
+        "type": "object",
+        "properties": {
+          "mimetype": { "type": "string" },
+          "size": { "type": "integer" },
+          "title": { "type": "string" },
+          "url": { "type": "string" },
+          "icon": { "type": "string" }
+        }
+      },
+      "Groupby": {
+        "title": "Groupby",
+        "type": "object",
+        "properties": {
+          "count": { "type": "number", "description": "count" },
+          "column_name": {
+            "type": "string",
+            "description": "the value of the given column"
+          }
+        }
+      },
+      "ZoneResponse": {
+        "title": "Zone Response",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": {
+          "Id": { "type": "integer" },
+          "Name": { "type": "string" },
+          "Geometry": { "type": "string" },
+          "Code": { "type": "string" },
+          "Area_id": { "type": "integer" },
+          "Contains Areas": { "type": "number" },
+          "Contained In": { "type": "object" },
+          "Type": { "type": "string" },
+          "Actors": { "type": "number" },
+          "Analysis": { "type": "number" },
+          "Interactions": { "type": "number" },
+          "PVCLevel": { "type": "string" },
+          "CVMLevel": { "type": "string" }
+        }
+      },
+      "ZoneRequest": {
+        "title": "Zone Request",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": {
+          "Name": { "type": "string" },
+          "Geometry": { "type": "string" },
+          "Code": { "type": "string" },
+          "Type": { "type": "string" },
+          "PVCLevel": { "type": "string" },
+          "CVMLevel": { "type": "string" }
+        }
+      },
+      "ZoneIdRequest": {
+        "title": "Zone Id Request",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": { "Id": { "type": "integer" } }
+      },
+      "_nc_m2m_Actor_ZoneResponse": {
+        "title": "_nc_m2m_Actor_Zone Response",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": {
+          "Zone_id": { "type": "integer" },
+          "Actor_id": { "type": "integer" }
+        }
+      },
+      "_nc_m2m_Actor_ZoneRequest": {
+        "title": "_nc_m2m_Actor_Zone Request",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": {}
+      },
+      "_nc_m2m_Actor_ZoneIdRequest": {
+        "title": "_nc_m2m_Actor_Zone Id Request",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": {
+          "Zone_id": { "type": "integer" },
+          "Actor_id": { "type": "integer" }
+        }
+      },
+      "ActorResponse": {
+        "title": "Actor Response",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": {
+          "Id": { "type": "integer" },
+          "Name": { "type": "string" },
+          "Zones": { "type": "number" },
+          "Interactions": { "type": "number" },
+          "Contacts": { "type": "number" }
+        }
+      },
+      "ActorRequest": {
+        "title": "Actor Request",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": { "Name": { "type": "string" } }
+      },
+      "ActorIdRequest": {
+        "title": "Actor Id Request",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": { "Id": { "type": "integer" } }
+      },
+      "InteractionResponse": {
+        "title": "Interaction Response",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": {
+          "Id": { "type": "integer" },
+          "Subject": { "type": "string" },
+          "Response Content": { "type": "string" },
+          "Type": { "type": "string" },
+          "Send Date": { "type": "string" },
+          "Response Date": { "type": "string" },
+          "CVMNotes": { "type": "string" },
+          "PVCNotes": { "type": "string" },
+          "Status": { "type": "string" },
+          "Acknowledgement Date": { "type": "string" },
+          "Collected By": { "type": "string" },
+          "Attachments": { "type": "number" },
+          "Actor_id": { "type": "integer" },
+          "Actor": { "$ref": "#/components/schemas/ActorRequest" },
+          "Zone_id": { "type": "integer" },
+          "Zone": { "$ref": "#/components/schemas/ZoneRequest" }
+        }
+      },
+      "InteractionRequest": {
+        "title": "Interaction Request",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": {
+          "Subject": { "type": "string" },
+          "Response Content": { "type": "string" },
+          "Type": { "type": "string" },
+          "Send Date": { "type": "string" },
+          "Response Date": { "type": "string" },
+          "CVMNotes": { "type": "string" },
+          "PVCNotes": { "type": "string" },
+          "Status": { "type": "string" },
+          "Acknowledgement Date": { "type": "string" },
+          "Collected By": { "type": "string" }
+        }
+      },
+      "InteractionIdRequest": {
+        "title": "Interaction Id Request",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": { "Id": { "type": "integer" } }
+      },
+      "AnalysisResponse": {
+        "title": "Analysis Response",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": {
+          "Id": { "type": "integer" },
+          "Description": { "type": "string" },
+          "Date": { "type": "string" },
+          "Zone_id": { "type": "integer" },
+          "Zone": { "$ref": "#/components/schemas/ZoneRequest" },
+          "CVMMeasure": { "type": "string" }
+        }
+      },
+      "AnalysisRequest": {
+        "title": "Analysis Request",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": {
+          "Description": { "type": "string" },
+          "Date": { "type": "string" },
+          "CVMMeasure": { "type": "string" }
+        }
+      },
+      "AnalysisIdRequest": {
+        "title": "Analysis Id Request",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": { "Id": { "type": "integer" } }
+      },
+      "AttachmentResponse": {
+        "title": "Attachment Response",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": {
+          "Id": { "type": "integer" },
+          "Title": { "type": "string" },
+          "Attachment": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Attachment" }
+          },
+          "Interaction_id": { "type": "integer" },
+          "Interaction": { "$ref": "#/components/schemas/InteractionRequest" }
+        }
+      },
+      "AttachmentRequest": {
+        "title": "Attachment Request",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": { "Title": { "type": "string" } }
+      },
+      "AttachmentIdRequest": {
+        "title": "Attachment Id Request",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": { "Id": { "type": "integer" } }
+      },
+      "ContactPersonResponse": {
+        "title": "ContactPerson Response",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": {
+          "Id": { "type": "integer" },
+          "Position": { "type": "string" },
+          "Name": { "type": "string" },
+          "Source Of Information": { "type": "string" },
+          "Do Not Contact": { "type": "boolean" },
+          "Email": { "type": "string" },
+          "Actor_id": { "type": "integer" },
+          "Actor": { "$ref": "#/components/schemas/ActorRequest" }
+        }
+      },
+      "ContactPersonRequest": {
+        "title": "ContactPerson Request",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": {
+          "Position": { "type": "string" },
+          "Name": { "type": "string" },
+          "Source Of Information": { "type": "string" },
+          "Do Not Contact": { "type": "boolean" },
+          "Email": { "type": "string" }
+        }
+      },
+      "ContactPersonIdRequest": {
+        "title": "ContactPerson Id Request",
+        "type": "object",
+        "description": "",
+        "x-internal": false,
+        "properties": { "Id": { "type": "integer" } }
+      }
+    },
+    "securitySchemes": {
+      "xcToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "xc-token",
+        "description": "API token"
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "BadRequest",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "msg": {
+                  "type": "string",
+                  "x-stoplight": { "id": "p9mk4oi0hbihm" },
+                  "example": "BadRequest [Error]: <ERROR MESSAGE>"
+                }
+              },
+              "required": ["msg"]
+            },
+            "examples": {
+              "Example 1": {
+                "value": { "msg": "BadRequest [Error]: <ERROR MESSAGE>" }
+              }
+            }
+          }
+        },
+        "headers": {}
+      }
+    }
+  },
+  "security": [{ "xcToken": [] }]
+}
