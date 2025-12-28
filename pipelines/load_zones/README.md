@@ -38,10 +38,10 @@ LEVEL_CONFIGS = {
 ### Basic Usage
 
 ```python
-from workflow import import_geojson_level_flow
+from workflow import load_zones_level_flow
 from pathlib import Path
 
-import_geojson_level_flow(
+load_zones_level_flow(
     level="Country",
     geojson_file_path=Path("data/countries.geojson"),
     db_connection_string="postgresql://user:pass@host:port/dbname"
@@ -69,11 +69,3 @@ Each level table should have the following columns:
 - `Code` (string): Unique code identifier
 - `Geometry` (JSON/Geometry): GeoJSON geometry
 - `Parent` (integer, nullable): Foreign key to parent area ID
-
-## Database Helper
-
-The `DatabaseHelper` class provides skeleton methods for database operations:
-- `load_fields()`: Load fields from a table with optional conditions (returns Polars DataFrame)
-- `load_dataframe()`: Insert a Polars DataFrame into a table
-
-**Note**: The database helper is currently a skeleton implementation. You'll need to implement the actual API calls to interact with your cloud database. The methods are structured to accept the necessary parameters and return/accept Polars DataFrames as expected by the workflow.

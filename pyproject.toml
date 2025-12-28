@@ -21,3 +21,8 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --strict-markers"
+
+[tool.prefect]
+# (not configured yet)
+PREFECT_RESULTS_PERSIST_BY_DEFAULT = false
+PREFECT_DEFAULT_RESULT_STORAGE_BLOCK = "pipelines/.prefect-storage"

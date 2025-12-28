@@ -7,6 +7,36 @@ import re
 from pathlib import Path
 
 
+# Link field IDs extracted from swagger file
+LINK_FIELD_IDS: Dict[str, Dict[str, str]] = {
+    "Actor": {
+        "Contacts": "c33y0i580vry0b2",
+        "Interactions": "c9hswu4xal8fqdv",
+        "Zones": "cl426jurhv4prp1",
+    },
+    "Analysis": {
+        "Zone": "cz3mphin1xmgz54",
+    },
+    "Attachment": {
+        "Interaction": "cg8ewp4l4cd6g81",
+    },
+    "ContactPerson": {
+        "Actor": "czhttvyt50wtc9b",
+    },
+    "Interaction": {
+        "Actor": "c3myqu8izdqy4hm",
+        "Attachments": "cciu7rawwhhiw0w",
+        "Zone": "c9v7d0th7wlbuot",
+    },
+    "Zone": {
+        "Actors": "crchwow9pqhe78o",
+        "Analysis": "cvy23o27xc6bz9n",
+        "Contains Areas": "ce19bme4uy6d5h9",
+        "Interactions": "co92u1gp84qx6qn",
+    },
+}
+
+
 class DatabaseHelper:
     """Helper class for NocoDB operations using Polars dataframes.
     
@@ -173,7 +203,7 @@ class DatabaseHelper:
         
         return pl.DataFrame(records).select(fields)
     
-    def insert_records(self, df: pl.DataFrame, table_name: str, batch_size: int = 100) -> None:
+    def insert_records(self, df: pl.DataFrame, table_name: str, batch_size: int = 100) -> pl.DataFrame:
         """
         Load a Polars DataFrame into a NocoDB table (bulk insert).
         
@@ -184,9 +214,12 @@ class DatabaseHelper:
             
         Raises:
             httpx.HTTPError: If the API request fails
+
+        Returns:
+            Polars DataFrame with the inserted records and their IDs
         """
         if df.is_empty():
-            return
+            return df.with_columns(pl.lit(None).alias("Id"))
         
         table_id = self._get_table_id(table_name)
         
@@ -202,6 +235,9 @@ class DatabaseHelper:
                 json=batch
             )
             response.raise_for_status()
+            for i, record in enumerate(response.json()):
+                batch[i]["Id"] = record["Id"]
+        return pl.DataFrame(records)
     
     def load_all_records(
         self,
@@ -260,6 +296,83 @@ class DatabaseHelper:
             return pl.DataFrame(schema=schema)
         
         return pl.concat(all_records)
+    
+    def link_records(
+        self,
+        df: pl.DataFrame,
+        table_name: str,
+        link_field_name: str,
+        foreign_key_column: str
+    ) -> None:
+        """
+        Link records in a parent table to records in a related table.
+        
+        Args:
+            df: DataFrame with 'Id' column (from insert_records()) and foreign key column
+            table_name: Parent table name (e.g., "Actor")
+            link_field_name: Exact link field name from swagger (e.g., "Zones")
+            foreign_key_column: Column in df containing foreign key IDs (e.g., "Zone_id")
+            
+        Raises:
+            ValueError: If table_name not in LINK_FIELD_IDS
+            ValueError: If link_field_name not found for table
+            ValueError: If "Id" column missing from dataframe
+            ValueError: If foreign_key_column missing from dataframe
+            httpx.HTTPError: If the API request fails
+            
+        Example:
+            # After inserting actors, link them to their zones
+            actors_df = db.insert_records(actors_df, "Actor")
+            db.link_records(actors_df, "Actor", "Zones", "Zone_id")
+        """
+        # Validate table exists
+        if table_name not in LINK_FIELD_IDS:
+            raise ValueError(
+                f"Table '{table_name}' has no link fields defined. "
+                f"Available tables: {list(LINK_FIELD_IDS.keys())}"
+            )
+        
+        # Validate link field exists for table
+        if link_field_name not in LINK_FIELD_IDS[table_name]:
+            raise ValueError(
+                f"Link field '{link_field_name}' not found for table '{table_name}'. "
+                f"Available link fields: {list(LINK_FIELD_IDS[table_name].keys())}"
+            )
+        
+        # Validate dataframe has required columns
+        if "Id" not in df.columns:
+            raise ValueError(
+                "DataFrame must have 'Id' column. "
+                "Did you call insert_records() first?"
+            )
+        
+        if foreign_key_column not in df.columns:
+            raise ValueError(
+                f"Column '{foreign_key_column}' not found in DataFrame. "
+                f"Available columns: {df.columns}"
+            )
+        
+        # Get table_id and link_field_id
+        table_id = self._get_table_id(table_name)
+        link_field_id = LINK_FIELD_IDS[table_name][link_field_name]
+        
+        # Filter out rows where foreign key is null
+        records_to_link = df.filter(pl.col(foreign_key_column).is_not_null())
+        
+        if records_to_link.is_empty():
+            return
+        
+        # Link each record
+        for row in records_to_link.iter_rows(named=True):
+            record_id = row["Id"]
+            foreign_id = row[foreign_key_column]
+            
+            # POST to link endpoint
+            response = self.client.post(
+                f"/api/v2/tables/{table_id}/links/{link_field_id}/records/{record_id}",
+                json=[{"Id": foreign_id}]
+            )
+            response.raise_for_status()
     
     def __del__(self):
         """Close the HTTP client when the object is destroyed."""

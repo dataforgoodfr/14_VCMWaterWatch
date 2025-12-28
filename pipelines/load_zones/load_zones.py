@@ -130,8 +130,8 @@ def load_to_database_task(
     db_helper.insert_records(df, table_name)
 
 
-@flow(name="import_geojson_level", persist_result=False)
-def import_geojson_level_flow(
+@flow(name="load_zones_level", persist_result=False)
+def load_zones_level_flow(
     level: str, geojson_file_path: Path, data_directory: Optional[Path] = None
 ) -> None:
     """
@@ -219,7 +219,7 @@ if __name__ == "__main__":
     level = sys.argv[1]
     geojson_path = Path(sys.argv[2])
 
-    import_geojson_level_flow(
+    load_zones_level_flow(
         level=level,
         geojson_file_path=geojson_path,
     )
