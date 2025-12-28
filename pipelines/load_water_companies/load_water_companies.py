@@ -115,10 +115,11 @@ def load_water_companies(data: Path):
     db_helper = services.db_helper()
 
     df = load_water_companies_task(data)
-    df = filter_existing_actors_task(df, db_helper)
     df = lookup_country_task(df, db_helper)
     df = create_water_distribution_areas_task(df, db_helper)
+    df = filter_existing_actors_task(df, db_helper)
     df = insert_actors_task(df, db_helper)
+    # TODO link municipalities to distribution zones and calculate distribution zone geometry
     link_actors_to_distribution_zones_task(df, db_helper)
 
 
