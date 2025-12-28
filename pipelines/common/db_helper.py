@@ -11,6 +11,8 @@ from pathlib import Path
 LINK_FIELD_IDS: Dict[str, Dict[str, str]] = {
     "Actor": {
         "Contacts": "c33y0i580vry0b2",
+        "Country": "cyauwdp4zhgjzgw",
+        "Distribution Zones": "c07ta1ff4n2d7fv",
         "Interactions": "c9hswu4xal8fqdv",
         "Zones": "cl426jurhv4prp1",
     },
@@ -23,12 +25,38 @@ LINK_FIELD_IDS: Dict[str, Dict[str, str]] = {
     "ContactPerson": {
         "Actor": "czhttvyt50wtc9b",
     },
+    "Country": {
+        "Actors": "c2kwo40lxxpl9ds",
+        "Distribution Zones": "c3z8syohglc642n",
+        "Municipalities": "c7ihcbx9ux2u0m8",
+    },
+    "DistributionZone": {
+        "Actors": "cxvebklqtcljgbr",
+        "Country": "cvqrmhcm1oy4w9r",
+        "Interactions": "cdbcif735pv7jwa",
+        "Municipalities": "cixn6cop13sahwm",
+    },
     "Interaction": {
         "Actor": "c3myqu8izdqy4hm",
         "Attachments": "cciu7rawwhhiw0w",
+        "Distribution Zone": "cen4auiduszs81f",
         "Zone": "c9v7d0th7wlbuot",
     },
-    "Zone": {
+    "Municipality": {
+        "Country": "cdutxg2krgjqb2f",
+        "Distribution Zone": "c9ztov908mvso1v",
+    },
+    "Page": {
+        "PageFields": "cvd7pwauikoiwy0",
+    },
+    "PageField": {
+        "Translations": "c94yyru03b2kvz8",
+        "WebsitePage": "crnt4gjmygneti8",
+    },
+    "Translation": {
+        "PageField": "cu2ip53y4p6bj1v",
+    },
+    "Zone_OLD": {
         "Actors": "crchwow9pqhe78o",
         "Analysis": "cvy23o27xc6bz9n",
         "Contains Areas": "ce19bme4uy6d5h9",

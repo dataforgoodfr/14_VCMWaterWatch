@@ -13,7 +13,7 @@ from .config import LEVEL_CONFIGS, LevelConfig, EUROPEAN_COUNTRIES
 
 
 @task(name="load_existing_data", cache_policy=NO_CACHE)
-def load_existing_data_task(db_helper: DatabaseHelper, level_name: str) -> pl.DataFrame:
+def load_existing_data_task(db_helper: DatabaseHelper, table_name: str) -> pl.DataFrame:
     """
     Load existing data from the database for this level.
 
@@ -24,13 +24,10 @@ def load_existing_data_task(db_helper: DatabaseHelper, level_name: str) -> pl.Da
     Returns:
         Polars DataFrame with 'Code' and 'Id' columns
     """
-    if not level_name:
+    if not table_name:
         # No parent level, return empty dataframe with correct schema
         return pl.DataFrame(schema={"Code": pl.Utf8, "Id": pl.Int64})
-    condition = {"Type": level_name}
-    return db_helper.load_all_records(
-        table_name="Zone", fields=["Code", "Id"], condition=condition
-    )
+    return db_helper.load_all_records(table_name=table_name, fields=["Code", "Id"])
 
 
 @task(name="transform_geojson", cache_policy=NO_CACHE)
@@ -87,7 +84,7 @@ def transform_geojson_task(
 
 @task(name="lookup_parent", cache_policy=NO_CACHE)
 def lookup_parent_task(
-    transformed_df: pl.DataFrame, reference_df: pl.DataFrame
+    transformed_df: pl.DataFrame, reference_df: pl.DataFrame, parent_field: str
 ) -> pl.DataFrame:
     """
     Use reference data to look up parent IDs.
@@ -95,20 +92,15 @@ def lookup_parent_task(
     Args:
         transformed_df: DataFrame with ParentCode column
         reference_df: DataFrame with code and id columns for parent lookup
+        parent_field: Name of field to use in the dataframe for Parent id
 
     Returns:
-        DataFrame with Area_id column added (parent ID)
+        DataFrame with (parent_field) column added (parent ID)
     """
-    if reference_df.is_empty():
-        # No parent level, add null Parent column
-        return transformed_df.with_columns(
-            [pl.lit(None).cast(pl.Int64).alias("Area_id")]
-        )
-
     # Join to get parent ID
     result = transformed_df.join(
         reference_df, left_on="ParentCode", right_on="Code", how="inner"
-    ).select(["Name", "Code", "Geometry", pl.col("Id").alias("Area_id")])
+    ).select(["Name", "Code", "Geometry", pl.col("Id").alias(parent_field)])
 
     return result
 
@@ -128,6 +120,13 @@ def load_to_database_task(
     logger = get_run_logger()
     logger.info(f"Inserting {len(df)} records")
     db_helper.insert_records(df, table_name)
+
+
+def lookup_country_task(db_helper: DatabaseHelper, df: pl.DataFrame):
+    reference_df = load_existing_data_task(db_helper=db_helper, table_name="Country")
+    return lookup_parent_task(
+        transformed_df=df, reference_df=reference_df, parent_field="Country_id"
+    )
 
 
 @flow(name="load_zones_level", persist_result=False)
@@ -169,41 +168,29 @@ def load_zones_level_flow(
     else:
         raise FileNotFoundError(f"GeoJSON file not found: {geojson_file_path}")
 
-    # Get parent table name if parent level exists
-    parent_level = level_config.parent_level
-
     existing_df = load_existing_data_task(
         db_helper=db_helper,
-        level_name=level,
+        table_name=level,
     )
 
     transformed_df = transform_geojson_task(
         geojson_file_path=geojson_file, level_config=level_config
     )
-    if level == "Country":
-        transformed_df = transformed_df.filter(pl.col("Code").is_in(EUROPEAN_COUNTRIES.keys()))
-
-    reference_df = load_existing_data_task(
-        db_helper=db_helper,
-        level_name=parent_level or "",
-    )
-
-    final_df = lookup_parent_task(
-        transformed_df=transformed_df, reference_df=reference_df
-    )
-    final_df = final_df.with_columns(pl.lit(level).alias("Type"))
 
     # Filter out records that already exist
-    if not existing_df.is_empty():
-        existing_codes = existing_df["Code"].to_list()
-        final_df = final_df.filter(~pl.col("Code").is_in(existing_codes))
+    new_records = transformed_df.join(existing_df, on="Code", how="anti")
+
+    if level == "Country":
+        final_df = new_records.filter(pl.col("Code").is_in(EUROPEAN_COUNTRIES.keys()))
+    else:
+        final_df = lookup_country_task(db_helper, new_records)
 
     # Task 5: Load to database
     if not final_df.is_empty():
         load_to_database_task(
             db_helper=db_helper,
-            df=final_df.select(["Code", "Name", "Geometry", "Area_id", "Type"]),
-            table_name="Zone",
+            df=final_df,
+            table_name=level,
         )
     else:
         print(f"No new records to import for level {level}")
