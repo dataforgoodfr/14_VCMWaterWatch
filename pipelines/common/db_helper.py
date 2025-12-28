@@ -311,7 +311,9 @@ class DatabaseHelper:
             df: DataFrame with 'Id' column (from insert_records()) and foreign key column
             table_name: Parent table name (e.g., "Actor")
             link_field_name: Exact link field name from swagger (e.g., "Zones")
-            foreign_key_column: Column in df containing foreign key IDs (e.g., "Zone_id")
+            foreign_key_column: Column in df containing foreign key IDs (e.g., "Zone_id").
+                              Can be either a single integer or a list of integers.
+                              If a list, all IDs in the list will be linked to the record.
             
         Raises:
             ValueError: If table_name not in LINK_FIELD_IDS
@@ -320,10 +322,14 @@ class DatabaseHelper:
             ValueError: If foreign_key_column missing from dataframe
             httpx.HTTPError: If the API request fails
             
-        Example:
-            # After inserting actors, link them to their zones
+        Examples:
+            # Link each actor to a single zone
             actors_df = db.insert_records(actors_df, "Actor")
             db.link_records(actors_df, "Actor", "Zones", "Zone_id")
+            
+            # Link each actor to multiple zones (if Zone_id is a list column)
+            actors_df = db.insert_records(actors_df, "Actor")
+            db.link_records(actors_df, "Actor", "Zones", "Zone_ids")
         """
         # Validate table exists
         if table_name not in LINK_FIELD_IDS:
@@ -365,12 +371,20 @@ class DatabaseHelper:
         # Link each record
         for row in records_to_link.iter_rows(named=True):
             record_id = row["Id"]
-            foreign_id = row[foreign_key_column]
+            foreign_value = row[foreign_key_column]
+            
+            # Handle both single integer and list of integers
+            if isinstance(foreign_value, list):
+                # List of foreign keys - create multiple link records
+                link_payload = [{"Id": v} for v in foreign_value]
+            else:
+                # Single foreign key - create single link record
+                link_payload = [{"Id": foreign_value}]
             
             # POST to link endpoint
             response = self.client.post(
                 f"/api/v2/tables/{table_id}/links/{link_field_id}/records/{record_id}",
-                json=[{"Id": foreign_id}]
+                json=link_payload
             )
             response.raise_for_status()
     
