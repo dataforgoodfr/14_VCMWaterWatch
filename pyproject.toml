@@ -25,4 +25,4 @@ addopts = "-v --strict-markers"
 [tool.prefect]
 # (not configured yet)
 PREFECT_RESULTS_PERSIST_BY_DEFAULT = false
-PREFECT_DEFAULT_RESULT_STORAGE_BLOCK = "pipelines/.prefect-storage"
+# PREFECT_DEFAULT_RESULT_STORAGE_BLOCK = "pipelines/.prefect-storage"

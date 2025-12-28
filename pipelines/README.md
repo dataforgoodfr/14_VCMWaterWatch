@@ -28,4 +28,15 @@ The justfile recipes from the top of the repo will do that automatically.
 Credentials are configured in the file `.env` at the root of this repository.
 Copy from .env.example and update with actual values.
 
-## Running workflows
+## Running an import task
+
+To start a workflow for an import task, use the `just` command at the root of the repository.
+
+There are 3 categories:
+
+ - extract: download raw data and process it into the staging directory
+ - transform: additional processing of staging data
+ - load: load staging data into NocoDB
+
+Run `just` with the corresponding category to get a list, for example `just extract`.
+Then run a task by adding the name, for example `just extract download-municipalities`.

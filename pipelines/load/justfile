@@ -1,0 +1,10 @@
+_default:
+  @just --list
+  @echo ""
+  @echo "Run 'just <recipe>' to execute a task."
+
+set working-directory := "../.."
+
+# Load all zone data into NocoDB.
+load-zones:
+  uv run python -m pipelines.load.load_zones

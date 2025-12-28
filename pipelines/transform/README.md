@@ -1,0 +1,1 @@
+Process data in the staging area into further tables.

@@ -129,8 +129,8 @@ def lookup_country_task(db_helper: DatabaseHelper, df: pl.DataFrame):
     )
 
 
-@flow(name="load_zones_level", persist_result=False)
-def load_zones_level_flow(
+@flow(name="import_geojson", persist_result=False)
+def import_geojson_flow(
     level: str, geojson_file_path: Path, data_directory: Optional[Path] = None
 ) -> None:
     """
@@ -200,13 +200,13 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) < 3:
-        print("Usage: python workflow.py <level> <geojson_file_path>")
+        print("Usage: python import_geojson.py <level> <geojson_file_path>")
         sys.exit(1)
 
     level = sys.argv[1]
     geojson_path = Path(sys.argv[2])
 
-    load_zones_level_flow(
+    import_geojson_flow(
         level=level,
         geojson_file_path=geojson_path,
     )

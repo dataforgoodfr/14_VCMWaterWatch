@@ -15,20 +15,12 @@ def load_water_companies_task(csv_file: Path) -> pl.DataFrame:
     return pl.read_csv(csv_file).with_columns(pl.lit("Water Company").alias("Type"))
 
 
-@task(name="filter_existing_actors", cache_policy=NO_CACHE)
-def filter_existing_actors_task(
-    df: pl.DataFrame, db_helper: DatabaseHelper
-) -> pl.DataFrame:
-    """Filter out existing actors from the dataframe"""
-    existing_df = db_helper.load_all_records(table_name="Actor", fields=["Name"], condition={"Type": "Water Company"})
-    return df.join(existing_df, on="Name", how="anti")
-
-
 @task(name="lookup_country", cache_policy=NO_CACHE)
 def lookup_country_task(df: pl.DataFrame, db_helper: DatabaseHelper) -> pl.DataFrame:
-    """Lookup the country for the actor.  
-    
-    Populate Country_id field in the dataframe and filter out actors without a country."""
+    """Lookup the country for the actor.
+
+    Populate Country_id field in the dataframe and filter out actors without a country.
+    """
     countries_df = db_helper.load_all_records(
         table_name="Country", fields=["Code", "Id"]
     )
@@ -39,7 +31,7 @@ def lookup_country_task(df: pl.DataFrame, db_helper: DatabaseHelper) -> pl.DataF
 @task(name="create_water_distribution_areas", cache_policy=NO_CACHE)
 def create_water_distribution_areas_task(
     df: pl.DataFrame, db_helper: DatabaseHelper
-) -> pl.DataFrame:
+) -> tuple[pl.DataFrame, pl.DataFrame]:
     """
     Initialize water distribution areas for water companies.
     Assume the zone name = the water company name.
@@ -50,7 +42,7 @@ def create_water_distribution_areas_task(
         db_helper: Database helper instance
 
     Returns:
-        modified actors dataframe
+        modified actors dataframe, and distribution zones dataframe (including new and existing zones)
     """
     # Get the existing distribution zones
     zones_df = db_helper.load_all_records(
@@ -85,15 +77,31 @@ def create_water_distribution_areas_task(
             "DistributionZone_id"
         )
     )
-    return df
+    zones_df = zones_df.vstack(new_zones_df)
+    return df, zones_df
 
 
 @task(name="insert_actors", cache_policy=NO_CACHE)
 def insert_actors_task(df: pl.DataFrame, db_helper: DatabaseHelper) -> pl.DataFrame:
-    """Insert actors into the database"""
+    """Insert actors into the database.
+    Existing actors are not updated.
+
+    Returns df with the Id column populated for all actors.
+    """
     logger = get_run_logger()
-    logger.info(f"Inserting {len(df)} actors into the database")
-    df = db_helper.insert_records(df, table_name="Actor")
+    existing_df = db_helper.load_all_records(
+        table_name="Actor", fields=["Name", "Id"], condition={"Type": "Water Company"}
+    )
+    df = df.join(existing_df, on="Name", how="left")
+    insert_df = df.filter(pl.col("Id").is_null()).select(
+        "Name", "Country_id", "Phone", "Email", "Website", "Description"
+    )
+    logger.info(f"Inserting {len(insert_df)} actors into the database")
+    inserted_df = db_helper.insert_records(insert_df, table_name="Actor")
+    # join the inserted actors back to the original dataframe, so we have the Id column
+    df = df.join(inserted_df.select("Id", "Name"), on="Name", how="left").with_columns(
+        pl.coalesce("Id", "Id_right").alias("Id")
+    )
     return df
 
 
@@ -109,19 +117,36 @@ def link_actors_to_distribution_zones_task(
         foreign_key_column="DistributionZone_id",
     )
 
+def get_municipalities_by_distribution_zone_task(df: pl.DataFrame, db_helper: DatabaseHelper) -> pl.DataFrame:
+    """
+    Get existing municipalities and link with the "Municipalities" array in df to form a df with
+    DistributionZone_id, Municipality_id, Geometry
+    """
+    raise NotImplementedError("Not implemented")
+    # muni_df = db_helper.load_all_records(
+    #     table_name="Municipality", fields=["Id", "Geometry", "Country_id"]
+    # )
+    # df = df.explode("Municipalities")
+
+def link_zones_to_municipalities_task(zones_df: pl.DataFrame, muni_df: pl.DataFrame, db_helper: DatabaseHelper) -> None:
+    """
+    Given zones_df (DistributionZone_id) and muni_df (DistributionZone_id, Municipality_id, Geometry),
+    link the municipalities to the zones, calculate the resulting area for each zone, and update the zones_df with the 
+    geometry.
+    """
 
 @flow(name="load_water_companies", persist_result=False)
-def load_water_companies(data: Path):
+def load_water_companies(data_path: Path):
     db_helper = services.db_helper()
 
-    df = load_water_companies_task(data)
+    df = load_water_companies_task(data_path)
     df = lookup_country_task(df, db_helper)
-    df = create_water_distribution_areas_task(df, db_helper)
-    df = filter_existing_actors_task(df, db_helper)
+    df, zones_df = create_water_distribution_areas_task(df, db_helper)
     df = insert_actors_task(df, db_helper)
     # TODO link municipalities to distribution zones and calculate distribution zone geometry
     link_actors_to_distribution_zones_task(df, db_helper)
-
+    muni_df = get_municipalities_by_distribution_zone_task(df, db_helper)
+    link_zones_to_municipalities_task(zones_df, muni_df, db_helper)
 
 if __name__ == "__main__":
-    load_water_companies(data=Path("data/water_companies.csv"))
+    load_water_companies(data_path=Path("data/water_companies.csv"))

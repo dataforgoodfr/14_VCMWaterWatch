@@ -1,0 +1,10 @@
+_default:
+  @just --list
+  @echo ""
+  @echo "Run 'just <recipe>' to execute a task."
+
+set working-directory := "../.."
+
+# Prepare distribution zones from water company data.
+create-distribution-zones:
+  uv run python -m pipelines.transform.create_distribution_zones

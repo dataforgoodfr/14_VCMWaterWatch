@@ -1,3 +1,7 @@
+"""
+Download and convert the commune GPKG file to GeoJSON.
+Produces file data/raw/municipalities.geojson
+"""
 from pathlib import Path
 from prefect import flow, task
 import pyogrio
@@ -5,8 +9,8 @@ from urllib.request import urlretrieve
 
 
 @task(name="download commune gpkg")
-def download_commune_gpkg() -> Path:
-    dst = Path("data") / "COMM_RG_01M_2016_2035.gpkg"
+def download_commune_gpkg(dest_directory: Path) -> Path:
+    dst = dest_directory / "COMM_RG_01M_2016_2035.gpkg"
     if dst.exists():
         return dst
     source = "https://gisco-services.ec.europa.eu/distribution/v2/communes/gpkg/COMM_RG_01M_2016_3035.gpkg"
@@ -37,11 +41,13 @@ def convert_gpkg_to_geojson(gpkg_file: Path, output_path: Path):
 
 
 @flow(name="download_municipality")
-def download_municipality():
-    gpkg = download_commune_gpkg()
-    geojson = convert_gpkg_to_geojson(gpkg, Path("data") / "municipalities.geojson")
+def download_municipality(data_directory: Path):
+    gpkg = download_commune_gpkg(data_directory / "raw")
+    geojson = convert_gpkg_to_geojson(
+        gpkg, data_directory / "raw" / "municipalities.geojson"
+    )
     return geojson
 
 
 if __name__ == "__main__":
-    download_municipality()
+    download_municipality(Path("data"))
