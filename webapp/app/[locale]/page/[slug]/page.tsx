@@ -1,4 +1,4 @@
-import { fetchDictionary } from "@/lib/fetchDictionary";
+import { fetchPageDictionary } from "@/lib/fetchPageDictionary";
 import { VcmPollutionHistory } from "./components/VcmPollutionHistory";
 import { notFound } from "next/navigation";
 import { SUB_PAGES } from "@/routes/routes";
@@ -10,7 +10,7 @@ interface PageProps {
 
 export default async function Page({ params }: PageProps) {
   const { slug, locale } = await params;
-  const dictionary = await fetchDictionary({ slug, locale });
+  const dictionary = await fetchPageDictionary({ slug, locale });
 
   if (!slug || !dictionary) {
     notFound();

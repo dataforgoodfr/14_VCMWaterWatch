@@ -29,3 +29,15 @@ To add a shadcn component:
 npx shadcn@latest add navigation-menu
 ```
 For icons, we use the default library in Shadcn, [Lucide](https://www.shadcn.io/icons/lucide).
+
+## Internationalisation i18n
+
+For the internationalisation of the app we are using [next-i18next](https://github.com/i18next/next-i18next). Our setup is based on this article from [Locize](https://www.locize.com/blog/i18n-next-app-router/).
+
+## BlogPosts / news markdown
+
+We use the library [react-markdown](https://remarkjs.github.io/react-markdown/) to display blog posts / news. Visit [CommonMark](https://commonmark.org) for Markdown guidelines and tutorial. You can style the components by passing the components props to ReactMarkdown. 
+
+```bash
+<ReactMarkdown components={components}>{Content}</ReactMarkdown>
+```

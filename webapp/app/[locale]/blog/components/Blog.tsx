@@ -15,7 +15,7 @@ import { getT } from "@/i18n/server";
 import type { Locale } from "@/i18n/i18next.config";
 
 type BlogCard = {
-  Image: { url: string }[];
+  Image: { signedUrl: string }[];
   Alt: string;
   Title: string;
   Subtitle: string;
@@ -53,7 +53,7 @@ export default async function Blog({
               <CardContent className="px-0">
                 <div className="relative aspect-video h-60 w-full rounded-t-xl overflow-hidden">
                   <Image
-                    src={item.Image[0].url}
+                    src={item.Image[0].signedUrl}
                     alt={item.Alt}
                     fill
                     className="object-cover"

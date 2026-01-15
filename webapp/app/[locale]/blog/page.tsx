@@ -9,7 +9,7 @@ export default async function Page({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const blogPosts = await fetchBlogPosts({ language: locale });
+  const blogPosts = await fetchBlogPosts({ locale });
 
   if (!blogPosts || blogPosts.length === 0) {
     notFound();

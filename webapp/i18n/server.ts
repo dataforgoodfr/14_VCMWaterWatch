@@ -8,12 +8,6 @@ interface GetTOptions {
   [key: string]: unknown;
 }
 
-/**
- * Get translation function for server components
- * @param ns - Namespace(s) to load
- * @param options - Optional configuration (keyPrefix, locale)
- * @returns Translation function and i18n instance
- */
 export async function getT(
   ns: string | string[],
   options?: GetTOptions & { locale?: Locale }

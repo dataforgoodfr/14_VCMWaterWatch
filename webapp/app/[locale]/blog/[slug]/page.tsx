@@ -1,19 +1,20 @@
-import { fetchBlogPost } from "@/lib/fetchBlogPost";
-import { notFound } from "next/navigation";
-import { Blogpost } from "./components/BlogPost";
+import { notFound } from "next/navigation"
+
+import { fetchBlogPost } from "@/lib/fetchBlogPost"
+import { Blogpost } from "./components/BlogPost"
 
 interface PageProps {
-  params: { slug: string; locale: string };
-  searchParams?: { [key: string]: string | string[] | undefined };
+  params: { slug: string }
+  searchParams?: { [key: string]: string | string[] | undefined }
 }
 
 export default async function Page({ params }: PageProps) {
-  const { slug, locale } = await params;
-  const blogPost = await fetchBlogPost({ slug, locale });
+  const { slug } = await params
+  const blogPost = await fetchBlogPost({ slug })
 
   if (!slug || !blogPost) {
-    notFound();
+    notFound()
   } else {
-    return <Blogpost post={blogPost} />;
+    return <Blogpost post={blogPost} />
   }
 }

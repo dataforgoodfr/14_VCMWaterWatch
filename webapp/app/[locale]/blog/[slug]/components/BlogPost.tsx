@@ -1,20 +1,15 @@
-import { format } from "date-fns";
+import NextImage from "next/image"
 
-import { cn } from "@/lib/utils";
-import ReactMarkdown from "react-markdown";
+import { format } from "date-fns"
 
-interface BlogPostData {
-  Title: string;
-  // AuthorName: string;
-  Image: string;
-  CreatedDate: Date;
-  Subtitle: string;
-  Content: string;
-}
+import ReactMarkdown from "react-markdown"
+
+import { cn } from "@/lib/utils"
+import { BlogPost } from "@/types/apiTypes"
 
 interface BlogpostProps {
-  className?: string;
-  post?: BlogPostData;
+  className?: string
+  post: BlogPost
 }
 
 const components = {
@@ -33,11 +28,11 @@ const components = {
   p: (props: React.HTMLAttributes<HTMLParagraphElement>) => (
     <p className="leading-7 not-first:mt-6" {...props} />
   ),
-  // ...add more for blockquote, code, etc as desired
 };
 
 const Blogpost = ({ post, className }: BlogpostProps) => {
-  const { Title, Image, CreatedDate, Subtitle, Content } = post;
+  const { Title, Image, CreatedDate, Subtitle, Content } = post
+
   return (
     <section
       className={cn("py-32 flex items-center justify-center", className)}
@@ -52,17 +47,16 @@ const Blogpost = ({ post, className }: BlogpostProps) => {
           </h3>
           <div className="flex items-center gap-3 text-sm md:text-base">
             <span>
-              {/* <a href="#" className="font-semibold">
-                {authorName}
-              </a> */}
               <span className="ml-1">
                 on {format(CreatedDate, "MMMM d, yyyy")}
               </span>
             </span>
           </div>
-          <img
-            src={Image}
-            alt="placeholder"
+          <NextImage
+            src={Image[0].signedUrl}
+            alt={Subtitle}
+            width={1200}
+            height={675}
             className="mt-4 mb-8 aspect-video w-full rounded-lg border object-cover"
           />
         </div>
@@ -72,7 +66,7 @@ const Blogpost = ({ post, className }: BlogpostProps) => {
         </div>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export { Blogpost };
+export { Blogpost }

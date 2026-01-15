@@ -1,17 +1,18 @@
-"use client";
+"use client"
 
-import Image from "next/image";
-import { Menu } from "lucide-react";
+import Image from "next/image"
 
-import { cn } from "@/lib/utils";
+import { Menu } from "lucide-react"
+
+import { cn } from "@/lib/utils"
 
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/accordion"
+import { Button } from "@/components/ui/button"
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -19,34 +20,35 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
+} from "@/components/ui/navigation-menu"
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
-import { ROUTES, SUB_PAGES } from "@/routes/routes";
+} from "@/components/ui/sheet"
+import { ROUTES, SUB_PAGES } from "@/routes/routes"
+import LanguageDropDown from "./LanguageDropDown"
 
 interface MenuItem {
-  title: string;
-  url: string;
-  description?: string;
-  icon?: React.ReactNode;
-  items?: MenuItem[];
+  title: string
+  url: string
+  description?: string
+  icon?: React.ReactNode
+  items?: MenuItem[]
 }
 
 interface NavbarProps {
-  className?: string;
+  className?: string
   logo?: {
-    url: string;
-    src: string;
-    alt: string;
-    title: string;
-    className?: string;
-  };
-  menu?: MenuItem[];
+    url: string
+    src: string
+    alt: string
+    title: string
+    className?: string
+  }
+  menu?: MenuItem[]
 }
 
 // Component created from https://www.shadcnblocks.com/block/navbar1
@@ -98,7 +100,9 @@ const Navbar = ({
               </NavigationMenu>
             </div>
           </div>
-          <div className="flex gap-2">{/* Language button */}</div>
+          <div className="flex gap-2">
+            <LanguageDropDown />
+          </div>
         </nav>
 
         {/* Mobile Menu */}
@@ -146,7 +150,7 @@ const Navbar = ({
                   </Accordion>
 
                   <div className="flex flex-col gap-3">
-                    {/* Language button */}
+                    <LanguageDropDown />
                   </div>
                 </div>
               </SheetContent>
@@ -155,8 +159,8 @@ const Navbar = ({
         </div>
       </div>
     </section>
-  );
-};
+  )
+}
 
 const renderMenuItem = (item: MenuItem) => {
   if (item.items) {
@@ -228,4 +232,4 @@ const SubMenuLink = ({ item }: { item: MenuItem }) => {
   );
 };
 
-export { Navbar };
+export { Navbar }
