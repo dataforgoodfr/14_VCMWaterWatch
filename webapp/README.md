@@ -41,3 +41,23 @@ We use the library [react-markdown](https://remarkjs.github.io/react-markdown/) 
 ```bash
 <ReactMarkdown components={components}>{Content}</ReactMarkdown>
 ```
+
+## Linting and Code Formatting
+
+This repo uses `ESLint` [according to the official next documentation](https://nextjs.org/docs/app/api-reference/config/eslint) and prettier for linting and code formatting. The configuration for `ESLint` is located in the `.eslint.config.mjs` file, and the configuration for `prettier` is in the `.prettierrc.json` file.
+
+With the [ESLint Prettier plugin](https://www.npmjs.com/package/eslint-plugin-prettier/v/4.0.0) Prettier runs within ESLint and doesn't need a separate command. In order to apply `ESLint` to all existing files, run:
+
+```
+npm lint:fix
+```
+
+Before each commit, our `husky🐶` uses the `lint-staged` package to automatically lint and format the staged files according to the rules specified in the `.lintstagedrc` file:
+
+You can do this manually by running:
+
+```
+npm lint-staged
+```
+
+This ensures code quality and consistency across our codebase.

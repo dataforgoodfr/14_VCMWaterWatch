@@ -7,17 +7,9 @@ import { Card, CardContent, CardTitle, CardDescription, CardHeader, CardFooter }
 
 import { getT } from '@/i18n/server'
 import type { Locale } from '@/i18n/i18next.config'
+import { BlogPost } from '@/types/apiTypes'
 
-type BlogCard = {
-	Image: { signedUrl: string }[]
-	Alt: string
-	Title: string
-	Subtitle: string
-	Slug: string
-	Date: string
-}[]
-
-export default async function Blog({ blogCards, locale }: { blogCards: BlogCard; locale: Locale }) {
+export default async function Blog({ blogCards, locale }: { blogCards: BlogPost[]; locale: Locale }) {
 	const { t } = await getT('default', { locale })
 
 	return (

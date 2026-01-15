@@ -20,7 +20,9 @@ export function useClientTranslation(lng?: Locale, ns?: string | string[], optio
 	const { i18n } = ret
 
 	if (runsOnServerSide && lng && i18n.resolvedLanguage !== lng) {
-		i18n.changeLanguage(lng)
+		i18n.changeLanguage(lng).catch(err => {
+			console.error('Error changing language on server side:', err)
+		})
 	} else {
 		// eslint-disable-next-line react-hooks/rules-of-hooks
 		const [activeLng, setActiveLng] = useState(i18n.resolvedLanguage)
@@ -40,7 +42,9 @@ export function useClientTranslation(lng?: Locale, ns?: string | string[], optio
 				return
 			}
 
-			i18n.changeLanguage(lng)
+			i18n.changeLanguage(lng).catch(err => {
+				console.error('Error changing language on server side:', err)
+			})
 		}, [lng, i18n])
 
 		// eslint-disable-next-line react-hooks/rules-of-hooks

@@ -3,12 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import type { Metadata } from 'next'
 import './globals.css'
 
-import { languages } from '@/i18n/i18next.config'
 import { Navbar } from '@/components/Navbar'
-
-export async function generateStaticParams() {
-	return languages.map(lng => ({ locale: lng }))
-}
 
 const geistSans = Geist({
 	variable: '--font-geist-sans',

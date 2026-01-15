@@ -18,13 +18,8 @@ export function proxy(req: NextRequest) {
 		lng = acceptLanguage.get(req.cookies.get(cookieName)?.value)
 	}
 
-	if (!lng) {
-		lng = acceptLanguage.get(req.headers.get('Accept-Language'))
-	}
-
-	if (!lng) {
-		lng = fallbackLanguage
-	}
+	lng ??= acceptLanguage.get(req.headers.get('Accept-Language'))
+	lng ??= fallbackLanguage
 
 	// Redirect if lng in path is not supported
 	if (
@@ -35,7 +30,7 @@ export function proxy(req: NextRequest) {
 	}
 
 	if (req.headers.has('referer')) {
-		const refererUrl = new URL(req.headers.get('referer') || '')
+		const refererUrl = new URL(req.headers.get('referer') ?? '')
 
 		const lngInReferer = languages.find(l => refererUrl.pathname.startsWith(`/${l}`))
 

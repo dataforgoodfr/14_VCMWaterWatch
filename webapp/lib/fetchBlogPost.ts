@@ -10,7 +10,9 @@ export async function fetchBlogPost({ slug }: FetchBlogPostsParams) {
 	try {
 		const blogPostTableId = await getTableIdByName('BlogPost')
 
-		const blogPostResponse = await instance.get(`/tables/${blogPostTableId}/records?where=(Slug,eq,${slug})`)
+		const blogPostResponse = await instance.get<FetchResponse<BlogPost>>(
+			`/tables/${blogPostTableId}/records?where=(Slug,eq,${slug})`
+		)
 
 		if (blogPostResponse.status !== 200) {
 			throw new Error(`Failed to fetch blog post: ${blogPostResponse.statusText}`)

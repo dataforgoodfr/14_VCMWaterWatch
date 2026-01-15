@@ -30,7 +30,7 @@ export default function LanguageDropDown() {
 
 	const onLanguageChange = (option: OptionProps) => {
 		const newSearchParams = new URLSearchParams(searchParams)
-		const locales = Object.keys(languagesOptionsTranslations || {}) as Array<keyof typeof languagesOptionsTranslations>
+		const locales = Object.keys(languagesOptionsTranslations || {}) as (keyof typeof languagesOptionsTranslations)[]
 		let updatedPathname = pathname
 		const regex = new RegExp(`^/(${locales.join('|')})`)
 
@@ -43,7 +43,7 @@ export default function LanguageDropDown() {
 		router.push(`/${option.value}${updatedPathname}?${newSearchParams.toString()}`)
 	}
 
-	const allLocales = Object.keys(languagesOptionsTranslations || {}) as Array<keyof typeof languagesOptionsTranslations>
+	const allLocales = Object.keys(languagesOptionsTranslations || {}) as (keyof typeof languagesOptionsTranslations)[]
 	const otherLocales = allLocales.filter(lang => lang !== locale)
 
 	return (

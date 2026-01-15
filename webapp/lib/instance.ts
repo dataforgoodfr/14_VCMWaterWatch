@@ -14,5 +14,5 @@ export interface FetchResponse<T> {
 export const instance = axios.create({
 	baseURL: process.env.NOCODB_URL,
 	timeout: 1000,
-	headers: { 'xc-token': process.env.NOCODB_TOKEN || '' }
+	headers: { 'xc-token': process.env.NOCODB_TOKEN ?? '' }
 })

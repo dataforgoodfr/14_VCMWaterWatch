@@ -8,7 +8,15 @@ import nextTs from 'eslint-config-next/typescript'
 
 const config = [
 	js.configs.recommended,
-	...tseslint.configs.recommended,
+	...tseslint.configs.recommendedTypeChecked,
+	...tseslint.configs.stylisticTypeChecked,
+	{
+		languageOptions: {
+			parserOptions: {
+				projectService: true
+			}
+		}
+	},
 	prettierRecommended,
 	...nextVitals,
 	...nextTs,
@@ -107,7 +115,15 @@ const config = [
 		}
 	},
 	{
-		ignores: ['**/node_modules/**', '.next/**', 'out/**', 'build/**', 'next-env.d.ts']
+		ignores: [
+			'**/node_modules/**',
+			'.next/**',
+			'out/**',
+			'build/**',
+			'next-env.d.ts',
+			'postcss.config.mjs',
+			'eslint.config.mjs'
+		]
 	}
 ]
 

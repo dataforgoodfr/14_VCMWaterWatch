@@ -1,15 +1,15 @@
-export type ThumbnailType = {
+export interface ThumbnailType {
 	signedUrl: string
 }
 
-export type ImageThumbnails = {
+export interface ImageThumbnails {
 	tiny?: ThumbnailType
 	small?: ThumbnailType
 	card_cover?: ThumbnailType
 	[key: string]: ThumbnailType | undefined
 }
 
-export type NocoDBImage = {
+export interface NocoDBImage {
 	url: string
 	title: string
 	mimetype: string

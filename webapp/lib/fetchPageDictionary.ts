@@ -12,13 +12,15 @@ export async function fetchPageDictionary({ slug, locale }: FetchPageDictionaryP
 		// Step 1: Fetch page fields corresponding to the slug
 		const FieldPageTableId = await getTableIdByName('PageField')
 
-		const fieldsResponse = await instance.get(`/tables/${FieldPageTableId}/records?where=(WebsitePage,eq,${slug})`)
+		const fieldsResponse = await instance.get<FetchResponse<PageFieldRecord>>(
+			`/tables/${FieldPageTableId}/records?where=(WebsitePage,eq,${slug})`
+		)
 
 		if (fieldsResponse.status !== 200) {
 			throw new Error(`Failed to fetch page fields: ${fieldsResponse.statusText}`)
 		}
 
-		const fieldsData: FetchResponse<PageFieldRecord> = fieldsResponse.data
+		const fieldsData = fieldsResponse.data
 		const pageFields = fieldsData.list
 
 		const pageFieldsList = pageFields.map(pf => pf.Key).join(',')
@@ -29,7 +31,7 @@ export async function fetchPageDictionary({ slug, locale }: FetchPageDictionaryP
 		// Step 2: Fetch translations for these page fields
 		const TranslationTableId = await getTableIdByName('Translation')
 
-		const translationsResponse = await instance.get(
+		const translationsResponse = await instance.get<FetchResponse<TranslationRecord>>(
 			`/tables/${TranslationTableId}/records/?where=(PageField,in,${pageFieldsListCsv})~and(Language,eq,${locale})`
 		)
 

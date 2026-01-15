@@ -1,5 +1,6 @@
+import { BlogPost } from '@/types/apiTypes'
 import { getTableIdByName } from './fetchMetaTables'
-import { instance } from './instance'
+import { FetchResponse, instance } from './instance'
 
 interface FetchBlogPostsParams {
 	locale: string
@@ -11,7 +12,9 @@ export async function fetchBlogPosts({ locale, isAll }: FetchBlogPostsParams) {
 		const blogPostsTableId = await getTableIdByName('BlogPost')
 		const queryAll = isAll ? '' : `~and(Language,eq,${locale})`
 
-		const blogPostsResponse = await instance.get(`/tables/${blogPostsTableId}/records?${queryAll}`)
+		const blogPostsResponse = await instance.get<FetchResponse<BlogPost>>(
+			`/tables/${blogPostsTableId}/records?${queryAll}`
+		)
 
 		if (blogPostsResponse.status !== 200) {
 			throw new Error(`Failed to fetch blog posts: ${blogPostsResponse.statusText}`)

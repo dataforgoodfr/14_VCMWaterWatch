@@ -16,20 +16,21 @@ const CACHE_DURATION_MS = 5 * 60 * 1000 // 5 minutes
  * Fetch meta tables from NocoDB and cache the results
  * @param forceRefresh - Force a fresh fetch even if cache is still valid
  */
-export async function fetchMetaTables(forceRefresh: boolean = false): Promise<TableMapping[]> {
+export async function fetchMetaTables(forceRefresh = false): Promise<TableMapping[]> {
 	try {
 		if (!forceRefresh && tableCache && cacheTimestamp && Date.now() - cacheTimestamp < CACHE_DURATION_MS) {
-			console.log('Returning cached table mappings')
 			return tableCache
 		}
 
-		const metaTablesResponse = await instance.get(`/meta/bases/${process.env.NOCODB_BASE_ID}/tables`)
+		const metaTablesResponse = await instance.get<FetchResponse<MetaTable>>(
+			`/meta/bases/${process.env.NOCODB_BASE_ID}/tables`
+		)
 
 		if (metaTablesResponse.status !== 200) {
 			throw new Error(`Failed to fetch meta tables: ${metaTablesResponse.statusText}`)
 		}
 
-		const metaTablesData: FetchResponse<MetaTable> = metaTablesResponse.data
+		const metaTablesData = metaTablesResponse.data
 
 		// Transform and cache the table mappings
 		tableCache = metaTablesData.list
@@ -55,11 +56,11 @@ export async function fetchMetaTables(forceRefresh: boolean = false): Promise<Ta
 	}
 }
 
-export async function getTableIdByName(tableName: TableName, forceRefresh: boolean = false): Promise<string | null> {
+export async function getTableIdByName(tableName: TableName, forceRefresh = false): Promise<string | null> {
 	const tables = await fetchMetaTables(forceRefresh)
 	const table = tables.find(t => t.table_name === tableName)
 
-	return table?.id || null
+	return table?.id ?? null
 }
 
 // Clear the cache (when tables have been updated)

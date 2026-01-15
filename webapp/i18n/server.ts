@@ -18,10 +18,10 @@ export async function getT(ns: string | string[], options?: GetTOptions & { loca
 	} else {
 		const headerList = await headers()
 
-		lng = (headerList.get(headerName) || 'en') as Locale
+		lng = (headerList.get(headerName) ?? 'en') as Locale
 	}
 
-	const otherOptions = { ...(options || {}) } as GetTOptions
+	const otherOptions = { ...(options ?? {}) } as GetTOptions
 
 	return getServerTranslation(lng, ns, otherOptions)
 }
