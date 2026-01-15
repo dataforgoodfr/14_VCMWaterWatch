@@ -1,72 +1,56 @@
-import { PageFieldRecord, TranslationRecord } from "@/types/apiTypes"
-import { getTableIdByName } from "./fetchMetaTables"
-import { FetchResponse, instance } from "./instance"
-
+import { PageFieldRecord, TranslationRecord } from '@/types/apiTypes'
+import { getTableIdByName } from './fetchMetaTables'
+import { FetchResponse, instance } from './instance'
 
 interface FetchPageDictionaryParams {
-  slug: string
-  locale: string
+	slug: string
+	locale: string
 }
 
-export async function fetchPageDictionary({
-  slug,
-  locale,
-}: FetchPageDictionaryParams) {
-  try {
-    // Step 1: Fetch page fields corresponding to the slug
-    const FieldPageTableId = await getTableIdByName('PageField')
-    
-    const fieldsResponse = await instance.get(
-      `/tables/${FieldPageTableId}/records?where=(WebsitePage,eq,${slug})`
-    );
+export async function fetchPageDictionary({ slug, locale }: FetchPageDictionaryParams) {
+	try {
+		// Step 1: Fetch page fields corresponding to the slug
+		const FieldPageTableId = await getTableIdByName('PageField')
 
-    if (fieldsResponse.status !== 200) {
-      throw new Error(
-        `Failed to fetch page fields: ${fieldsResponse.statusText}`
-      );
-    }
+		const fieldsResponse = await instance.get(`/tables/${FieldPageTableId}/records?where=(WebsitePage,eq,${slug})`)
 
-    const fieldsData: FetchResponse<PageFieldRecord> = fieldsResponse.data;
-    const pageFields = fieldsData.list;
-  
-    const pageFieldsList = pageFields
-      .map((pf) => pf.Key)
-      .join(',');
+		if (fieldsResponse.status !== 200) {
+			throw new Error(`Failed to fetch page fields: ${fieldsResponse.statusText}`)
+		}
 
-    // If none of the fetched fields match, fall back to the default list
-    const pageFieldsListCsv = pageFieldsList ?? ""
+		const fieldsData: FetchResponse<PageFieldRecord> = fieldsResponse.data
+		const pageFields = fieldsData.list
 
-    // Step 2: Fetch translations for these page fields
-    const TranslationTableId = await getTableIdByName('Translation');
+		const pageFieldsList = pageFields.map(pf => pf.Key).join(',')
 
-    const translationsResponse = await instance.get(
-      `/tables/${TranslationTableId}/records/?where=(PageField,in,${pageFieldsListCsv})~and(Language,eq,${locale})`
-    );
+		// If none of the fetched fields match, fall back to the default list
+		const pageFieldsListCsv = pageFieldsList ?? ''
 
-    if (translationsResponse.status !== 200) {
-      throw new Error(
-        `Failed to fetch translations: ${translationsResponse.statusText}`
-      );
-    }
+		// Step 2: Fetch translations for these page fields
+		const TranslationTableId = await getTableIdByName('Translation')
 
-    const translationsData: FetchResponse<TranslationRecord> =
-      translationsResponse.data;
+		const translationsResponse = await instance.get(
+			`/tables/${TranslationTableId}/records/?where=(PageField,in,${pageFieldsListCsv})~and(Language,eq,${locale})`
+		)
 
-    // Step 3: Merge translations into a dictionary organized by field key
-    const dictionary: Record<string, string> = {}
+		if (translationsResponse.status !== 200) {
+			throw new Error(`Failed to fetch translations: ${translationsResponse.statusText}`)
+		}
 
-    translationsData.list.forEach((translation) => {
-      const fieldKey = translation.PageField.Key
-      
-      dictionary[fieldKey] = translation.Value
-    })
+		const translationsData: FetchResponse<TranslationRecord> = translationsResponse.data
 
-    return dictionary
-  } catch (error) {
-    console.error(
-      `Error fetching dictionary for slug "${slug}" and language "${locale}":`,
-      error
-    )
-    throw error
-  }
+		// Step 3: Merge translations into a dictionary organized by field key
+		const dictionary: Record<string, string> = {}
+
+		translationsData.list.forEach(translation => {
+			const fieldKey = translation.PageField.Key
+
+			dictionary[fieldKey] = translation.Value
+		})
+
+		return dictionary
+	} catch (error) {
+		console.error(`Error fetching dictionary for slug "${slug}" and language "${locale}":`, error)
+		throw error
+	}
 }
