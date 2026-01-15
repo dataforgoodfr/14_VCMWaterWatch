@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+
 import Image from 'next/image'
 
 import { Menu } from 'lucide-react'
@@ -61,72 +63,86 @@ const Navbar = ({
 	],
 	className
 }: NavbarProps) => {
-	return (
-		<section className={cn('py-4', className)}>
-			<div className='container'>
-				{/* Desktop Menu */}
-				<nav className='hidden items-center justify-between lg:flex'>
-					<div className='flex items-center gap-6'>
-						{/* Logo */}
-						<a href={logo.url} className='flex items-center gap-2'>
-							<Image src={logo.src} height={32} width={32} className='max-h-8 dark:invert' alt={logo.alt} priority />
-							<span className='text-lg font-semibold tracking-tighter'>{logo.title}</span>
-						</a>
-						<div className='flex items-center'>
-							<NavigationMenu>
-								<NavigationMenuList>{menu.map(item => renderMenuItem(item))}</NavigationMenuList>
-							</NavigationMenu>
+	// Suppress hydration mismatch for Radix UI components
+	// They generate random IDs that differ between server and client
+	const [isClient, setIsClient] = useState(false)
+
+	useEffect(() => {
+		setIsClient(true)
+	}, [])
+
+	// Don't render interactive elements until client-side
+	// This prevents hydration mismatches from Radix UI ID generation
+	if (isClient) {
+		return (
+			<section className={cn('py-4', className)}>
+				<div className='container'>
+					{/* Desktop Menu */}
+					<nav className='hidden items-center justify-between lg:flex'>
+						<div className='flex items-center gap-6'>
+							{/* Logo */}
+							<a href={logo.url} className='flex items-center gap-2'>
+								<Image src={logo.src} height={32} width={32} className='max-h-8 dark:invert' alt={logo.alt} priority />
+								<span className='text-lg font-semibold tracking-tighter'>{logo.title}</span>
+							</a>
+							<div className='flex items-center'>
+								<NavigationMenu>
+									<NavigationMenuList>{menu.map(item => renderMenuItem(item))}</NavigationMenuList>
+								</NavigationMenu>
+							</div>
+						</div>
+						<div className='flex gap-2'>
+							<LanguageDropDown />
+						</div>
+					</nav>
+
+					{/* Mobile Menu */}
+					<div className='block lg:hidden'>
+						<div className='flex items-center justify-between'>
+							{/* Logo */}
+							<a href={logo.url} className='flex items-center gap-2'>
+								<Image src={logo.src} height={32} width={32} className='max-h-8 dark:invert' alt={logo.alt} priority />
+							</a>
+							<Sheet>
+								<SheetTrigger asChild>
+									<Button variant='outline' size='icon'>
+										<Menu className='size-4' />
+									</Button>
+								</SheetTrigger>
+								<SheetContent className='overflow-y-auto'>
+									<SheetHeader>
+										<SheetTitle>
+											<a href={logo.url} className='flex items-center gap-2'>
+												<Image
+													src={logo.src}
+													height={32}
+													width={32}
+													className='max-h-8 dark:invert'
+													alt={logo.alt}
+													priority
+												/>
+											</a>
+										</SheetTitle>
+									</SheetHeader>
+									<div className='flex flex-col gap-6 p-4'>
+										<Accordion type='single' collapsible className='flex w-full flex-col gap-4'>
+											{menu.map(item => renderMobileMenuItem(item))}
+										</Accordion>
+
+										<div className='flex flex-col gap-3'>
+											<LanguageDropDown />
+										</div>
+									</div>
+								</SheetContent>
+							</Sheet>
 						</div>
 					</div>
-					<div className='flex gap-2'>
-						<LanguageDropDown />
-					</div>
-				</nav>
-
-				{/* Mobile Menu */}
-				<div className='block lg:hidden'>
-					<div className='flex items-center justify-between'>
-						{/* Logo */}
-						<a href={logo.url} className='flex items-center gap-2'>
-							<Image src={logo.src} height={32} width={32} className='max-h-8 dark:invert' alt={logo.alt} priority />
-						</a>
-						<Sheet>
-							<SheetTrigger asChild>
-								<Button variant='outline' size='icon'>
-									<Menu className='size-4' />
-								</Button>
-							</SheetTrigger>
-							<SheetContent className='overflow-y-auto'>
-								<SheetHeader>
-									<SheetTitle>
-										<a href={logo.url} className='flex items-center gap-2'>
-											<Image
-												src={logo.src}
-												height={32}
-												width={32}
-												className='max-h-8 dark:invert'
-												alt={logo.alt}
-												priority
-											/>
-										</a>
-									</SheetTitle>
-								</SheetHeader>
-								<div className='flex flex-col gap-6 p-4'>
-									<Accordion type='single' collapsible className='flex w-full flex-col gap-4'>
-										{menu.map(item => renderMobileMenuItem(item))}
-									</Accordion>
-
-									<div className='flex flex-col gap-3'>
-										<LanguageDropDown />
-									</div>
-								</div>
-							</SheetContent>
-						</Sheet>
-					</div>
 				</div>
-			</div>
-		</section>
-	)
+			</section>
+		)
+	} else {
+		return null
+	}
 }
 
 const renderMenuItem = (item: MenuItem) => {
