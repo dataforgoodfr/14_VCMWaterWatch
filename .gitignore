@@ -17,6 +17,7 @@ downloads/
 eggs/
 .eggs/
 lib/
+!webapp/lib/
 lib64/
 lib64
 parts/
