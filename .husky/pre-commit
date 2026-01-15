@@ -1,1 +1,0 @@
-cd webapp && npx lint-staged

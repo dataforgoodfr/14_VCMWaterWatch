@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "prepare": "husky"
+    "postinstall": "node scripts/setup-hooks.js"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",
