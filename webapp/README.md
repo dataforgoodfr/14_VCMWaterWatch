@@ -58,7 +58,12 @@ This repo uses `ESLint` [according to the official next documentation](https://n
 With the [ESLint Prettier plugin](https://www.npmjs.com/package/eslint-plugin-prettier/v/4.0.0) Prettier runs within ESLint and doesn't need a separate command. In order to apply `ESLint` to all existing files, run:
 
 ```
-npm lint:fix
+npx eslint .
+```
+
+and to fix fixable errors:
+```
+npx eslint . --fix
 ```
 
 Before each commit, our `husky🐶` uses the `lint-staged` package to automatically lint and format the staged files according to the rules specified in the `.lintstagedrc` file:
@@ -66,7 +71,7 @@ Before each commit, our `husky🐶` uses the `lint-staged` package to automatica
 You can do this manually by running:
 
 ```
-npm lint-staged
+npx lint-staged
 ```
 
 This ensures code quality and consistency across our codebase.
