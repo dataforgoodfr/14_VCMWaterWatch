@@ -1,7 +1,3 @@
-/**
- * Fetches dictionary data from NocoDB for a specific page slug and language
- */
-
 import { PageFieldRecord, TranslationRecord } from "@/types/apiTypes"
 import { getTableIdByName } from "./fetchMetaTables"
 import { FetchResponse, instance } from "./instance"
