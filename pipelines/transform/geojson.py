@@ -1,4 +1,6 @@
-"""Prefect workflow for importing GeoJSON data."""
+"""
+Prefect workflow for transforming GeoJSON data into the zone objects (Country + Municipality)
+"""
 
 import json
 from pathlib import Path
@@ -146,7 +148,7 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) < 2:
-        print("Usage: python -m extract.geojson <data_directory>")
+        print("Usage: python -m transform.geojson <data_directory>")
         sys.exit(1)
 
     data_directory = Path(sys.argv[1])

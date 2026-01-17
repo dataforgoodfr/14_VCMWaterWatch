@@ -1,4 +1,4 @@
-from pipelines.common.db_helper import DatabaseHelper
+from .db_helper import DatabaseHelper
 import dotenv
 import os
 

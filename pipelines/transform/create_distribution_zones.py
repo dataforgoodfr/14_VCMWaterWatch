@@ -46,4 +46,11 @@ def create_distribution_zones_flow(data_directory: Path):
 
 
 if __name__ == "__main__":
-    create_distribution_zones_flow(Path("data"))
+    import sys
+
+    if len(sys.argv) < 2:
+        print("Usage: python create_distribution_zones.py <data_directory>")
+        sys.exit(1)
+
+    data_directory = Path(sys.argv[1])
+    create_distribution_zones_flow(data_directory)
