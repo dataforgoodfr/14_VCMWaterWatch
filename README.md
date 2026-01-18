@@ -17,7 +17,7 @@ Créer une plateforme collaborative et scientifique pour cartographier et analys
 - [uv](https://docs.astral.sh/uv/) for dependency management
 - [just](https://just.systems/) for running tasks
 - [pre-commit](https://pre-commit.com/)
-- [docker](https://www.docker.com/) >= 29
+- [docker](https://www.docker.com/), recent version
 
 ### Installation
 
