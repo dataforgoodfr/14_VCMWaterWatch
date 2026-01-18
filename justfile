@@ -10,9 +10,12 @@ setup:
   ./tools/init_nocodb.sh
   docker compose up -d
 
-reset:
+clean:
   docker compose down
   rm -f data/nocodb/noco.db
+
+reset: clean setup
   just setup
 
+# All the python tasks
 mod pipelines 'pipelines'
