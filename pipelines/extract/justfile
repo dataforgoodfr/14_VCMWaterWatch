@@ -1,0 +1,15 @@
+_default:
+  @just --list
+  @echo ""
+  @echo "Run 'just <recipe>' to execute a task."
+
+# Download municipalities data and process it into GeoJSON.
+[working-directory("../..")]
+download-municipalities:
+  uv run python -m pipelines.extract.download_municipalities
+
+# Download data from DE Wasserportal API.  Municipality data must be downloaded first.
+# This will take several hours to complete and should not be run regularly so as to avoid hitting the API.
+[working-directory("../..")]
+download-de-wasserportal:
+  uv run python -m pipelines.extract.de_wasserportal

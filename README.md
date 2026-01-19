@@ -1,42 +1,29 @@
-# Template DataForGood
+# VCM Water Watch
 
-This file will become your README and also the index of your
-documentation.
+## Objectif
 
-# Contributing
+Créer une plateforme collaborative et scientifique pour cartographier et analyser les risques de pollution de l’eau par les CVM/VCM dans les tuyaux en PVC installés dans les années 70/80 en Europe. La plateforme permettra de visualiser les risques connus et potentiels, d’identifier les manques de données, et de stimuler la contribution citoyenne et institutionnelle à la recherche.
 
+## Contributing
 
-## Installation
+### Prerequisites
 
-- [Installation de Python](#installation-de-python)
+- Python 3.12
+- [uv](https://docs.astral.sh/uv/) for dependency management
+- [just](https://just.systems/) for running tasks
+- [pre-commit](https://pre-commit.com/)
 
-Ce projet utilise [uv](https://docs.astral.sh/uv/) pour la gestion des dépendances Python. Il est préréquis pour l'installation de ce projet.
-
-Une fois installé, il suffit de lancer la commande suivante pour installer la version de Python adéquate, créer un environnement virtuel et installer les dépendances du projet.
-
-```bash
-uv sync
-```
-
-A l'usage, si vous utilisez VSCode, l'environnement virtuel sera automatiquement activé lorsque vous ouvrirez le projet. Sinon, il suffit de l'activer manuellement avec la commande suivante :
+### Installation
 
 ```bash
-source .venv/bin/activate
+just install
 ```
 
-Ou alors, utilisez la commande `uv run ...` (au lieu de `python ...`) pour lancer un script Python. Par exemple:
+This will install:
 
-```bash
-uv run pipelines/run.py run build_database
-```
+ - Python dependencies, using `uv`
+ - pre-commit hooks, using `pre-commit`
 
+### Running Python ETL
 
-## Lancer les precommit-hook localement
-
-[Installer les precommit](https://pre-commit.com/)
-
-    pre-commit run --all-files
-
-## Utiliser Tox pour tester votre code
-
-    tox -vv
+See [Pipelines Documentation](pipelines/README.md)

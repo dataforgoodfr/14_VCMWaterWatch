@@ -1,0 +1,27 @@
+_default:
+  @just --list
+  @echo ""
+  @echo "Run 'just <recipe>' to execute a task."
+
+# Load all zone data into NocoDB.
+[working-directory("../..")]
+zones-country:
+  uv run python -m pipelines.load.load_zones Country data/staging
+
+[working-directory("../..")]
+zones-municipality:
+  uv run python -m pipelines.load.load_zones Municipality data/staging
+
+[working-directory("../..")]
+zones-distribution:
+  uv run python -m pipelines.load.load_zones DistributionZone data/staging
+
+zones:
+  @just zones-country
+  @just zones-municipality
+  @just zones-distribution-zone
+
+# Load water companies into NocoDB.
+[working-directory("../..")]
+water-companies:
+  uv run python -m pipelines.load.load_water_companies

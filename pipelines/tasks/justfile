@@ -1,0 +1,8 @@
+_default:
+  @just --list
+  @echo ""
+  @echo "Run 'just <recipe>' to execute a task."
+
+[working-directory("../..")]
+calculate-distribution-zone:
+  uv run python -m pipelines.tasks.calculate_distribution_zone
