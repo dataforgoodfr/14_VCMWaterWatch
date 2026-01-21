@@ -11,6 +11,10 @@ In this monorepo setup, `.git` is at the root of the repository while the webapp
 
 ## Getting Started
 
+Run `npm install`
+
+Set the environment variables in your .env.local file like defined in .env.example.
+
 First, run the development server:
 
 ```bash
