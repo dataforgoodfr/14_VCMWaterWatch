@@ -35,7 +35,7 @@ This will install:
 Then, it will start the local nocodb instance (see [nocodb](docs/nocodb.md)).
 You can access it at `http://localhost:8500` - use username "dev@vcmwatch.eu".
 
-To reset the environment (you will then have to re-run setup):
+To reset the environment:
 
 ```bash
 just reset
