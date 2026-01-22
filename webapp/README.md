@@ -1,14 +1,5 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-
-## Git Hooks Setup (Monorepo Configuration)
-
-In this monorepo setup, `.git` is at the root of the repository while the webapp package is in a subfolder. The git hooks are automatically set up when you run `npm install`:
-
-- The `postinstall` script in `package.json` runs `scripts/setup-hooks.js`
-- This script automatically creates `.git/hooks/pre-commit` with the command: `cd webapp && npx lint-staged`
-- Each colleague who clones the repo and runs `npm install` will automatically have the hooks configured
-
 ## Getting Started
 
 Run `npm install`

@@ -11,3 +11,10 @@ repos:
       - id: check-merge-conflict
       - id: check-illegal-windows-names
       - id: mixed-line-ending
+  - repo: local #run custom scripts from own repo
+    hooks:
+      - id: lint-staged-webapp
+        name: Run lint-staged on webapp staged files
+        entry: bash run-lint-staged-if-webapp.sh
+        language: system
+        pass_filenames: false # This hook handles filenames internally

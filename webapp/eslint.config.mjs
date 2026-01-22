@@ -122,8 +122,7 @@ const config = [
 			'build/**',
 			'next-env.d.ts',
 			'postcss.config.mjs',
-			'eslint.config.mjs',
-			'scripts/setup-hooks.js'
+			'eslint.config.mjs'
 		]
 	}
 ]

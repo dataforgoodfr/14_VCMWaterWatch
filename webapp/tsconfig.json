@@ -31,5 +31,5 @@
 		"**/*.mts",
 		"i18n/i18next.ts"
 	],
-	"exclude": ["node_modules", "postcss.config.mjs", "eslint.config.mjs", "scripts/setup-hooks.js"]
+	"exclude": ["node_modules", "postcss.config.mjs", "eslint.config.mjs"]
 }
