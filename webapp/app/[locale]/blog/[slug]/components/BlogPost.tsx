@@ -5,11 +5,11 @@ import { format } from 'date-fns'
 import ReactMarkdown from 'react-markdown'
 
 import { cn } from '@/lib/utils'
-import { BlogPost } from '@/types/apiTypes'
+import { BlogPostRecord } from '@/types/apiTypes'
 
 interface BlogpostProps {
 	className?: string
-	post: BlogPost
+	post: BlogPostRecord
 }
 
 const components = {
@@ -26,7 +26,8 @@ const components = {
 }
 
 const Blogpost = ({ post, className }: BlogpostProps) => {
-	const { Title, Image, CreatedDate, Subtitle, Content } = post
+	const { fields } = post
+	const { Title, Image, CreatedDate, Subtitle, Content } = fields
 
 	return (
 		<section className={cn('flex items-center justify-center py-32', className)}>

@@ -1,14 +1,15 @@
 import axios from 'axios'
 
-export interface FetchResponse<T> {
+export interface FetchResponseMeta<T> {
 	list: T[]
-	pageInfo: {
-		totalRows: number
-		page: number
-		pageSize: number
-		isFirstPage: boolean
-		isLastPage: boolean
-	}
+}
+
+export interface FetchResponseRecords<T> {
+	records: T[]
+	next?: string | null
+	prev?: string | null
+	nestedNext: string | null
+	nestedPrev?: string | null
 }
 
 export const instance = axios.create({

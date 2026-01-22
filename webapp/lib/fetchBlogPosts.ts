@@ -1,6 +1,6 @@
-import { BlogPost } from '@/types/apiTypes'
+import { BlogPostRecord } from '@/types/apiTypes'
 import { getTableIdByName } from './fetchMetaTables'
-import { FetchResponse, instance } from './instance'
+import { FetchResponseRecords, instance } from './instance'
 
 interface FetchBlogPostsParams {
 	locale: string
@@ -12,8 +12,8 @@ export async function fetchBlogPosts({ locale, isAll }: FetchBlogPostsParams) {
 		const blogPostsTableId = await getTableIdByName('BlogPost')
 		const queryAll = isAll ? '' : `~and(Language,eq,${locale})`
 
-		const blogPostsResponse = await instance.get<FetchResponse<BlogPost>>(
-			`/tables/${blogPostsTableId}/records?${queryAll}`
+		const blogPostsResponse = await instance.get<FetchResponseRecords<BlogPostRecord>>(
+			`/data/${process.env.NOCODB_BASE_ID}/${blogPostsTableId}/records?${queryAll}`
 		)
 
 		if (blogPostsResponse.status !== 200) {
@@ -22,7 +22,7 @@ export async function fetchBlogPosts({ locale, isAll }: FetchBlogPostsParams) {
 
 		const blogPostsData = blogPostsResponse.data
 
-		return blogPostsData.list || []
+		return blogPostsData.records || []
 	} catch (error) {
 		console.error('Error fetching blog posts:', error)
 		return []

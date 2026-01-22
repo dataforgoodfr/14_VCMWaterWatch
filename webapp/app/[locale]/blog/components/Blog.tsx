@@ -7,9 +7,9 @@ import { Card, CardContent, CardTitle, CardDescription, CardHeader, CardFooter }
 
 import { getT } from '@/i18n/server'
 import type { Locale } from '@/i18n/i18next.config'
-import { BlogPost } from '@/types/apiTypes'
+import { BlogPostRecord } from '@/types/apiTypes'
 
-export default async function Blog({ blogCards, locale }: { blogCards: BlogPost[]; locale: Locale }) {
+export default async function Blog({ blogCards, locale }: { blogCards: BlogPostRecord[]; locale: Locale }) {
 	const { t } = await getT('default', { locale })
 
 	return (
@@ -23,21 +23,21 @@ export default async function Blog({ blogCards, locale }: { blogCards: BlogPost[
 
 				<div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
 					{blogCards.map(item => (
-						<Card className='pt-0 shadow-none max-lg:last:col-span-full' key={item.Slug}>
+						<Card className='pt-0 shadow-none max-lg:last:col-span-full' key={item.fields.Slug}>
 							<CardContent className='px-0'>
 								<div className='relative aspect-video h-60 w-full overflow-hidden rounded-t-xl'>
-									<Image src={item.Image[0].signedUrl} alt={item.Alt} fill className='object-cover' />
+									<Image src={item.fields.Image[0].signedUrl} alt={item.fields.Alt} fill className='object-cover' />
 								</div>
 							</CardContent>
 							<CardHeader className='mb-2 gap-3'>
 								<CardTitle className='text-xl'>
-									<a href={`blog/${item.Slug}`}>{item.Title}</a>
+									<a href={`blog/${item.fields.Slug}`}>{item.fields.Title}</a>
 								</CardTitle>
-								<CardDescription className='text-base'>{item.Subtitle}</CardDescription>
+								<CardDescription className='text-base'>{item.fields.Subtitle}</CardDescription>
 							</CardHeader>
 							<CardFooter>
 								<Button className='group rounded-lg text-base has-[>svg]:px-6' size='lg' asChild>
-									<a href={`blog/${item.Slug}`}>
+									<a href={`blog/${item.fields.Slug}`}>
 										{t('blog-read-more')}
 										<ArrowRightIcon className='transition-transform duration-200 group-hover:translate-x-0.5' />
 									</a>

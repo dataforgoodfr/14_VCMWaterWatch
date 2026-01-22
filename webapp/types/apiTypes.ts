@@ -21,7 +21,7 @@ export interface NocoDBImage {
 	signedUrl: string
 }
 
-export type TableName =
+export type TableTitle =
 	| 'Actor'
 	| 'Interaction'
 	| 'Analysis'
@@ -35,24 +35,12 @@ export type TableName =
 	| 'Municipality'
 	| 'BlogPost'
 
-export interface BlogPost {
-	Id: number
-	Title: string
-	Subtitle: string
-	Slug: string
-	Content: string
-	Image: NocoDBImage[]
-	Alt: string
-	CreatedDate: string
-	UpdatedAt: string
-}
-
 export interface MetaTable {
 	id: string
 	source_id?: string | null
 	base_id?: string | null
-	table_name?: TableName
-	title?: string
+	table_name?: string
+	title?: TableTitle
 	type?: string
 	meta?: {
 		hasNonDefaultViews?: boolean
@@ -75,34 +63,43 @@ export interface MetaTable {
 	fk_custom_url_id?: string | null
 }
 
-export interface MetaTables {
-	Actor?: MetaTable
-	[tableName: string]: MetaTable | undefined
+export interface Record<T> {
+	id: number
+	fields: T
 }
 
-export interface PageFieldRecord {
-	Id: number
+export type BlogPostRecord = Record<BlogPostFields>
+
+export interface BlogPostFields {
+	Title: string
+	Subtitle: string
+	Slug: string
+	Content: string
+	Image: NocoDBImage[]
+	Alt: string
+	CreatedDate: string
+	UpdatedAt: string
+}
+
+export type PageFieldRecord = Record<PageFieldFields>
+
+export interface PageFieldFields {
 	Key: string
 	CreatedAt: string
 	UpdatedAt: string
 	WebsitePage_id: number
 	Translations: number
-	WebsitePage: {
-		Id: number
-		slug: string
-	}
+	WebsitePage: Record<{ slug: string }>
 }
 
-export interface TranslationRecord {
-	Id: number
+export type TranslationRecord = Record<TranslationFields>
+
+export interface TranslationFields {
 	Language: string
 	Status: string
 	Value: string
 	CreatedAt: string
 	UpdatedAt: string
 	PageField_id: number
-	PageField: {
-		Id: number
-		Key: string
-	}
+	PageField: Record<{ Key: string }>
 }

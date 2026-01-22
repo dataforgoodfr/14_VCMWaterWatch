@@ -1,9 +1,9 @@
-import { MetaTable, TableName } from '@/types/apiTypes'
-import { FetchResponse, instance } from './instance'
+import { MetaTable, TableTitle } from '@/types/apiTypes'
+import { FetchResponseMeta, instance } from './instance'
 
 export interface TableMapping {
 	id: string
-	table_name: string
+	title: string
 }
 
 // Server-side cache - persists for the lifetime of the server process
@@ -22,7 +22,7 @@ export async function fetchMetaTables(forceRefresh = false): Promise<TableMappin
 			return tableCache
 		}
 
-		const metaTablesResponse = await instance.get<FetchResponse<MetaTable>>(
+		const metaTablesResponse = await instance.get<FetchResponseMeta<MetaTable>>(
 			`/meta/bases/${process.env.NOCODB_BASE_ID}/tables`
 		)
 
@@ -34,10 +34,10 @@ export async function fetchMetaTables(forceRefresh = false): Promise<TableMappin
 
 		// Transform and cache the table mappings
 		tableCache = metaTablesData.list
-			.filter((table): table is MetaTable & { table_name: string } => Boolean(table.table_name))
+			.filter((table): table is MetaTable & { title: string } => Boolean(table.title))
 			.map(table => ({
 				id: table.id,
-				table_name: table.table_name
+				title: table.title
 			}))
 
 		cacheTimestamp = Date.now()
@@ -56,9 +56,9 @@ export async function fetchMetaTables(forceRefresh = false): Promise<TableMappin
 	}
 }
 
-export async function getTableIdByName(tableName: TableName, forceRefresh = false): Promise<string | null> {
+export async function getTableIdByName(tableTitle: TableTitle, forceRefresh = false): Promise<string | null> {
 	const tables = await fetchMetaTables(forceRefresh)
-	const table = tables.find(t => t.table_name === tableName)
+	const table = tables.find(t => t.title === tableTitle)
 
 	return table?.id ?? null
 }
