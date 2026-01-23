@@ -15,6 +15,6 @@ repos:
     hooks:
       - id: lint-staged-webapp
         name: Run lint-staged on webapp staged files
-        entry: bash run-lint-staged-if-webapp.sh
+        files: ^webapp/
+        entry: sh -c "cd webapp && npx lint-staged --no-stash"
         language: system
-        pass_filenames: false # This hook handles filenames internally
