@@ -26,7 +26,9 @@ export default async function Blog({ blogCards, locale }: { blogCards: BlogPostR
 						<Card className='pt-0 shadow-none max-lg:last:col-span-full' key={item.fields.Slug}>
 							<CardContent className='px-0'>
 								<div className='relative aspect-video h-60 w-full overflow-hidden rounded-t-xl'>
-									<Image src={item.fields.Image[0].signedUrl} alt={item.fields.Alt} fill className='object-cover' />
+									{item.fields.Image[0].signedUrl && (
+										<Image src={item.fields.Image[0].signedUrl} alt={item.fields.Alt} fill className='object-cover' />
+									)}
 								</div>
 							</CardContent>
 							<CardHeader className='mb-2 gap-3'>
