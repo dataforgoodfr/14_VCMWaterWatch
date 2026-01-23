@@ -7,7 +7,8 @@ Créer une plateforme collaborative et scientifique pour cartographier et analys
 ## Stack Components
 
  - NocoDB = database frontend
- - 
+ - Next.js = web frontend
+ - Python with Prefect and Polars = data transformation scripts
 
 ## Local Development Environment
 

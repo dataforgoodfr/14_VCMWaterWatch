@@ -2,7 +2,7 @@
 name = "14_vcm_water_watch"
 version = "0.1.0"
 description = "Prefect workflows for VCM Water Watch"
-requires-python = ">=3.12"
+requires-python = "~=3.12.0"
 dependencies = [
     "prefect>=3.6.6",
     "polars>=1.22.0",
