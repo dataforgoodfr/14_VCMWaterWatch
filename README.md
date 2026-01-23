@@ -33,7 +33,7 @@ This will install:
  - a default configuration in .env, pointing to the local instance
 
 Then, it will start the local nocodb instance (see [nocodb](docs/nocodb.md)).
-You can access it at `http://localhost:8500` - use username "dev@vcmwatch.eu".
+You can access it at `http://localhost:8500` - use username "dev@vcmwatch.eu", ask tech leads for password.
 
 To reset the environment:
 
