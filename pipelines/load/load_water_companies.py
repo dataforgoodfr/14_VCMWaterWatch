@@ -11,8 +11,8 @@ from prefect import flow, get_run_logger, task
 from prefect.cache_policies import NO_CACHE
 import polars as pl
 
-from pipelines.common import services
-from pipelines.common.db_helper import DatabaseHelper
+from ..common import services
+from ..common.db_helper import DatabaseHelper
 
 
 @task(name="load_water_companies", cache_policy=NO_CACHE)
@@ -99,4 +99,11 @@ def load_water_companies(data_path: Path):
 
 
 if __name__ == "__main__":
-    load_water_companies(data_path=Path("data/staging"))
+    import sys
+
+    if len(sys.argv) < 2:
+        print("Usage: python load_water_companies.py <data_directory>")
+        sys.exit(1)
+
+    data_directory = Path(sys.argv[1])
+    load_water_companies(data_path=data_directory)

@@ -1,0 +1,8 @@
+services: 
+  nocodb: 
+    image: "nocodb/nocodb:0.301.1"
+    ports: 
+      - "8500:8080"
+    restart: always
+    volumes: 
+      - "./data/nocodb:/usr/app/data"

@@ -12,7 +12,7 @@ import polars as pl
 from prefect import flow, get_run_logger, task
 from prefect.cache_policies import INPUTS
 
-from pipelines.common import services
+from ..common import services
 
 
 @dataclass

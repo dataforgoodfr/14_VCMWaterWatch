@@ -4,15 +4,18 @@ _default:
   @echo "Run 'just <recipe>' to execute a task."
 
 # install environment and pre-commit hooks
-install:
-	uv sync
-	pre-commit install
+setup:
+  uv sync
+  pre-commit install
+  ./tools/init_nocodb.sh
+  docker compose up -d
 
-# run tests for the Python pipelines
-pipelines-test:
-	uv run pytest pipelines
+clean:
+  docker compose down
+  rm -f data/nocodb/noco.db
 
-mod extract 'pipelines/extract'
-mod transform 'pipelines/transform'
-mod load 'pipelines/load'
-mod task 'pipelines/tasks'
+reset: clean setup
+  just setup
+
+# All the python tasks
+mod pipelines 'pipelines'
