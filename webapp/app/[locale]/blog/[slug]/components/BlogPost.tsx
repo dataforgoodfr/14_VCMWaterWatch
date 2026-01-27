@@ -40,7 +40,7 @@ const Blogpost = ({ post, className }: BlogpostProps) => {
 							<span className='ml-1'>on {format(CreatedDate, 'MMMM d, yyyy')}</span>
 						</span>
 					</div>
-					{Image[0].signedUrl && (
+					{Image.length > 0 && Image[0].signedUrl && (
 						<NextImage
 							src={Image[0].signedUrl}
 							alt={Subtitle}
