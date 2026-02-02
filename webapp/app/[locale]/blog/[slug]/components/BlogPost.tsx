@@ -40,13 +40,15 @@ const Blogpost = ({ post, className }: BlogpostProps) => {
 							<span className='ml-1'>on {format(CreatedDate, 'MMMM d, yyyy')}</span>
 						</span>
 					</div>
-					<NextImage
-						src={Image[0].signedUrl}
-						alt={Subtitle}
-						width={1200}
-						height={675}
-						className='mt-4 mb-8 aspect-video w-full rounded-lg border object-cover'
-					/>
+					{Image.length > 0 && Image[0].signedUrl && (
+						<NextImage
+							src={Image[0].signedUrl}
+							alt={Subtitle}
+							width={1200}
+							height={675}
+							className='mt-4 mb-8 aspect-video w-full rounded-lg border object-cover'
+						/>
+					)}
 				</div>
 
 				<div className='dark:prose-invert mx-auto max-w-5xl'>
