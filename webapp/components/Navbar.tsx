@@ -53,6 +53,10 @@ const Navbar = ({
 	menu = [
 		{ title: 'Home', url: ROUTES.HOME },
 		{
+			title: 'Interactive map',
+			url: `${SUB_PAGES.MAP}`
+		},
+		{
 			title: 'VCM Pollution History',
 			url: `${ROUTES.PAGE}/${SUB_PAGES.VCM_POLLUTION_HISTORY}`
 		},
