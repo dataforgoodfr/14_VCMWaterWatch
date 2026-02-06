@@ -8,7 +8,7 @@ acceptLanguage.languages(languages)
 
 export const config = {
 	// Avoid matching for static files, API routes, etc.
-	matcher: ['/((?!api|_next/static|_next/image|assets|public|favicon.ico).*)']
+	matcher: ['/((?!api|_next/static|_next/image|assets|public|favicon.ico|pmtiles).*)']
 }
 
 export function proxy(req: NextRequest) {
