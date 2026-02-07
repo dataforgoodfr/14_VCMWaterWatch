@@ -103,3 +103,46 @@ export interface TranslationFields {
 	PageField_id: number
 	PageField: Record<{ Key: string }>
 }
+
+export type DistributionZoneRecord = Record<DistributionZoneFields>
+
+export type Country = Record<{ Name: string }>
+
+// GeoJSON structure  for the MultiPolygon
+export interface GeoJSONMultiPolygon {
+	type: 'MultiPolygon'
+	coordinates: number[][][][]
+}
+
+// GeoJSON structure  for the Polygon
+export interface GeoJSONPolygon {
+	type: 'Polygon'
+	coordinates: number[][][]
+}
+
+export type GeoGeometry = GeoJSONPolygon | GeoJSONMultiPolygon
+
+export interface DistributionZoneFields {
+	Name: string
+	Code: string
+	// Note: The geometry arrives as a JSON string which must be parsed with JSON.parse() to obtain a GeoJSONMultiPolygon or GeoJSONPolygon
+	Geometry: string
+	'PVC Level': string | null
+	'VCM Level': string | null
+	CreatedAt: string
+	UpdatedAt: string
+	Country_id: number
+	Municipalities: number
+	Actors: number
+	Interactions: number
+	Analyses: number
+	Country: Country
+	ActorName: string[]
+	ActorEmail: string[]
+	'Municipality Geometries': string[]
+}
+export interface DistributionZoneGeoLimitedFields {
+	Name: string
+	Country: Country
+}
+export type DistributionZoneGeoLimitedRecord = Record<DistributionZoneGeoLimitedFields>
