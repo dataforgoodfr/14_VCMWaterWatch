@@ -1,44 +1,46 @@
-export DATA_DIR := "../data"
+set working-directory := ".."
+
+export DATA_DIR := "data"
 
 _default:
-  @just --list
+  @just --list pipelines
   @echo ""
   @echo "Run 'just <recipe>' to execute a task."
 
 # Download municipalities data and process it into GeoJSON.
 extract-municipalities:
-  uv run python -m extract.download_municipalities
+  uv run python -m pipelines.extract.download_municipalities
 
 # Download data from DE Wasserportal API.  Municipality data must be downloaded first.
 # This will take several hours to complete and should not be run regularly so as to avoid hitting the API.
 extract-de-wasserportal:
-  uv run python -m extract.de_wasserportal
+  uv run python -m pipelines.extract.de_wasserportal
 
 # Convert downloaded GeoJSON files to the staging format.
 transform-geojson:
-  uv run python -m transform.geojson
+  uv run python -m pipelines.transform.geojson ${DATA_DIR}
 
 # Prepare distribution zones from water company data.
 transform-create-distribution-zones:
-  uv run python -m transform.create_distribution_zones
+  uv run python -m pipelines.transform.create_distribution_zones ${DATA_DIR}
 
 # Load all zone data into NocoDB.
 load-zones-country:
-  uv run python -m load.load_zones Country ${DATA_DIR}/staging
+  uv run python -m pipelines.load.load_zones Country ${DATA_DIR}/staging
 
 load-zones-municipality:
-  uv run python -m load.load_zones Municipality ${DATA_DIR}/staging
+  uv run python -m pipelines.load.load_zones Municipality ${DATA_DIR}/staging
 
 load-zones-distribution:
-  uv run python -m load.load_zones DistributionZone ${DATA_DIR}/staging
+  uv run python -m pipelines.load.load_zones DistributionZone ${DATA_DIR}/staging
 
 load-zones:
   @just load-zones-country
   @just load-zones-municipality
-  @just load-zones-distribution-zone
+  @just load-zones-distribution
 
 load-water-companies:
-  uv run python -m load.load_water_companies
+  uv run python -m pipelines.load.load_water_companies ${DATA_DIR}/staging
 
 # Load all data from staging to NocoDB
 load-all:
@@ -47,7 +49,7 @@ load-all:
 
 # Check NocoDB for zones missing geometry and calculate them
 tasks-calculate-missing-distribution-zone:
-  uv run python -m tasks.calculate_distribution_zone
+  uv run python -m pipelines.tasks.calculate_distribution_zone
 
 test:
   uv run pytest

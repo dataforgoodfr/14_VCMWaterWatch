@@ -1,5 +1,5 @@
 """Example usage of DatabaseHelper for NocoDB operations."""
-from .db_helper import DatabaseHelper
+from pipelines.common.db_helper import DatabaseHelper
 import polars as pl
 
 # Example 1: Initialize with API token

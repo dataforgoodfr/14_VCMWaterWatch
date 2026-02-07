@@ -8,7 +8,7 @@ import polars as pl
 from prefect import flow, get_run_logger, task
 from prefect.cache_policies import NO_CACHE
 
-from .config import LEVEL_CONFIGS, LevelConfig, EUROPEAN_COUNTRIES
+from pipelines.transform.config import LEVEL_CONFIGS, LevelConfig, EUROPEAN_COUNTRIES
 
 
 @task(name="transform_geojson", cache_policy=NO_CACHE)

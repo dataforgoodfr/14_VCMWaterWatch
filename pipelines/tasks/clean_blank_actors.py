@@ -1,5 +1,5 @@
 import polars as pl
-from ..common import services
+from pipelines.common import services
 from prefect import flow
 
 

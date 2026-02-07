@@ -8,7 +8,7 @@ from prefect import flow, get_run_logger, task
 from prefect.cache_policies import NO_CACHE
 from shapely import unary_union
 from shapely.geometry import shape
-from ..common import services
+from pipelines.common import services
 import polars as pl
 
 
