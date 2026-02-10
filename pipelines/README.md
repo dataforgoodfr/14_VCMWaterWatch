@@ -28,6 +28,11 @@ The justfile recipes from the top of the repo will do that automatically.
 Credentials are configured in the file `.env` at the root of this repository.
 Copy from .env.example and update with actual values.
 
+## Unit tests
+
+Run `just pipelines test` from the root of the repo.
+Unit tests will automatically run (via pre-commit) when committing files in the `pipelines/` folder.
+
 ## Running an import task
 
 To start a workflow for an import task, use the `just` command at the root of the repository.
