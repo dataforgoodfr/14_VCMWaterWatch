@@ -1,9 +1,21 @@
 """
 Prefect workflow for loading water companies from the staging area.
 
+(data/staging/WaterCompany*.ndjson)
+
 Water companies are linked to the previously created distribution zones, by looking for a
 distribution zone with the Water Company name as code prefix.
 This should run after all zone data has been loaded.
+
+Expected input fields:
+
+ - CountryCode (required)
+ - Name (required)
+ - Phone
+ - Email
+ - Website
+ - Description
+ - Source
 """
 
 from pathlib import Path
@@ -11,8 +23,8 @@ from prefect import flow, get_run_logger, task
 from prefect.cache_policies import NO_CACHE
 import polars as pl
 
-from ..common import services
-from ..common.db_helper import DatabaseHelper
+from pipelines.common import services
+from pipelines.common.db_helper import DatabaseHelper
 
 
 @task(name="load_water_companies", cache_policy=NO_CACHE)

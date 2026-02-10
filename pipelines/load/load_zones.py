@@ -4,6 +4,14 @@ Load data into the zone tables: Country, DistributionZone, Municipality.
 Countries are loaded first as they have no parent.
 Municipalities are linked to the countries as parent.
 Distribution zones are linked to the countries as parent, and also have municipalities as children.
+
+
+Expected input fields:
+
+ - Code
+ - Name
+ - CountryCode (for DistributionZone and Municipality levels)
+ - Municipalities (for DistributionZone level)
 """
 
 from dataclasses import dataclass, field
@@ -12,7 +20,7 @@ import polars as pl
 from prefect import flow, get_run_logger, task
 from prefect.cache_policies import INPUTS
 
-from ..common import services
+from pipelines.common import services
 
 
 @dataclass
