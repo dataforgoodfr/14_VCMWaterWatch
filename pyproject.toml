@@ -13,6 +13,7 @@ dependencies = [
     "pyogrio>=0.12.1",
     "fiona>=1.10.1",
     "geopandas>=1.1.1",
+    "tippecanoe>=2.72.0",
 ]
 
 [tool.pytest.ini_options]
