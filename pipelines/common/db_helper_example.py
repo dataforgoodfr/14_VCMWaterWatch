@@ -2,9 +2,13 @@
 from pipelines.common.db_helper import DatabaseHelper
 import polars as pl
 
-# Example 1: Initialize with API token
-# The base URL and table IDs are automatically loaded from nocodb_swagger.json
-db = DatabaseHelper(api_token="your_token_here")
+# Example 1: Initialize with API token, base URL and base ID
+# Table IDs and link field IDs are fetched from the NocoDB meta API at startup
+db = DatabaseHelper(
+    api_token="your_token_here",
+    base_url="https://noco.services.dataforgood.fr",
+    base_id="pqc6cnm5mpnr9ka",
+)
 
 # Example 2: Load specific fields from a table
 zones_df = db.load_fields(
@@ -36,8 +40,6 @@ new_zones = pl.DataFrame({
 })
 db.insert_records(new_zones, "Zone")
 
-# Available tables (loaded dynamically from swagger):
+# Available tables (loaded dynamically from meta API):
 # Run this to see what tables are available:
 print(f"Available tables: {list(db.table_ids.keys())}")
-
-
