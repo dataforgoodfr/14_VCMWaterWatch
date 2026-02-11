@@ -42,6 +42,35 @@ To reset the environment:
 just reset
 ```
 
+## Git Conventions
+
+### Branch Naming
+
+Branches follow the pattern: `<username>/<type>/<issue_number>-<description>`
+
+- `username`: short name identifying the developer (e.g., `nicg`, `juho`)
+- `type`: one of `feat`, `bug`, `task`
+- `issue_number`: GitHub issue number, when one exists
+- `description`: short kebab-case summary
+
+Examples:
+
+- `nicg/feat/21-country-pmtiles`
+- `juho/bug/prevent-bug-image-no-signed-url`
+- `nicg/task/document_conventions`
+
+### Commit Messages
+
+When a commit is linked to a GitHub issue, use: `#<issue_number> | <description>`
+
+For minor or infrastructure changes without an issue, a plain imperative description is acceptable.
+
+Examples:
+
+- `#24 | database-independant db_helper`
+- `#13 | BFF setup for distributionZones search in client component`
+- `Add github hook to run python unit tests`
+
 ## Python Data Transformations
 
 See [Pipelines Documentation](pipelines/README.md)
