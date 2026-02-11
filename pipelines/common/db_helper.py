@@ -3,111 +3,6 @@
 from typing import Dict, List, Optional, Any
 import polars as pl
 import httpx
-import json
-import re
-from pathlib import Path
-
-
-# Link field IDs extracted from swagger file
-LINK_FIELD_IDS: Dict[str, Dict[str, str]] = {
-    "Actor": {
-        "Contacts": "c33y0i580vry0b2",
-        "Country": "cyauwdp4zhgjzgw",
-        "Distribution Zones": "c07ta1ff4n2d7fv",
-        "Interactions": "c9hswu4xal8fqdv",
-        "Zones": "cl426jurhv4prp1",
-    },
-    "Analysis": {
-        "Zone": "cz3mphin1xmgz54",
-    },
-    "Attachment": {
-        "Interaction": "cg8ewp4l4cd6g81",
-    },
-    "ContactPerson": {
-        "Actor": "czhttvyt50wtc9b",
-    },
-    "Country": {
-        "Actors": "c2kwo40lxxpl9ds",
-        "Distribution Zones": "c3z8syohglc642n",
-        "Municipalities": "c7ihcbx9ux2u0m8",
-    },
-    "DistributionZone": {
-        "Actors": "cxvebklqtcljgbr",
-        "Country": "cvqrmhcm1oy4w9r",
-        "Interactions": "cdbcif735pv7jwa",
-        "Municipalities": "cixn6cop13sahwm",
-    },
-    "Interaction": {
-        "Actor": "c3myqu8izdqy4hm",
-        "Attachments": "cciu7rawwhhiw0w",
-        "Distribution Zone": "cen4auiduszs81f",
-        "Zone": "c9v7d0th7wlbuot",
-    },
-    "Municipality": {
-        "Country": "cdutxg2krgjqb2f",
-        "Distribution Zone": "c9ztov908mvso1v",
-    },
-    "Page": {
-        "PageFields": "cvd7pwauikoiwy0",
-    },
-    "PageField": {
-        "Translations": "c94yyru03b2kvz8",
-        "WebsitePage": "crnt4gjmygneti8",
-    },
-    "Translation": {
-        "PageField": "cu2ip53y4p6bj1v",
-    },
-    "Zone_OLD": {
-        "Actors": "crchwow9pqhe78o",
-        "Analysis": "cvy23o27xc6bz9n",
-        "Contains Areas": "ce19bme4uy6d5h9",
-        "Interactions": "co92u1gp84qx6qn",
-    },
-}
-
-# View name to view ID mappings extracted from swagger file
-VIEW_NAMES: Dict[str, Dict[str, str]] = {
-    "Actor": {
-        "Default view": "vw3iewh0mpimkk1f",
-    },
-    "Analysis": {
-        "Default view": "vwh0xc5evlle6nco",
-    },
-    "Attachment": {
-        "Default view": "vwiqlcw653c0xifz",
-    },
-    "ContactPerson": {
-        "Default view": "vwrvneriqexypzjm",
-    },
-    "Country": {
-        "Default view": "vwnc4xpxy25qn1g9",
-    },
-    "DistributionZone": {
-        "Default view": "vwhpk8kw4npo3d3d",
-        "Missing Geometries": "vw2o0h78effk3g7v",
-    },
-    "Interaction": {
-        "Default view": "vwaaoke3oeby9knc",
-    },
-    "Municipality": {
-        "Default view": "vwv5d0f7odzf04ql",
-    },
-    "Page": {
-        "Default view": "vwrsp9oe1hhlrspu",
-    },
-    "PageField": {
-        "Default view": "vw6ptvtcdeyrmv79",
-    },
-    "Translation": {
-        "Default view": "vwlpqskp8mxounin",
-    },
-    "Zone_OLD": {
-        "Countries": "vwqj5ccgz7x02y3i",
-        "Default view": "vw43dwdr3xswhbsv",
-        "Distribution Zones": "vw27vufl67az4v5h",
-        "Municipalities / Communes": "vw74ss2146qnca71",
-    },
-}
 
 
 class DatabaseHelper:
@@ -116,86 +11,81 @@ class DatabaseHelper:
     This class provides a simple interface to interact with NocoDB's REST API,
     allowing for reading and writing data using Polars DataFrames.
 
-    Configuration is loaded from the OpenAPI swagger file.
+    Configuration is loaded dynamically from the NocoDB meta API at startup.
     """
 
-    def __init__(self, api_token: str, swagger_path: Optional[Path] = None):
+    def __init__(self, api_token: str, base_url: str, base_id: str):
         """
         Initialize the database helper with NocoDB connection.
 
         Args:
             api_token: NocoDB API token for authentication (xc-token header)
-            swagger_path: Optional path to swagger JSON file.
-                         Defaults to nocodb_swagger.json in the same directory
+            base_url: NocoDB server URL (e.g. "https://noco.services.dataforgood.fr")
+            base_id: NocoDB base (project) ID (e.g. "pqc6cnm5mpnr9ka")
 
         Example:
-            db = DatabaseHelper(api_token="your_token_here")
+            db = DatabaseHelper(
+                api_token="your_token_here",
+                base_url="https://noco.services.dataforgood.fr",
+                base_id="pqc6cnm5mpnr9ka",
+            )
         """
-        # Load swagger file
-        swagger_file: Path
-        if swagger_path is None:
-            swagger_file = Path(__file__).parent / "nocodb_swagger.json"
-        else:
-            swagger_file = swagger_path
-
-        with open(swagger_file, "r") as f:
-            swagger = json.load(f)
-
-        # Extract base URL from servers section
-        servers = swagger.get("servers", [])
-        if not servers:
-            raise ValueError("No servers defined in swagger file")
-
-        # Get the first concrete URL (not a template)
-        self.base_url = None
-        for server in servers:
-            url = server.get("url", "")
-            if "{" not in url:  # Skip template URLs
-                self.base_url = url.rstrip("/")
-                break
-
-        if not self.base_url:
-            raise ValueError("No concrete server URL found in swagger file")
-
-        # Extract base_id and table IDs from paths
-        # Pattern for v3: /api/v3/data/{base_id}/{table_id}/records
-        self.base_id: str = ""
-        self.table_ids: Dict[str, str] = {}
-        paths = swagger.get("paths", {})
-
-        pattern = re.compile(r"/api/v3/data/([a-z0-9]+)/([a-z0-9]+)/records$")
-
-        for path, methods in paths.items():
-            match = pattern.match(path)
-            if match:
-                base_id = match.group(1)
-                table_id = match.group(2)
-
-                # Set base_id if not already set
-                if not self.base_id:
-                    self.base_id = base_id
-
-                # Get the table name from the first method's tags
-                for method in methods.values():
-                    if isinstance(method, dict) and "tags" in method:
-                        tags = method.get("tags", [])
-                        if tags:
-                            table_name = tags[0]
-                            self.table_ids[table_name] = table_id
-                            break
-
-        if not self.table_ids:
-            raise ValueError("No table IDs found in swagger file")
-
-        if not self.base_id:
-            raise ValueError("No base ID found in swagger file")
+        self.base_url = base_url.rstrip("/")
+        self.base_id = base_id
 
         # Setup HTTP client
         headers = {"Content-Type": "application/json", "xc-token": api_token}
-
         self.client = httpx.Client(
             base_url=self.base_url, headers=headers, timeout=30.0
         )
+
+        # Fetch schema from meta API
+        self.table_ids: Dict[str, str] = {}
+        self.link_field_ids: Dict[str, Dict[str, str]] = {}
+        self._fetch_schema()
+
+    def _fetch_schema(self) -> None:
+        """Fetch table IDs and link field IDs from the NocoDB meta API.
+
+        Calls:
+          1. GET /api/v3/meta/bases/{base_id}/tables  -> list of tables
+          2. GET /api/v3/meta/bases/{base_id}/tables/{table_id}  -> per-table schema
+
+        Populates:
+          - self.table_ids: {table_title: table_id}
+          - self.link_field_ids: {table_title: {link_field_title: link_field_id}}
+        """
+        # Step 1: list all tables
+        resp = self.client.get(f"/api/v3/meta/bases/{self.base_id}/tables")
+        resp.raise_for_status()
+        tables = resp.json().get("list", [])
+
+        if not tables:
+            raise ValueError(
+                f"No tables found for base '{self.base_id}'. "
+                "Check that BASE_ID is correct and the API token has access."
+            )
+
+        # Build table_ids mapping
+        for table in tables:
+            self.table_ids[table["title"]] = table["id"]
+
+        # Step 2: fetch each table's schema to extract link field IDs
+        for table_name, table_id in self.table_ids.items():
+            resp = self.client.get(
+                f"/api/v3/meta/bases/{self.base_id}/tables/{table_id}"
+            )
+            resp.raise_for_status()
+            schema = resp.json()
+
+            # Extract link fields
+            link_fields: Dict[str, str] = {}
+            for field in schema.get("fields", []):
+                if field.get("type") == "Links":
+                    link_fields[field["title"]] = field["id"]
+
+            if link_fields:
+                self.link_field_ids[table_name] = link_fields
 
     def _get_table_id(self, table_name: str) -> str:
         """
@@ -218,40 +108,6 @@ class DatabaseHelper:
             )
         return table_id
 
-    def _resolve_view_name(self, table_name: str, view_name: str) -> str:
-        """
-        Resolve a view name to its view ID for a given table.
-
-        Args:
-            table_name: Name of the table
-            view_name: Name of the view to resolve
-
-        Returns:
-            View ID corresponding to the view name
-
-        Raises:
-            ValueError: If table has no views defined or view name not found
-        """
-        if not view_name:
-            return ""
-
-        # Check if table has any views defined
-        if table_name not in VIEW_NAMES:
-            raise ValueError(
-                f"Table '{table_name}' has no views defined in swagger file. "
-                f"Tables with views: {list(VIEW_NAMES.keys())}"
-            )
-
-        # Check if view name exists for this table
-        table_views = VIEW_NAMES[table_name]
-        if view_name not in table_views:
-            raise ValueError(
-                f"View '{view_name}' not found for table '{table_name}'. "
-                f"Available views: {list(table_views.keys())}"
-            )
-
-        return table_views[view_name]
-
     def load_fields(
         self,
         table_name: str,
@@ -259,7 +115,6 @@ class DatabaseHelper:
         condition: Optional[Dict[str, Any]] = None,
         limit: int = 1000,
         offset: int = 0,
-        viewName: str = "",
     ) -> pl.DataFrame:
         """
         Load one or more fields from a NocoDB table.
@@ -271,20 +126,14 @@ class DatabaseHelper:
                       Format: {"field": "value"} creates (field,eq,value) in NocoDB
             limit: Maximum number of records to return (default: 1000, max: 1000)
             offset: Number of records to skip for pagination (default: 0)
-            viewName: Optional view name to filter records (default: "")
-                     View name will be resolved to view ID using VIEW_NAMES mapping
 
         Returns:
             Polars DataFrame with the selected fields
 
         Raises:
             httpx.HTTPError: If the API request fails
-            ValueError: If viewName is provided but not found in VIEW_NAMES
         """
         table_id = self._get_table_id(table_name)
-
-        # Resolve view name to view ID if provided
-        view_id = self._resolve_view_name(table_name, viewName)
 
         # Build query parameters
         params: Dict[str, Any] = {
@@ -297,10 +146,6 @@ class DatabaseHelper:
         if offset > 0:
             page = (offset // min(limit, 1000)) + 1
             params["page"] = page
-
-        # Add viewId parameter if view_id is provided
-        if view_id:
-            params["viewId"] = view_id
 
         # Add WHERE condition if provided
         # NocoDB format: where=(field,eq,value) or where=(field1,eq,value1)~and(field2,eq,value2)
@@ -509,7 +354,6 @@ class DatabaseHelper:
         table_name: str,
         fields: Optional[List[str]] = None,
         condition: Optional[Dict[str, Any]] = None,
-        viewName: str = "",
     ) -> pl.DataFrame:
         """
         Load all records from a table with automatic pagination.
@@ -518,14 +362,9 @@ class DatabaseHelper:
             table_name: Name of the table to query
             fields: Optional list of field names to select (if None, returns all fields)
             condition: Optional dictionary of key-value pairs for WHERE clause
-            viewName: Optional view name to filter records (default: "")
-                     View name will be resolved to view ID using VIEW_NAMES mapping
 
         Returns:
             Polars DataFrame with all matching records
-
-        Raises:
-            ValueError: If viewName is provided but not found in VIEW_NAMES
         """
         all_records = []
         offset = 0
@@ -538,7 +377,6 @@ class DatabaseHelper:
                 condition=condition,
                 limit=limit,
                 offset=offset,
-                viewName=viewName,
             )
 
             all_records.append(batch)
@@ -564,13 +402,13 @@ class DatabaseHelper:
         Args:
             df: DataFrame with 'Id' column (from insert_records()) and foreign key column
             table_name: Parent table name (e.g., "Actor")
-            link_field_name: Exact link field name from swagger (e.g., "Zones")
+            link_field_name: Exact link field name (e.g., "Zones")
             foreign_key_column: Column in df containing foreign key IDs (e.g., "Zone_id").
                               Can be either a single integer or a list of integers.
                               If a list, all IDs in the list will be linked to the record.
 
         Raises:
-            ValueError: If table_name not in LINK_FIELD_IDS
+            ValueError: If table_name not in link_field_ids
             ValueError: If link_field_name not found for table
             ValueError: If "Id" column missing from dataframe
             ValueError: If foreign_key_column missing from dataframe
@@ -585,18 +423,18 @@ class DatabaseHelper:
             actors_df = db.insert_records(actors_df, "Actor")
             db.link_records(actors_df, "Actor", "Zones", "Zone_ids")
         """
-        # Validate table exists
-        if table_name not in LINK_FIELD_IDS:
+        # Validate table exists in link_field_ids
+        if table_name not in self.link_field_ids:
             raise ValueError(
                 f"Table '{table_name}' has no link fields defined. "
-                f"Available tables: {list(LINK_FIELD_IDS.keys())}"
+                f"Available tables with links: {list(self.link_field_ids.keys())}"
             )
 
         # Validate link field exists for table
-        if link_field_name not in LINK_FIELD_IDS[table_name]:
+        if link_field_name not in self.link_field_ids[table_name]:
             raise ValueError(
                 f"Link field '{link_field_name}' not found for table '{table_name}'. "
-                f"Available link fields: {list(LINK_FIELD_IDS[table_name].keys())}"
+                f"Available link fields: {list(self.link_field_ids[table_name].keys())}"
             )
 
         # Validate dataframe has required columns
@@ -614,7 +452,7 @@ class DatabaseHelper:
 
         # Get table_id and link_field_id
         table_id = self._get_table_id(table_name)
-        link_field_id = LINK_FIELD_IDS[table_name][link_field_name]
+        link_field_id = self.link_field_ids[table_name][link_field_name]
 
         # Filter out rows where foreign key is null
         records_to_link = df.filter(pl.col(foreign_key_column).is_not_null())

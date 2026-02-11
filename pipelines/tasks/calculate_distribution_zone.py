@@ -54,9 +54,10 @@ def calculate_distribution_zone_flow():
     db_helper = services.db_helper()
     df = db_helper.load_all_records(
         table_name="DistributionZone",
-        fields=["Id", "Municipality Geometries"],
-        viewName="Missing Geometries",
+        fields=["Id", "Geometry", "Municipality Geometries"],
     )
+    # Filter to only zones missing geometry (replaces the "Missing Geometries" view)
+    df = df.filter(pl.col("Geometry").is_null())
     df = merge_municipalities_geometries_task(df)
     df = df.filter(pl.col("Geometry").is_not_null())
     update_distribution_zone_task(df, db_helper)
