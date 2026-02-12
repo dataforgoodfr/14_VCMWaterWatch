@@ -71,6 +71,9 @@ Examples:
 - `#13 | BFF setup for distributionZones search in client component`
 - `Add github hook to run python unit tests`
 
+Side note for CLI users: since `#` is the default comment character in Git, to be able to do commit
+messages in the CLI you will need to do something like `git config core.commentChar \;`
+
 ## Python Data Transformations
 
 See [Pipelines Documentation](pipelines/README.md)
