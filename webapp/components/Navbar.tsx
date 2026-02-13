@@ -1,33 +1,24 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import Image from 'next/image'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
-import { Menu } from 'lucide-react'
+import { ChevronRightIcon, Menu } from 'lucide-react'
 
+import { isActivePath, normalizePath } from '@/lib/path'
 import { cn } from '@/lib/utils'
 
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Button } from '@/components/ui/button'
-import {
-	NavigationMenu,
-	NavigationMenuContent,
-	NavigationMenuItem,
-	NavigationMenuLink,
-	NavigationMenuList,
-	NavigationMenuTrigger
-} from '@/components/ui/navigation-menu'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { ROUTES, SUB_PAGES } from '@/routes/routes'
+import { ROUTES } from '@/routes/routes'
 import LanguageDropDown from './LanguageDropDown'
 
 interface MenuItem {
 	title: string
 	url: string
-	description?: string
-	icon?: React.ReactNode
-	items?: MenuItem[]
 }
 
 interface NavbarProps {
@@ -42,174 +33,134 @@ interface NavbarProps {
 	menu?: MenuItem[]
 }
 
-// Component created from https://www.shadcnblocks.com/block/navbar1
 const Navbar = ({
 	logo = {
 		url: ROUTES.HOME,
-		src: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/shadcnblockscom-icon.svg',
-		alt: 'logo',
+		src: '/images/vcm-logo-white.svg',
+		alt: 'VCM Water Watch Logo',
 		title: 'VCM Water Watch'
 	},
 	menu = [
-		{ title: 'Home', url: ROUTES.HOME },
+		{ title: 'Accueil', url: ROUTES.HOME },
 		{
-			title: 'Interactive map',
-			url: `${SUB_PAGES.MAP}`
+			title: 'Carte interactive',
+			url: '/map'
 		},
 		{
-			title: 'VCM Pollution History',
-			url: `${ROUTES.PAGE}/${SUB_PAGES.VCM_POLLUTION_HISTORY}`
+			title: 'La pollution au CVM',
+			url: ROUTES.VCM_POLLUTION_HISTORY
 		},
 		{
-			title: 'Blog',
-			url: ROUTES.BLOG
-		}
+			title: 'Fiches pays',
+			url: ROUTES.COUNTRY
+		},
+		{ title: 'Agir', url: ROUTES.ACT },
+		{ title: 'Ressources', url: ROUTES.RESOURCES },
+		{ title: 'À propos', url: ROUTES.ABOUT }
 	],
 	className
 }: NavbarProps) => {
-	// Suppress hydration mismatch for Radix UI components
-	// They generate random IDs that differ between server and client
-	const [isClient, setIsClient] = useState(false)
+	const pathname = usePathname()
+	const normalizedPathname = useMemo(() => normalizePath(pathname ?? ROUTES.HOME), [pathname])
+	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-	useEffect(() => {
-		setIsClient(true)
-	}, [])
-
-	// Don't render interactive elements until client-side
-	// This prevents hydration mismatches from Radix UI ID generation
-	if (isClient) {
-		return (
-			<section className={cn('py-4', className)}>
-				<div className='container'>
-					{/* Desktop Menu */}
-					<nav className='hidden items-center justify-between lg:flex'>
-						<div className='flex items-center gap-6'>
-							{/* Logo */}
-							<a href={logo.url} className='flex items-center gap-2'>
-								<Image src={logo.src} height={32} width={32} className='max-h-8 dark:invert' alt={logo.alt} priority />
-								<span className='text-lg font-semibold tracking-tighter'>{logo.title}</span>
-							</a>
-							<div className='flex items-center'>
-								<NavigationMenu>
-									<NavigationMenuList>{menu.map(item => renderMenuItem(item))}</NavigationMenuList>
-								</NavigationMenu>
-							</div>
-						</div>
-						<div className='flex gap-2'>
-							<LanguageDropDown />
-						</div>
-					</nav>
-
-					{/* Mobile Menu */}
-					<div className='block lg:hidden'>
-						<div className='flex items-center justify-between'>
-							{/* Logo */}
-							<a href={logo.url} className='flex items-center gap-2'>
-								<Image src={logo.src} height={32} width={32} className='max-h-8 dark:invert' alt={logo.alt} priority />
-							</a>
-							<Sheet>
-								<SheetTrigger asChild>
-									<Button variant='outline' size='icon'>
-										<Menu className='size-4' />
-									</Button>
-								</SheetTrigger>
-								<SheetContent className='overflow-y-auto'>
-									<SheetHeader>
-										<SheetTitle>
-											<a href={logo.url} className='flex items-center gap-2'>
-												<Image
-													src={logo.src}
-													height={32}
-													width={32}
-													className='max-h-8 dark:invert'
-													alt={logo.alt}
-													priority
-												/>
-											</a>
-										</SheetTitle>
-									</SheetHeader>
-									<div className='flex flex-col gap-6 p-4'>
-										<Accordion type='single' collapsible className='flex w-full flex-col gap-4'>
-											{menu.map(item => renderMobileMenuItem(item))}
-										</Accordion>
-
-										<div className='flex flex-col gap-3'>
-											<LanguageDropDown />
-										</div>
-									</div>
-								</SheetContent>
-							</Sheet>
+	return (
+		<section className={cn('border-navy-600 bg-navy-700 flex justify-center border-b px-3', className)}>
+			<div className='container max-w-[1680px]'>
+				<nav className='hidden h-[84px] items-center justify-between lg:flex'>
+					<div className='flex items-center gap-8'>
+						<Link href={logo.url} className='flex items-center'>
+							<Image
+								src={logo.src}
+								height={52}
+								width={138}
+								className='h-[44px] w-auto'
+								alt={logo.alt}
+								priority
+								unoptimized
+							/>
+						</Link>
+						<div className='flex items-center gap-1'>
+							{menu.map(item => (
+								<Link
+									key={item.title}
+									href={item.url}
+									className={cn(
+										'hover:text-aqua-200 inline-flex h-[46px] items-center border-b-[2px] border-transparent px-3 text-[18px] font-medium text-nowrap text-white/95 transition-colors',
+										isActivePath(normalizedPathname, normalizePath(item.url)) && 'border-aqua-400 text-white'
+									)}
+								>
+									{item.title}
+								</Link>
+							))}
 						</div>
 					</div>
+					<LanguageDropDown className='hover:text-aqua-200 text-[20px] text-white/95' />
+				</nav>
+
+				<div className='block lg:hidden'>
+					<div className='flex h-[64px] items-center justify-between'>
+						<Link href={logo.url} className='flex items-center'>
+							<Image
+								src={logo.src}
+								height={52}
+								width={138}
+								className='h-[38px] w-auto'
+								alt={logo.alt}
+								priority
+								unoptimized
+							/>
+						</Link>
+						<Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+							<SheetTrigger asChild>
+								<Button variant='ghost' size='icon' className='text-white hover:bg-white/10 hover:text-white'>
+									<Menu className='size-4' />
+								</Button>
+							</SheetTrigger>
+							<SheetContent side='top' className='bg-navy-500 p-5 text-white'>
+								<SheetHeader>
+									<SheetTitle>
+										<Link href={logo.url} className='flex items-center' onClick={() => setIsMobileMenuOpen(false)}>
+											<Image
+												src={logo.src}
+												height={52}
+												width={138}
+												className='h-[38px] w-auto'
+												alt={logo.alt}
+												priority
+												unoptimized
+											/>
+										</Link>
+									</SheetTitle>
+								</SheetHeader>
+								<div className='mt-6 flex flex-col gap-2'>
+									{menu.map(item => (
+										<Link
+											key={item.title}
+											href={item.url}
+											onClick={() => setIsMobileMenuOpen(false)}
+											className={cn(
+												'flex justify-between p-3 text-base font-medium text-white/90 transition-colors hover:bg-white/10 hover:text-white',
+												isActivePath(normalizedPathname, normalizePath(item.url)) && 'bg-white/10 text-white'
+											)}
+										>
+											<span>{item.title}</span>
+											<ChevronRightIcon />
+										</Link>
+									))}
+									<div className='mt-4'>
+										<LanguageDropDown
+											className='hover:text-aqua-200 justify-start px-3 text-base text-white/95'
+											onLocaleSelected={() => setIsMobileMenuOpen(false)}
+										/>
+									</div>
+								</div>
+							</SheetContent>
+						</Sheet>
+					</div>
 				</div>
-			</section>
-		)
-	} else {
-		return null
-	}
-}
-
-const renderMenuItem = (item: MenuItem) => {
-	if (item.items) {
-		return (
-			<NavigationMenuItem key={item.title}>
-				<NavigationMenuTrigger>{item.title}</NavigationMenuTrigger>
-				<NavigationMenuContent className='bg-popover text-popover-foreground'>
-					{item.items.map(subItem => (
-						<NavigationMenuLink asChild key={subItem.title} className='w-80'>
-							<SubMenuLink item={subItem} />
-						</NavigationMenuLink>
-					))}
-				</NavigationMenuContent>
-			</NavigationMenuItem>
-		)
-	}
-
-	return (
-		<NavigationMenuItem key={item.title}>
-			<NavigationMenuLink
-				href={item.url}
-				className='group bg-background hover:bg-muted hover:text-accent-foreground inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors'
-			>
-				{item.title}
-			</NavigationMenuLink>
-		</NavigationMenuItem>
-	)
-}
-
-const renderMobileMenuItem = (item: MenuItem) => {
-	if (item.items) {
-		return (
-			<AccordionItem key={item.title} value={item.title} className='border-b-0'>
-				<AccordionTrigger className='text-md py-0 font-semibold hover:no-underline'>{item.title}</AccordionTrigger>
-				<AccordionContent className='mt-2'>
-					{item.items.map(subItem => (
-						<SubMenuLink key={subItem.title} item={subItem} />
-					))}
-				</AccordionContent>
-			</AccordionItem>
-		)
-	}
-
-	return (
-		<a key={item.title} href={item.url} className='text-md font-semibold'>
-			{item.title}
-		</a>
-	)
-}
-
-const SubMenuLink = ({ item }: { item: MenuItem }) => {
-	return (
-		<a
-			className='hover:bg-muted hover:text-accent-foreground flex min-w-80 flex-row gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none'
-			href={item.url}
-		>
-			<div className='text-foreground'>{item.icon}</div>
-			<div>
-				<div className='text-sm font-semibold'>{item.title}</div>
-				{item.description && <p className='text-muted-foreground text-sm leading-snug'>{item.description}</p>}
 			</div>
-		</a>
+		</section>
 	)
 }
 
