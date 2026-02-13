@@ -62,7 +62,7 @@ const Navbar = ({
 }: NavbarProps) => {
 	const pathname = usePathname()
 	const normalizedPathname = useMemo(() => normalizePath(pathname ?? ROUTES.HOME), [pathname])
-	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false)
 
 	return (
 		<section className={cn('border-navy-600 bg-navy-700 flex justify-center border-b px-3', className)}>
