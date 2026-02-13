@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 
 import { fetchPageDictionary } from '@/lib/fetchPageDictionary'
 import { VcmPollutionHistory } from './components/VcmPollutionHistory'
-import { SUB_PAGES } from '@/routes/routes'
+import { ROUTES } from '@/routes/routes'
 
 interface PageProps {
 	params: { slug: string; locale: string }
@@ -20,7 +20,7 @@ export default async function Page({ params }: PageProps) {
 
 	switch (slug) {
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-		case SUB_PAGES.VCM_POLLUTION_HISTORY:
+		case ROUTES.VCM_POLLUTION_HISTORY:
 			return <VcmPollutionHistory dictionary={dictionary} />
 		default:
 			notFound()

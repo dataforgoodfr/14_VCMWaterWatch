@@ -8,7 +8,7 @@ acceptLanguage.languages(languages)
 
 export const config = {
 	// Avoid matching for static files, API routes, etc.
-	matcher: ['/((?!api|_next/static|_next/image|assets|public|favicon.ico).*)']
+	matcher: ['/((?!api|_next/static|_next/image|assets|public|images|favicon.ico|.*\\..*).*)']
 }
 
 export function proxy(req: NextRequest) {
@@ -24,7 +24,9 @@ export function proxy(req: NextRequest) {
 	// Redirect if lng in path is not supported
 	if (
 		!languages.some((loc: Locale) => req.nextUrl.pathname.startsWith(`/${loc}`)) &&
-		!req.nextUrl.pathname.startsWith('/_next')
+		!req.nextUrl.pathname.startsWith('/_next') &&
+		!req.nextUrl.pathname.startsWith('/images') &&
+		!req.nextUrl.pathname.includes('.')
 	) {
 		return NextResponse.redirect(new URL(`/${lng}${req.nextUrl.pathname}`, req.url))
 	}
