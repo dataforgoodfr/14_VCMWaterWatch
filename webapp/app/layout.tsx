@@ -1,12 +1,13 @@
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Geist_Mono, Lato } from 'next/font/google'
 
 import type { Metadata } from 'next'
 import './globals.css'
 
 import { Navbar } from '@/components/Navbar'
 
-const geistSans = Geist({
-	variable: '--font-geist-sans',
+const lato = Lato({
+	variable: '--font-lato',
+	weight: ['400', '700'],
 	subsets: ['latin']
 })
 
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
 		<html>
-			<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+			<body className={`${lato.variable} ${geistMono.variable} antialiased`}>
 				<Navbar />
 				{children}
 			</body>
