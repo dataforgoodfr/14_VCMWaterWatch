@@ -1,5 +1,13 @@
 # Python Workflows
 
+## Overview
+
+ - extract workflows will download data into data/raw, or into data/staging if no further processing is necessary
+ - transform workflows will further process the data from data/raw into data/staging
+ - load workflows will load from data/staging into NocoDB
+ - tasks will manipulate the data directly in NocoDB
+ - export workflows will take data from NocoDB, process it, and generate data files in data/export
+
 ## Python Environment
 
 Install python dependencies:
