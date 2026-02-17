@@ -36,7 +36,7 @@ interface NavbarProps {
 const Navbar = ({
 	logo = {
 		url: ROUTES.HOME,
-		src: '/images/vcm-logo-white.svg',
+		src: '/images/vcm-logo-color.svg',
 		alt: 'VCM Water Watch Logo',
 		title: 'VCM Water Watch'
 	},
@@ -113,8 +113,8 @@ const Navbar = ({
 						</Link>
 						<Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
 							<SheetTrigger asChild>
-								<Button variant='ghost' size='icon' className='text-white hover:bg-white/10 hover:text-white'>
-									<Menu className='size-4' />
+								<Button variant='ghost' className='text-white hover:bg-white/10 hover:text-white'>
+									<Menu className='size-8' />
 								</Button>
 							</SheetTrigger>
 							<SheetContent side='top' className='bg-navy-500 p-5 text-white'>
