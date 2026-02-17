@@ -42,6 +42,31 @@ To reset the environment:
 just reset
 ```
 
+### Windows installation
+
+When installing uv, just and docker, even if corresponding files are added to PATH, Git Bash may not read Windows path correctly. Thus, use:
+```bash
+nano ~/.bashrc
+```
+This will open the bashrc file in which you can write:
+```bash
+export PATH="path/to/your/required/file:$PATH"
+# Example:
+# export PATH="/c/ProgramData/chocolatey/bin:$PATH"
+```
+Then press Ctrl+O to write out, Enter to save, and Ctrl+X to exit.
+These lines will not be executed when restarting the shell, so type:
+```bash
+nano ~/.bash_profile
+```
+to open the bash_profile file, where you can write:
+```bash
+if [ -f ~/.bashrc ]; then
+  . ~/.bashrc
+fi
+```
+Then press Ctrl+O to write out, Enter to save, and Ctrl+X to exit. This will indicate that if bashrc file exists it should be run and will always be executed when starting a new Bash shell.
+
 ## Git Conventions
 
 ### Branch Naming
