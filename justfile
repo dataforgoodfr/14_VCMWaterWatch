@@ -6,7 +6,7 @@ _default:
 # install environment and pre-commit hooks
 setup:
   uv sync
-  pre-commit install
+  uvx pre-commit install
   ./tools/init_nocodb.sh
   docker compose up -d
 
