@@ -1,9 +1,0 @@
-# These owners will be the default owners for everything in
-# the repo. Unless a later match takes precedence,
-# @nicocrm and @JulietteHoisnard will be requested for
-# review when someone opens a pull request.
-*       @nicocrm @JulietteHoisnard
-# @JulietteHoisnard and @aaadryyy own any file in the `/webapp`
-# directory in the root of the repository and any of its
-# subdirectories.
-/webapp/ @JulietteHoisnard @aaadryyy
