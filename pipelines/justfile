@@ -51,5 +51,9 @@ load-all:
 tasks-calculate-missing-distribution-zone:
   uv run python -m pipelines.tasks.calculate_distribution_zone
 
+# Export zone data from NocoDB to PMTiles
+export-pmtiles:
+  uv run python -m pipelines.export.export_pmtiles
+
 test:
   uv run pytest
