@@ -157,8 +157,12 @@ class DatabaseHelper:
         endpoint = f"/api/v3/data/{self.base_id}/{table_id}/records"
         response = self.client.get(endpoint, params=params)
         if response.status_code == 422:
-            raise ValueError(f"Failed to load fields: {response.json()}")
-        response.raise_for_status()
+            err_payload = response.json()
+            # in case we have exactly N * Limit records
+            if err_payload["error"] != "ERR_INVALID_OFFSET_VALUE":
+                raise ValueError(f"Failed to load fields: {response.json()}")
+        else:
+            response.raise_for_status()
 
         data = response.json()
         records = data.get("records", [])
@@ -387,7 +391,7 @@ class DatabaseHelper:
 
             offset += limit
 
-        return pl.concat(all_records)
+        return pl.concat(all_records, how="diagonal")
 
     def link_records(
         self,
