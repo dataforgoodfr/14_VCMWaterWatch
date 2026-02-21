@@ -85,14 +85,15 @@ def lookup_parent_task(df: pl.DataFrame, level_config: LevelConfig) -> pl.DataFr
     Records without a parent are not included in the result.
 
     Returns:
-        DataFrame with (parent_field) column added (parent ID)
+        DataFrame with parent column added as nested object (e.g. Country: {Id: 1})
     """
     parent_level = level_config.parent_level
     if not parent_level:
         return df
-    parent_field_db = f"{parent_level}_id"
-    parent_df = load_existing_data(table_name=parent_level).rename(
-        {"Id": parent_field_db}
+    parent_df = (
+        load_existing_data(table_name=parent_level)
+        .with_columns(pl.struct(Id=pl.col("Id")).alias(parent_level))
+        .select(["Code", parent_level])
     )
     parent_field_df = f"{parent_level}Code"
     return df.join(parent_df, left_on=parent_field_df, right_on="Code", how="inner")
