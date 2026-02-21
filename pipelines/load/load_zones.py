@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 import polars as pl
 from prefect import flow, get_run_logger, task
-from prefect.cache_policies import INPUTS
+from prefect.cache_policies import INPUTS, NO_CACHE
 
 from pipelines.common import services
 
@@ -99,7 +99,7 @@ def lookup_parent_task(df: pl.DataFrame, level_config: LevelConfig) -> pl.DataFr
     return df.join(parent_df, left_on=parent_field_df, right_on="Code", how="inner")
 
 
-@task(name="load_to_database", cache_policy=INPUTS)
+@task(name="load_to_database", cache_policy=NO_CACHE)
 def insert_records_task(df: pl.DataFrame, table_name: str) -> pl.DataFrame:
     """
     Load the final DataFrame into the database.
