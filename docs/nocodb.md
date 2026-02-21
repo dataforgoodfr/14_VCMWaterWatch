@@ -41,6 +41,11 @@ To re-run the full export/import:
 
 Note, the import process is not optimized and will take a few hours.
 
+## Staging NocoDB
+
+We have a database `14_VCM Staging` that can be used for testing.  It will be occasionally refreshed
+from production.  The URL is the same as production, only the `BASE_ID` will be different.
+
 ## API
 
 To access the database we use the [REST API](https://nocodb.com/docs/product-docs/developer-resources/rest-apis)
