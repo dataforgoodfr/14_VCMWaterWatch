@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 import polars as pl
 from prefect import flow, get_run_logger, task
-from prefect.cache_policies import INPUTS
+from prefect.cache_policies import INPUTS, NO_CACHE
 
 from pipelines.common import services
 
@@ -85,20 +85,21 @@ def lookup_parent_task(df: pl.DataFrame, level_config: LevelConfig) -> pl.DataFr
     Records without a parent are not included in the result.
 
     Returns:
-        DataFrame with (parent_field) column added (parent ID)
+        DataFrame with parent column added as nested object (e.g. Country: {Id: 1})
     """
     parent_level = level_config.parent_level
     if not parent_level:
         return df
-    parent_field_db = f"{parent_level}_id"
-    parent_df = load_existing_data(table_name=parent_level).rename(
-        {"Id": parent_field_db}
+    parent_df = (
+        load_existing_data(table_name=parent_level)
+        .with_columns(pl.struct(Id=pl.col("Id")).alias(parent_level))
+        .select(["Code", parent_level])
     )
     parent_field_df = f"{parent_level}Code"
     return df.join(parent_df, left_on=parent_field_df, right_on="Code", how="inner")
 
 
-@task(name="load_to_database", cache_policy=INPUTS)
+@task(name="load_to_database", cache_policy=NO_CACHE)
 def insert_records_task(df: pl.DataFrame, table_name: str) -> pl.DataFrame:
     """
     Load the final DataFrame into the database.
