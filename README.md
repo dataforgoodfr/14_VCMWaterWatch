@@ -67,6 +67,11 @@ fi
 ```
 Then press Ctrl+O to write out, Enter to save, and Ctrl+X to exit. This will indicate that if bashrc file exists it should be run and will always be executed when starting a new Bash shell.
 
+## Deployment
+
+Pushes to the main branch will be deployed automatically using [Coolify](https://coolify.services.d4g.fr/).
+The service is accessible at [vcmwaterwatch.services.d4g.fr](https://vcmwaterwatch.services.d4g.fr).
+
 ## Git Conventions
 
 ### Branch Naming
