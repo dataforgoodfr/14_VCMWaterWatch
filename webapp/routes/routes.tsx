@@ -6,6 +6,6 @@ export enum ROUTES {
 	RESOURCES = '/resources',
 	ABOUT = '/about',
 	BLOG = '/blog',
-	MAP = 'map',
-	VCM_POLLUTION_HISTORY = 'vcm-pollution-history'
+	MAP = '/map',
+	VCM_POLLUTION_HISTORY = '/vcm-pollution-history'
 }
