@@ -1,13 +1,20 @@
-import { Geist_Mono, Lato } from 'next/font/google'
+import { Geist_Mono, Lato, Lexend } from 'next/font/google'
 
 import type { Metadata } from 'next'
 import './globals.css'
 
 import { Navbar } from '@/components/Navbar'
+import { Footer } from '@/components/Footer'
 
 const lato = Lato({
 	variable: '--font-lato',
 	weight: ['400', '700'],
+	subsets: ['latin']
+})
+
+const lexend = Lexend({
+	variable: '--font-lexend',
+	weight: ['400', '500', '600', '700'],
 	subsets: ['latin']
 })
 
@@ -24,9 +31,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
 		<html>
-			<body className={`${lato.variable} ${geistMono.variable} antialiased`}>
+			<body className={`${lato.variable} ${lexend.variable} ${geistMono.variable} h-full antialiased`}>
 				<Navbar />
 				{children}
+				<Footer />
 			</body>
 		</html>
 	)
