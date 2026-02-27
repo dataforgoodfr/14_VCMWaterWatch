@@ -1,7 +1,7 @@
 services:
   webapp:
     build:
-      context: ..
+      context: .
       dockerfile: deploy/Dockerfile
       args:
         - NOCODB_BASE_ID=${NOCODB_BASE_ID}
