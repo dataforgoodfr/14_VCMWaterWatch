@@ -11,7 +11,6 @@ dependencies = [
     "pytest>=8.0.0",
     "pytest-cov>=4.1.0",
     "pyogrio>=0.12.1",
-    "fiona>=1.10.1",
     "geopandas>=1.1.1",
     "tippecanoe>=2.72.0",
 ]

@@ -23,7 +23,7 @@ To re-run the full export/import:
  * run the export (replace xxxx with API token):
 
     NOCODB_URL=https://noco.services.dataforgood.fr \
-    BASE_ID=pqc6cnm5mpnr9ka \
+    NOCODB_BASE_ID=pqc6cnm5mpnr9ka \
     OUTPUT_FILE=vcm_data.json \
     NOCODB_TOKEN=xxxx \
     uv run python nocodb_full_export.py
@@ -44,7 +44,7 @@ Note, the import process is not optimized and will take a few hours.
 ## Staging NocoDB
 
 We have a database `14_VCM Staging` that can be used for testing.  It will be occasionally refreshed
-from production.  The URL is the same as production, only the `BASE_ID` will be different.
+from production.  The URL is the same as production, only the `NOCODB_BASE_ID` will be different.
 
 ## API
 
