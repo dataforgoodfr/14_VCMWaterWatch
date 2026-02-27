@@ -63,7 +63,7 @@ class DatabaseHelper:
         if not tables:
             raise ValueError(
                 f"No tables found for base '{self.base_id}'. "
-                "Check that BASE_ID is correct and the API token has access."
+                "Check that NOCODB_BASE_ID is correct and the API token has access."
             )
 
         # Build table_ids mapping
