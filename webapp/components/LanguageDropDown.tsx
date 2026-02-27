@@ -1,5 +1,7 @@
 'use client'
 
+import { Suspense } from 'react'
+
 import { useRouter } from 'next/navigation'
 import { usePathname, useSearchParams } from 'next/navigation'
 
@@ -32,7 +34,7 @@ const localeFlags: Record<string, string> = {
 	fr: '🇫🇷'
 }
 
-export default function LanguageDropDown({ className, onLocaleSelected }: LanguageDropDownProps) {
+function LanguageDropDownInner({ className, onLocaleSelected }: LanguageDropDownProps) {
 	const router = useRouter()
 	const pathname = usePathname()
 	const locale = useLocale()
@@ -97,5 +99,13 @@ export default function LanguageDropDown({ className, onLocaleSelected }: Langua
 				</DropdownMenuRadioGroup>
 			</DropdownMenuContent>
 		</DropdownMenu>
+	)
+}
+
+export default function LanguageDropDown(props: LanguageDropDownProps) {
+	return (
+		<Suspense>
+			<LanguageDropDownInner {...props} />
+		</Suspense>
 	)
 }
