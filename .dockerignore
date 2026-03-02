@@ -1,0 +1,8 @@
+webapp/node_modules
+webapp/.next
+.env*
+*.md
+data/
+!data/export
+docs/
+.git
