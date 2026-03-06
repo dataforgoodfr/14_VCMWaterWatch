@@ -42,6 +42,11 @@ load-zones:
 load-water-companies:
   uv run python -m pipelines.load.load_water_companies ${DATA_DIR}/staging
 
+# Import water companies from NocoDB staging table (Water Company Import).
+# Requires Country and Municipality data to be loaded first.
+import-water-companies-from-staging:
+  uv run python -m pipelines.load.import_water_companies_from_staging ${DATA_DIR}
+
 # Load all data from staging to NocoDB
 load-all:
   @just load-zones

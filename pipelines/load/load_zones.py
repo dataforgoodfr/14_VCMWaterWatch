@@ -205,7 +205,22 @@ def load_zones_flow(level: str, data_directory: Path) -> None:
     # so that we can create new links without having to re-insert the data
     df = filter_existing_data(df_source, level_config.table_name)
     df = lookup_parent_task(df, level_config)
-    df = insert_records_task(df, level_config.table_name)
+    # Exclude child link columns from insert - they contain codes, not IDs.
+    # Links are created separately via link_children_task.
+    if level_config.child_level:
+        child_field_names = list(level_config.child_level.values())
+        df_insert = df.drop(child_field_names)
+    else:
+        df_insert = df
+    df = insert_records_task(df_insert, level_config.table_name)
+    # Restore child columns for link_children (need codes for lookup)
+    if level_config.child_level:
+        child_field_names = list(level_config.child_level.values())
+        df = df.join(
+            df_source.select(["Code"] + child_field_names),
+            on="Code",
+            how="left",
+        )
     if level_config.child_level:
         for child_level, child_field_name in level_config.child_level.items():
             df_links = lookup_children_task(df, child_level, child_field_name)
