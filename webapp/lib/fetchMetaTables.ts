@@ -18,13 +18,20 @@ const CACHE_DURATION_MS = 5 * 60 * 1000 // 5 minutes
  */
 export async function fetchMetaTables(forceRefresh = false): Promise<TableMapping[]> {
 	try {
+		const baseId = process.env.NOCODB_BASE_ID
+		const baseUrl = process.env.NOCODB_URL
+
+		if (!baseId || !baseUrl) {
+			throw new Error(
+				'NocoDB non configuré. Créez .env.local avec NOCODB_BASE_ID, NOCODB_URL et NOCODB_TOKEN (voir .env.example).'
+			)
+		}
+
 		if (!forceRefresh && tableCache && cacheTimestamp && Date.now() - cacheTimestamp < CACHE_DURATION_MS) {
 			return tableCache
 		}
 
-		const metaTablesResponse = await instance.get<FetchResponseMeta<MetaTable>>(
-			`/meta/bases/${process.env.NOCODB_BASE_ID}/tables`
-		)
+		const metaTablesResponse = await instance.get<FetchResponseMeta<MetaTable>>(`/meta/bases/${baseId}/tables`)
 
 		if (metaTablesResponse.status !== 200) {
 			throw new Error(`Failed to fetch meta tables: ${metaTablesResponse.statusText}`)
