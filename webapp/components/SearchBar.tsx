@@ -42,12 +42,15 @@ export function SearchBar() {
 			>
 				<Field orientation='horizontal'>
 					<Input
+						disabled
 						type='search'
 						placeholder='Search...'
 						value={query}
 						onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
 					/>
-					<Button type='submit'>Search</Button>
+					<Button type='submit' disabled>
+						Search
+					</Button>
 				</Field>
 			</form>
 			<ul className='mt-4'>

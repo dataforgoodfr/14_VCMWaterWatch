@@ -146,3 +146,22 @@ export interface DistributionZoneGeoLimitedFields {
 	Country: Country
 }
 export type DistributionZoneGeoLimitedRecord = Record<DistributionZoneGeoLimitedFields>
+
+export interface DistributionZoneMapFields {
+	Name: string
+	Code: string
+	Geometry: string
+	'PVC Level': string | null
+	'VCM Level': string | null
+	Country: Country
+}
+export type DistributionZoneMapRecord = Record<DistributionZoneMapFields>
+
+export interface CountryMapFields {
+	Name: string
+	Code: string
+	Geometry: string
+	'PVC Level'?: string | null
+	'VCM Level'?: string | null
+}
+export type CountryMapRecord = Record<CountryMapFields>

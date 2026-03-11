@@ -1,10 +1,8 @@
-import { SearchBar } from '@/components/SearchBar'
+import { MapView } from '@/components/MapView'
+import { fetchMapData } from '@/lib/map/mapData'
 
-export default function Map() {
-	return (
-		<>
-			<div> Map Page</div>
-			<SearchBar />
-		</>
-	)
+export default async function MapPage() {
+	const data = await fetchMapData()
+
+	return <MapView initialData={data} />
 }
