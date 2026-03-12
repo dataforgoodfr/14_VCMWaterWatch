@@ -92,7 +92,7 @@ class TestDatabaseHelperInitialization:
 
     def test_initialization_sets_base_url_and_id(self):
         db = _make_db_helper()
-        assert db.base_url == "https://test.example.com"
+        assert db.base_url == "https://test.example.com/api/v3"
         assert db.base_id == "test_base_id"
 
     def test_table_ids_populated(self):
@@ -134,7 +134,7 @@ class TestDatabaseHelperInitialization:
             )
 
             MockClient.assert_called_once_with(
-                base_url="https://noco.example.com",
+                base_url="https://noco.example.com/api/v3",
                 headers={
                     "Content-Type": "application/json",
                     "xc-token": "my_secret_token",
@@ -163,6 +163,29 @@ class TestDatabaseHelperInitialization:
         db = _make_db_helper()
         # base_url should not end with /
         assert not db.base_url.endswith("/")
+
+    def test_url_with_api_v3_suffix_not_doubled(self):
+        """When base_url already ends with /api/v3, do not append it again."""
+        with patch("httpx.Client") as MockClient:
+            mock_client = Mock()
+            MockClient.return_value = mock_client
+            mock_client.get = Mock(side_effect=_mock_meta_get)
+
+            db = DatabaseHelper(
+                api_token="tok",
+                base_url="https://noco.example.com/api/v3",
+                base_id="test_base_id",
+            )
+
+            assert db.base_url == "https://noco.example.com/api/v3"
+            MockClient.assert_called_once_with(
+                base_url="https://noco.example.com/api/v3",
+                headers={
+                    "Content-Type": "application/json",
+                    "xc-token": "tok",
+                },
+                timeout=30.0,
+            )
 
 
 # --- Table mapping tests ---
@@ -292,7 +315,7 @@ class TestDatabaseHelperLoadFields:
 
         call_args = db_helper.client.get.call_args
         endpoint = call_args[0][0]
-        assert endpoint == "/api/v3/data/test_base_id/tbl_actor/records"
+        assert endpoint == "/data/test_base_id/tbl_actor/records"
 
     def test_load_fields_multiple_conditions(self, db_helper):
         mock_response = Mock()
