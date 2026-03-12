@@ -24,6 +24,7 @@ from pipelines.common import services
 ZONE_FIELDS = ["Code", "Name", "Geometry", "PVC Level", "VCM Level"]
 ZONE_TABLES = {
     "Country": "data_countries",
+    "DistributionZone": "data_distribution_zones",
 }
 
 
