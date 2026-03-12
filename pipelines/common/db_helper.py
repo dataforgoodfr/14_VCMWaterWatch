@@ -30,13 +30,19 @@ class DatabaseHelper:
                 base_id="pqc6cnm5mpnr9ka",
             )
         """
-        self.base_url = base_url.rstrip("/")
+        base_url = base_url.rstrip("/")
+        # If URL already has /api/v3, use as-is; otherwise append it
+        if base_url.lower().endswith("/api/v3"):
+            self.api_base = base_url
+        else:
+            self.api_base = f"{base_url}/api/v3"
+        self.base_url = self.api_base  # for backward compat
         self.base_id = base_id
 
         # Setup HTTP client
         headers = {"Content-Type": "application/json", "xc-token": api_token}
         self.client = httpx.Client(
-            base_url=self.base_url, headers=headers, timeout=30.0
+            base_url=self.api_base, headers=headers, timeout=30.0
         )
 
         # Fetch schema from meta API
@@ -48,15 +54,15 @@ class DatabaseHelper:
         """Fetch table IDs and link field IDs from the NocoDB meta API.
 
         Calls:
-          1. GET /api/v3/meta/bases/{base_id}/tables  -> list of tables
-          2. GET /api/v3/meta/bases/{base_id}/tables/{table_id}  -> per-table schema
+          1. GET .../meta/bases/{base_id}/tables  -> list of tables
+          2. GET .../meta/bases/{base_id}/tables/{table_id}  -> per-table schema
 
         Populates:
           - self.table_ids: {table_title: table_id}
           - self.link_field_ids: {table_title: {link_field_title: link_field_id}}
         """
         # Step 1: list all tables
-        resp = self.client.get(f"/api/v3/meta/bases/{self.base_id}/tables")
+        resp = self.client.get(f"/meta/bases/{self.base_id}/tables")
         resp.raise_for_status()
         tables = resp.json().get("list", [])
 
@@ -73,7 +79,7 @@ class DatabaseHelper:
         # Step 2: fetch each table's schema to extract link field IDs
         for table_name, table_id in self.table_ids.items():
             resp = self.client.get(
-                f"/api/v3/meta/bases/{self.base_id}/tables/{table_id}"
+                f"/meta/bases/{self.base_id}/tables/{table_id}"
             )
             resp.raise_for_status()
             schema = resp.json()
@@ -154,7 +160,7 @@ class DatabaseHelper:
             params["where"] = "~and".join(where_parts)
 
         # Make API call using v3 endpoint
-        endpoint = f"/api/v3/data/{self.base_id}/{table_id}/records"
+        endpoint = f"/data/{self.base_id}/{table_id}/records"
         response = self.client.get(endpoint, params=params)
         if response.status_code == 422:
             err_payload = response.json()
@@ -220,7 +226,7 @@ class DatabaseHelper:
         records = df.to_dicts()
 
         # v3 endpoint
-        endpoint = f"/api/v3/data/{self.base_id}/{table_id}/records"
+        endpoint = f"/data/{self.base_id}/{table_id}/records"
 
         # Insert in batches to avoid overwhelming the API
         for i in range(0, len(records), batch_size):
@@ -284,7 +290,7 @@ class DatabaseHelper:
         records = records_to_update.to_dicts()
 
         # v3 endpoint
-        endpoint = f"/api/v3/data/{self.base_id}/{table_id}/records"
+        endpoint = f"/data/{self.base_id}/{table_id}/records"
 
         # Update in batches to avoid overwhelming the API
         for i in range(0, len(records), batch_size):
@@ -339,7 +345,7 @@ class DatabaseHelper:
         ids = records_to_delete["Id"].to_list()
 
         # v3 endpoint
-        endpoint = f"/api/v3/data/{self.base_id}/{table_id}/records"
+        endpoint = f"/data/{self.base_id}/{table_id}/records"
 
         # Delete in batches
         for i in range(0, len(ids), batch_size):
@@ -465,7 +471,7 @@ class DatabaseHelper:
             return
 
         # v3 endpoint
-        endpoint_template = f"/api/v3/data/{self.base_id}/{table_id}/links/{link_field_id}/{{record_id}}"
+        endpoint_template = f"/data/{self.base_id}/{table_id}/links/{link_field_id}/{{record_id}}"
 
         # Link each record
         for row in records_to_link.iter_rows(named=True):

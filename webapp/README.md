@@ -4,7 +4,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 Run `npm install`
 
-Set the environment variables in your .env.local file like defined in .env.example.
+Set the environment variables in your `.env.local` file like defined in `.env.example`. You can also symlink the repo root `.env` to `webapp/.env.local` if you use the same config for both the Python pipeline and the webapp.
 
 First, run the development server:
 
