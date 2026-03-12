@@ -52,6 +52,39 @@ class TestExportZonesGeojson:
         assert fr["properties"]["code"] == "FR"
         assert fr["properties"]["vcm_level"] is None
 
+    def test_distribution_zone_produces_valid_feature_collection(self, tmp_path):
+        """DistributionZone table exports with same logic as Country."""
+        fake_df = pl.DataFrame({
+            "Code": ["DZ001"],
+            "Name": ["Water Zone Alpha"],
+            "Geometry": [
+                '{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]}',
+            ],
+            "PVC Level": ["Medium"],
+            "VCM Level": ["Low"],
+        })
+
+        mock_db = Mock()
+        mock_db.load_all_records.return_value = fake_df
+
+        with patch("pipelines.export.export_pmtiles.services") as mock_services:
+            mock_services.db_helper.return_value = mock_db
+
+            path = export_zones_geojson_task.fn(
+                table_name="DistributionZone", output_dir=tmp_path
+            )
+
+        assert path == tmp_path / "DistributionZone_tile_data.geojson"
+
+        collection = json.loads(path.read_text())
+        assert collection["type"] == "FeatureCollection"
+        assert len(collection["features"]) == 1
+
+        zone = collection["features"][0]
+        assert zone["properties"]["code"] == "DZ001"
+        assert zone["properties"]["name"] == "Water Zone Alpha"
+        assert zone["geometry"]["type"] == "Polygon"
+
     def test_empty_table_produces_empty_collection(self, tmp_path):
         """An empty table should produce a valid but empty FeatureCollection."""
         fake_df = pl.DataFrame(
