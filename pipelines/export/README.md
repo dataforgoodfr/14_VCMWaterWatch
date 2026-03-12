@@ -13,3 +13,5 @@ Each zone table maps to a layer name (configured in `ZONE_TABLES`), which determ
 |------------------|-------------------------|--------------------------------|
 | Country          | data_countries          | data_countries.pmtiles          |
 | DistributionZone | data_distribution_zones | data_distribution_zones.pmtiles |
+
+DistributionZone features include a `company_name` property (from linked Actor records) when available.
