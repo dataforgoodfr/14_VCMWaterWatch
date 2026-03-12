@@ -13,7 +13,7 @@ export interface FetchResponseRecords<T> {
 }
 
 export const instance = axios.create({
-	baseURL: process.env.NOCODB_URL,
+	baseURL: process.env.NOCODB_URL ? `${process.env.NOCODB_URL.replace(/\/$/, '')}/api/v3` : undefined,
 	timeout: 1000,
 	headers: { 'xc-token': process.env.NOCODB_TOKEN ?? '' }
 })

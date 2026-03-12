@@ -23,7 +23,7 @@ export async function fetchMetaTables(forceRefresh = false): Promise<TableMappin
 
 		if (!baseId || !baseUrl) {
 			throw new Error(
-				'NocoDB non configuré. Créez .env.local avec NOCODB_BASE_ID, NOCODB_URL et NOCODB_TOKEN (voir .env.example).'
+				'NocoDB non configuré. Créez .env à la racine du dépôt avec NOCODB_BASE_ID, NOCODB_URL et NOCODB_TOKEN (voir .env.example).'
 			)
 		}
 
