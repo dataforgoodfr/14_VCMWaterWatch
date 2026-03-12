@@ -9,6 +9,7 @@ Output GeoJSON fields per feature:
  - Geometry (from NocoDB)
  - PVC Level
  - VCM Level
+ - company_name (DistributionZone only, from linked Actor records)
 """
 
 import json
@@ -22,6 +23,8 @@ from pipelines.common import services
 
 # Fields shared by every zone table we export
 ZONE_FIELDS = ["Code", "Name", "Geometry", "PVC Level", "VCM Level"]
+# Extra fields per table (e.g. linked record display values)
+EXTRA_FIELDS = {"DistributionZone": ["ActorName"]}
 ZONE_TABLES = {
     "Country": "data_countries",
     "DistributionZone": "data_distribution_zones",
@@ -41,7 +44,8 @@ def export_zones_geojson_task(table_name: str, output_dir: Path) -> Path:
     logger = get_run_logger()
     db_helper = services.db_helper()
 
-    df = db_helper.load_all_records(table_name=table_name, fields=ZONE_FIELDS)
+    fields = ZONE_FIELDS + EXTRA_FIELDS.get(table_name, [])
+    df = db_helper.load_all_records(table_name=table_name, fields=fields)
     logger.info(f"Loaded {len(df)} records from {table_name}")
 
     features = []
@@ -52,16 +56,22 @@ def export_zones_geojson_task(table_name: str, output_dir: Path) -> Path:
             skipped += 1
             continue
         geometry = json.loads(geometry_str)
-        feature = {
-            "type": "Feature",
-            "geometry": geometry,
-            "properties": {
-                "code": row["Code"],
-                "name": row["Name"],
-                "pvc_level": row.get("PVC Level"),
-                "vcm_level": row.get("VCM Level"),
-            },
+        props = {
+            "code": row["Code"],
+            "name": row["Name"],
+            "pvc_level": row.get("PVC Level"),
+            "vcm_level": row.get("VCM Level"),
         }
+        if table_name == "DistributionZone":
+            actor_names = row.get("ActorName")
+            if actor_names is not None:
+                if isinstance(actor_names, list):
+                    company_name = ", ".join(str(n) for n in actor_names if n)
+                else:
+                    company_name = str(actor_names) if actor_names else None
+                if company_name:
+                    props["company_name"] = company_name
+        feature = {"type": "Feature", "geometry": geometry, "properties": props}
         features.append(feature)
 
     if skipped:

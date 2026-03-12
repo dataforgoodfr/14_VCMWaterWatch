@@ -53,7 +53,7 @@ class TestExportZonesGeojson:
         assert fr["properties"]["vcm_level"] is None
 
     def test_distribution_zone_produces_valid_feature_collection(self, tmp_path):
-        """DistributionZone table exports with same logic as Country."""
+        """DistributionZone table exports with company name from ActorName."""
         fake_df = pl.DataFrame({
             "Code": ["DZ001"],
             "Name": ["Water Zone Alpha"],
@@ -62,6 +62,7 @@ class TestExportZonesGeojson:
             ],
             "PVC Level": ["Medium"],
             "VCM Level": ["Low"],
+            "ActorName": [["Water Company Alpha"]],
         })
 
         mock_db = Mock()
@@ -83,6 +84,7 @@ class TestExportZonesGeojson:
         zone = collection["features"][0]
         assert zone["properties"]["code"] == "DZ001"
         assert zone["properties"]["name"] == "Water Zone Alpha"
+        assert zone["properties"]["company_name"] == "Water Company Alpha"
         assert zone["geometry"]["type"] == "Polygon"
 
     def test_empty_table_produces_empty_collection(self, tmp_path):
