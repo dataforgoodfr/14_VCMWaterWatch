@@ -50,28 +50,28 @@ def get_geometry_task(name: str) -> dict:
     company_info = {"Name": features[0]["properties"]["Naam"],
                     "Phone": features[0]["properties"]["Telefoonnummer"]}
     if len(features) == 1:
-        company_info["Geometry"] = features[0]["geometry"]
-        print(company_info["Geometry"])
+        company_info["Geometry"] = json.dumps(features[0]["geometry"])
     else:
         geometries = []
         for feature in features:
             geometries.append(shapely.from_geojson(json.dumps(feature["geometry"])))
         print(type(geometries), type(geometries[0]))
         company_info["Geometry"] = shapely.to_geojson(MultiPolygon(geometries))
+    print("Type Geometry", type(company_info["Geometry"]))
     return company_info
 
 @flow(name="save_distribution_zones_and_water_companies_task")
 def save_distribution_zones_and_water_companies(path: Path):
     companies = get_companies_task()
-    distribution_zones = pl.DataFrame()
-    water_companies = pl.DataFrame()
+    distribution_zones = []
+    water_companies = []
     for company in companies:
         row = get_geometry_task(company)
         row_dz = {"Code": row["Name"],
                   "CountryCode": "NL",
                   "Municipalities": [],
                   "Geometry": row["Geometry"]}
-        distribution_zones = pl.concat([distribution_zones, pl.DataFrame(row_dz)])
+        distribution_zones.append(row_dz)
         row_wc = {"Name": row["Name"],
                   "CountryCode": "NL",
                   "Source": "Vewin",
@@ -79,9 +79,11 @@ def save_distribution_zones_and_water_companies(path: Path):
                   "Phone": row["Phone"],
                   "Email": "",
                   "Description": ""}
-        water_companies = pl.concat([water_companies, pl.DataFrame(row_wc)])
-    distribution_zones.write_ndjson(path / "staging" / "DistributionZone_nl.ndjson")
-    water_companies.write_ndjson(path / "staging" / "WaterCompany_nl.ndjson")
+        water_companies.append(row_wc)
+    distribution_zones_df = pl.DataFrame(distribution_zones)
+    distribution_zones_df.write_ndjson(path / "staging" / "DistributionZone_nl.ndjson")
+    water_companies_df = pl.DataFrame(water_companies)
+    water_companies_df.write_ndjson(path / "staging" / "WaterCompany_nl.ndjson")
 
 if __name__=="__main__":
     save_distribution_zones_and_water_companies(Path("data"))
