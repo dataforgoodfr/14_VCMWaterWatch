@@ -165,3 +165,11 @@ export interface CountryMapFields {
 	'VCM Level'?: string | null
 }
 export type CountryMapRecord = Record<CountryMapFields>
+
+export interface CountryListFields {
+	Name: string
+	Code: string
+	'PVC Level'?: string | null
+	'VCM Level'?: string | null
+}
+export type CountryListRecord = Record<CountryListFields>
