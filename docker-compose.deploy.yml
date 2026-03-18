@@ -38,8 +38,8 @@ services:
     restart: unless-stopped
     labels:
       - traefik.enable=true
-      - traefik.http.routers.vcmwaterwatch.rule=Host(`vcmwaterwatch.services.d4g.fr`)
-      - traefik.http.routers.vcmwaterwatch.entryPoints=webtls
-      - traefik.http.routers.vcmwaterwatch.tls=true
+      - traefik.http.routers.vcmwaterwatch-hooks.rule=Host(`vcmwaterwatch-hooks.services.d4g.fr`)
+      - traefik.http.routers.vcmwaterwatch-hooks.entryPoints=webtls
+      - traefik.http.routers.vcmwaterwatch-hooks.tls=true
       - traefik.docker.network=d4g-internal
-      - traefik.http.services.vcmwaterwatch.loadbalancer.server.port=3000
+      - traefik.http.services.vcmwaterwatch.loadbalancer.server.port=3001
