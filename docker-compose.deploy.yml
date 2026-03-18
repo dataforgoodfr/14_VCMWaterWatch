@@ -21,3 +21,25 @@ services:
       - traefik.http.routers.vcmwaterwatch.tls=true
       - traefik.docker.network=d4g-internal
       - traefik.http.services.vcmwaterwatch.loadbalancer.server.port=3000
+  hooks:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.python
+      args:
+        - NOCODB_BASE_ID=${NOCODB_BASE_ID}
+        - NOCODB_URL=${NOCODB_URL}
+        - NOCODB_TOKEN=${NOCODB_TOKEN}
+    ports:
+      - 3001
+    environment:
+      - NOCODB_BASE_ID=${NOCODB_BASE_ID}
+      - NOCODB_URL=${NOCODB_URL}
+      - NOCODB_TOKEN=${NOCODB_TOKEN}
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.vcmwaterwatch-hooks.rule=Host(`vcmwaterwatch-hooks.services.d4g.fr`)
+      - traefik.http.routers.vcmwaterwatch-hooks.entryPoints=webtls
+      - traefik.http.routers.vcmwaterwatch-hooks.tls=true
+      - traefik.docker.network=d4g-internal
+      - traefik.http.services.vcmwaterwatch.loadbalancer.server.port=3001

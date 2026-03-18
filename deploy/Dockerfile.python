@@ -1,0 +1,19 @@
+FROM python:3.12-slim AS pmtiles
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+WORKDIR /app
+
+# Install system dependencies for GDAL (required by pyogrio/geopandas)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgdal-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen
+COPY pipelines ./pipelines
+ARG NOCODB_BASE_ID
+ARG NOCODB_URL
+ARG NOCODB_TOKEN
+ENV NOCODB_BASE_ID=${NOCODB_BASE_ID}
+ENV NOCODB_URL=${NOCODB_URL}
+ENV NOCODB_TOKEN=${NOCODB_TOKEN}
+RUN uv run python -c 'import duckdb'
