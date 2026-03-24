@@ -29,8 +29,8 @@ export function MapView({ initialData }: MapViewProps) {
 			</div>
 			{geojson.features.length === 0 && recordsCount > 0 && (
 				<div className='absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded bg-amber-100 px-4 py-2 text-sm text-amber-900'>
-					{recordsCount} enregistrement(s) chargé(s) mais aucune géométrie trouvée. Vérifiez que les colonnes Geometry
-					ou Municipality Geometries sont renseignées.
+					{recordsCount} record(s) loaded but no geometry found. Check that the Geometry or Municipality Geometries
+					columns are populated.
 				</div>
 			)}
 			<Map

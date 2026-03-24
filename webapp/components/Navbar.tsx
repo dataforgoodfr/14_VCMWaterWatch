@@ -41,22 +41,22 @@ const Navbar = ({
 		title: 'VCM Water Watch'
 	},
 	menu = [
-		{ title: 'Accueil', url: ROUTES.HOME },
+		{ title: 'Home', url: ROUTES.HOME },
 		{
-			title: 'Carte interactive',
+			title: 'Interactive map',
 			url: '/map'
 		},
 		{
-			title: 'La pollution au CVM',
+			title: 'VCM pollution',
 			url: ROUTES.VCM_POLLUTION_HISTORY
 		},
 		{
-			title: 'Fiches pays',
+			title: 'Country profiles',
 			url: ROUTES.COUNTRY
 		},
-		{ title: 'Agir', url: ROUTES.ACT },
-		{ title: 'Ressources', url: ROUTES.RESOURCES },
-		{ title: 'À propos', url: ROUTES.ABOUT }
+		{ title: 'Take action', url: ROUTES.ACT },
+		{ title: 'Resources', url: ROUTES.RESOURCES },
+		{ title: 'About', url: ROUTES.ABOUT }
 	],
 	className
 }: NavbarProps) => {
@@ -95,7 +95,8 @@ const Navbar = ({
 							))}
 						</div>
 					</div>
-					<LanguageDropDown className='hover:text-aqua-200 text-[20px] text-white/95' />
+					{/* TODO: uncomment when implementing dynamic languages */}
+					{/* <LanguageDropDown className='hover:text-aqua-200 text-[20px] text-white/95' /> */}
 				</nav>
 
 				<div className='block lg:hidden'>

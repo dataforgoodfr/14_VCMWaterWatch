@@ -28,25 +28,25 @@ export const Footer = ({
 	className,
 	logo = {
 		src: '/images/vcm-logo-color.svg',
-		alt: 'Logo VCM What',
-		title: 'Logo VCM What',
+		alt: 'VCM Water Watch logo',
+		title: 'VCM Water Watch',
 		url: ROUTES.HOME
 	},
 	description = 'water-watch@contact.com',
 	menuItems = [
 		{
 			links: [
-				{ text: 'Accueil', url: ROUTES.HOME },
-				{ text: 'Carte interactive', url: ROUTES.MAP },
-				{ text: 'La pollution au CVM', url: ROUTES.VCM_POLLUTION_HISTORY },
-				{ text: 'Fiches pays', url: ROUTES.COUNTRY },
-				{ text: 'Agir', url: ROUTES.ACT },
-				{ text: 'Ressources', url: ROUTES.RESOURCES },
-				{ text: 'À propos', url: ROUTES.ABOUT }
+				{ text: 'Home', url: ROUTES.HOME },
+				{ text: 'Interactive map', url: ROUTES.MAP },
+				{ text: 'VCM pollution', url: ROUTES.VCM_POLLUTION_HISTORY },
+				{ text: 'Country profiles', url: ROUTES.COUNTRY },
+				{ text: 'Take action', url: ROUTES.ACT },
+				{ text: 'Resources', url: ROUTES.RESOURCES },
+				{ text: 'About', url: ROUTES.ABOUT }
 			]
 		}
 	],
-	copyright = '© Water Watch 2026 - Tous droits réservés'
+	copyright = '© Water Watch 2026 — All rights reserved'
 }: Footer2Props) => {
 	return (
 		<section className={cn('bg-navy-900 flex w-full items-center justify-center py-8', className)}>

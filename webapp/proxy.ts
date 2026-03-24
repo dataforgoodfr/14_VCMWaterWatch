@@ -2,26 +2,24 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import acceptLanguage from 'accept-language'
 
-import { Locale, fallbackLanguage, languages, cookieName } from './i18n/i18next.config'
+import { Locale, cookieName, fallbackLanguage, languages } from './i18n/i18next.config'
 
 acceptLanguage.languages(languages)
 
 export const config = {
-	// Avoid matching for static files, API routes, etc.
 	matcher: ['/((?!api|_next/static|_next/image|assets|public|images|favicon.ico|.*\\..*).*)']
 }
 
 export function proxy(req: NextRequest) {
-	let lng
+	let lng: string | undefined
 
 	if (req.cookies.has(cookieName)) {
-		lng = acceptLanguage.get(req.cookies.get(cookieName)?.value)
+		lng = acceptLanguage.get(req.cookies.get(cookieName)?.value) ?? undefined
 	}
 
-	lng ??= acceptLanguage.get(req.headers.get('Accept-Language'))
+	lng ??= acceptLanguage.get(req.headers.get('Accept-Language')) ?? undefined
 	lng ??= fallbackLanguage
 
-	// Redirect if lng in path is not supported
 	if (
 		!languages.some((loc: Locale) => req.nextUrl.pathname.startsWith(`/${loc}`)) &&
 		!req.nextUrl.pathname.startsWith('/_next') &&

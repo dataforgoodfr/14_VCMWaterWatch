@@ -6,24 +6,23 @@ export const CardsSection = () => {
 	const cards = [
 		{
 			icon: Map,
-			title: 'Carte interactive',
-			description:
-				"Explorez les données par région, ville ou compagnie d'eau. Consultez les analyses et plans d'action.",
-			buttonText: 'Accéder à la carte',
+			title: 'Interactive map',
+			description: 'Explore data by region, city, or water utility. Review analyses and action plans.',
+			buttonText: 'Open the map',
 			href: '/map'
 		},
 		{
 			icon: Flag,
-			title: 'Fiches pays',
-			description: "Consultez les données nationales, la législation en vigueur et l'historique des contributions.",
-			buttonText: 'Voir les pays',
+			title: 'Country profiles',
+			description: 'Browse national data, applicable legislation, and contribution history.',
+			buttonText: 'View countries',
 			href: '/country-profile'
 		},
 		{
 			icon: Megaphone,
-			title: 'Agir',
-			description: 'Contactez vos décideurs, contribuez aux données ou rejoignez notre communauté de bénévoles.',
-			buttonText: "Passer à l'action",
+			title: 'Take action',
+			description: 'Reach out to decision-makers, contribute data, or join our volunteer community.',
+			buttonText: 'Get involved',
 			href: '/act'
 		}
 	]
