@@ -1,36 +1,29 @@
 """
 Prefect workflow for creating distribution zones based on water companies and municipalities.
-Right now this assume a 1:1 relationship between water companies and distribution zones, but
-the database allows for a 1:M relationship in case we can gather more specific information about
-the water company individual distribution zones.
 """
 
 from pathlib import Path
-import polars as pl
 from prefect import flow, task
 from prefect.cache_policies import NO_CACHE
 
+from pipelines.common import staging_db
+
 
 @task(name="create_distribution_zones", cache_policy=NO_CACHE)
-def create_distribution_zones_task(water_companies_df: pl.DataFrame) -> pl.DataFrame:
+def create_distribution_zones_task(water_companies: list[dict]) -> list[dict]:
     """
-    Create distribution zones based on water companies and municipalities.
-    Return a dataframe with the following fields:
-    - Code: str (from water company name)
-    - Name: str (from water company name)
-    - CountryCode: str (from water company DF)
-    - Municipalities: list of municipality codes
-    - Type: "Distribution" (literal)
+    Create distribution zones based on water companies.
     """
-    return water_companies_df.select(
-        pl.col("Name").alias("Code"),
-        pl.col("Name"),
-        pl.col("CountryCode"),
-        # we could have this be a list of list, if we want to support the 1:M relationship between
-        # water companies and distribution zones, explode() it here and use a counter for the code.
-        pl.col("Municipalities"),
-        pl.lit("Distribution").alias("Type"),
-    )
+    return [
+        {
+            "Code": r["Name"],
+            "Name": r["Name"],
+            "CountryCode": r["CountryCode"],
+            "Municipalities": r["Municipalities"],
+            "Type": "Distribution",
+        }
+        for r in water_companies
+    ]
 
 
 @flow(name="create_distribution_zones", persist_result=False)
@@ -38,11 +31,24 @@ def create_distribution_zones_flow(data_directory: Path):
     """
     Create distribution zones based on water companies and municipalities.
     """
-    water_companies_df = pl.read_ndjson(data_directory / "raw" / "WaterCompany*.ndjson")
-    distribution_zones_df = create_distribution_zones_task(water_companies_df)
-    distribution_zones_df.write_ndjson(
-        data_directory / "staging" / "DistributionZone_from_water_companies.ndjson"
-    )
+    conn = staging_db.get_connection(data_directory)
+    try:
+        # Read all WaterCompany tables from raw
+        water_companies = conn.sql(
+            "SELECT * FROM raw.WaterCompany_de_wasserportal"
+        ).fetchall()
+        columns = [desc[0] for desc in conn.description()]
+        water_companies = [dict(zip(columns, row)) for row in water_companies]
+
+        distribution_zones = create_distribution_zones_task(water_companies)
+        staging_db.write_table(
+            conn,
+            "DistributionZone_from_water_companies",
+            distribution_zones,
+            schema="staging",
+        )
+    finally:
+        conn.close()
 
 
 if __name__ == "__main__":

@@ -35,9 +35,9 @@ load-zones-distribution:
   uv run python -m pipelines.load.load_zones DistributionZone ${DATA_DIR}/staging
 
 load-zones:
-  @just load-zones-country
-  @just load-zones-municipality
-  @just load-zones-distribution
+  @just pipelines load-zones-country
+  @just pipelines load-zones-municipality
+  @just pipelines load-zones-distribution
 
 load-water-companies:
   uv run python -m pipelines.load.load_water_companies ${DATA_DIR}/staging

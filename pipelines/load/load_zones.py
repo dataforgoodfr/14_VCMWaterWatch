@@ -5,9 +5,7 @@ Countries are loaded first as they have no parent.
 Municipalities are linked to the countries as parent.
 Distribution zones are linked to the countries as parent, and also have municipalities as children.
 
-
 Expected input fields:
-
  - Code
  - Name
  - CountryCode (for DistributionZone and Municipality levels)
@@ -16,11 +14,10 @@ Expected input fields:
 
 from dataclasses import dataclass, field
 from pathlib import Path
-import polars as pl
 from prefect import flow, get_run_logger, task
 from prefect.cache_policies import INPUTS, NO_CACHE
 
-from pipelines.common import services
+from pipelines.common import services, staging_db
 
 
 @dataclass
@@ -45,138 +42,136 @@ LEVEL_CONFIGS = {
 }
 
 
-def load_existing_data(table_name: str) -> pl.DataFrame:
-    """
-    Load existing data from the database for this level.
-
-    Args:
-        db_helper: Database helper instance
-        table_name: Name of the table for this level
-
-    Returns:
-        Polars DataFrame with 'Code' and 'Id' columns
-    """
+def load_existing_data(table_name: str) -> list[dict]:
+    """Load existing Code/Id data from NocoDB for this level."""
     if not table_name:
-        # No parent level, return empty dataframe with correct schema
-        return pl.DataFrame(schema={"Code": pl.Utf8, "Id": pl.Int64})
+        return []
     db_helper = services.db_helper()
     return db_helper.load_all_records(table_name=table_name, fields=["Code", "Id"])
 
 
-def load_source_data(data_directory: Path, level: str) -> pl.DataFrame:
+def load_source_data(conn, level: str) -> list[dict]:
+    """Load source data from staging DB.
+
+    Reads all tables matching the level name pattern and unions them.
     """
-    Load source data from the data directory.
-    """
-    return pl.read_ndjson(data_directory / f"{level}*.ndjson")
+    # Get all tables in staging schema
+    tables = conn.sql(
+        "SELECT table_name FROM information_schema.tables WHERE table_catalog = 'staging'"
+    ).fetchall()
+    table_names = [t[0] for t in tables if t[0].startswith(level)]
+
+    if not table_names:
+        return []
+
+    queries = [f"SELECT * FROM staging.\"{tn}\"" for tn in table_names]
+    union_sql = " UNION ALL ".join(queries)
+    return conn.sql(union_sql).fetchdf().to_dict("records")
 
 
-def filter_existing_data(df: pl.DataFrame, table_name: str) -> pl.DataFrame:
+def split_new_and_existing(
+    records: list[dict], table_name: str
+) -> tuple[list[dict], list[dict]]:
+    """Split records into new and existing (by Code).
+
+    Returns:
+        (new_records, existing_records) where existing_records have their NocoDB 'Id' set.
     """
-    Filter out existing data from the database.
-    """
-    existing_df = load_existing_data(table_name=table_name)
-    return df.join(existing_df, on="Code", how="anti")
+    existing = load_existing_data(table_name=table_name)
+    existing_code_to_id = {r["Code"]: r["Id"] for r in existing}
+    new_records = []
+    existing_records = []
+    for r in records:
+        code = r.get("Code")
+        if code in existing_code_to_id:
+            r = dict(r)
+            r["Id"] = existing_code_to_id[code]
+            existing_records.append(r)
+        else:
+            new_records.append(r)
+    return new_records, existing_records
 
 
 @task(name="lookup_parent", cache_policy=INPUTS)
-def lookup_parent_task(df: pl.DataFrame, level_config: LevelConfig) -> pl.DataFrame:
+def lookup_parent_task(records: list[dict], level_config: LevelConfig) -> list[dict]:
     """
     Lookup the parent data for the given level.
     Records without a parent are not included in the result.
-
-    Returns:
-        DataFrame with parent column added as nested object (e.g. Country: {Id: 1})
     """
     parent_level = level_config.parent_level
     if not parent_level:
-        return df
-    parent_df = (
-        load_existing_data(table_name=parent_level)
-        .with_columns(pl.struct(Id=pl.col("Id")).alias(parent_level))
-        .select(["Code", parent_level])
-    )
-    parent_field_df = f"{parent_level}Code"
-    return df.join(parent_df, left_on=parent_field_df, right_on="Code", how="inner")
+        return records
+    parent_records = load_existing_data(table_name=parent_level)
+    parent_map = {r["Code"]: r["Id"] for r in parent_records}
+
+    result = []
+    parent_field = f"{parent_level}Code"
+    for r in records:
+        parent_code = r.get(parent_field)
+        if parent_code and parent_code in parent_map:
+            r = dict(r)
+            r[parent_level] = {"Id": parent_map[parent_code]}
+            result.append(r)
+    return result
 
 
 @task(name="load_to_database", cache_policy=NO_CACHE)
-def insert_records_task(df: pl.DataFrame, table_name: str) -> pl.DataFrame:
-    """
-    Load the final DataFrame into the database.
-
-    Args:
-        db_helper: Database helper instance
-        df: DataFrame to load
-        table_name: Target table name
-
-    Returns:
-        DataFrame with the inserted records and their IDs
-    """
+def insert_records_task(records: list[dict], table_name: str) -> list[dict]:
+    """Insert records into NocoDB."""
     db_helper = services.db_helper()
     logger = get_run_logger()
-    logger.info(f"Inserting {len(df)} records")
-    df = db_helper.insert_records(df, table_name)
-    return df
+    logger.info(f"Inserting {len(records)} records")
+    return db_helper.insert_records(records, table_name)
+
+
+@task(name="update_geometry", cache_policy=NO_CACHE)
+def update_geometry_task(records: list[dict], table_name: str) -> None:
+    """Update the Geometry field for existing records in NocoDB."""
+    db_helper = services.db_helper()
+    logger = get_run_logger()
+    # Only update records that have a Geometry value
+    to_update = [
+        {"Id": r["Id"], "Geometry": r["Geometry"]}
+        for r in records
+        if r.get("Geometry") and r.get("Id")
+    ]
+    if not to_update:
+        logger.info("No geometry updates needed")
+        return
+    logger.info(f"Updating geometry for {len(to_update)} existing records")
+    db_helper.update_records(to_update, table_name)
 
 
 @task(name="lookup_children", cache_policy=INPUTS)
 def lookup_children_task(
-    df: pl.DataFrame, child_level: str, child_field_name: str
-) -> pl.DataFrame:
+    records: list[dict], child_level: str, child_field_name: str
+) -> list[dict]:
     """
-    Lookup the children data for the given level, using the child_field_name column in the source df
-    as a list of codes.
-    Replaces the child_field_name column with a new column with the children IDs (list of integers)
+    Lookup children IDs from NocoDB and replace code lists with ID lists.
     """
-    child_df = load_existing_data(table_name=child_level)
+    child_records = load_existing_data(table_name=child_level)
+    code_to_id = {r["Code"]: r["Id"] for r in child_records}
 
-    # Explode the list column to create one row per child code
-    df_exploded = df.select(["Id", child_field_name]).explode(child_field_name)
-
-    # Join with child_df to get the child IDs, using 'inner' to skip any codes not found
-    df_with_ids = df_exploded.join(
-        child_df.select(["Code", "Id"]),
-        left_on=child_field_name,
-        right_on="Code",
-        how="inner",
-    ).select(
-        [
-            pl.col("Id"),  # Parent ID from df
-            pl.col("Id_right").alias("child_id"),  # Child ID from child_df
-        ]
-    )
-
-    # Group by parent Id and aggregate child IDs into a list
-    df_children_ids = df_with_ids.group_by("Id").agg(
-        pl.col("child_id").alias(child_field_name)
-    )
-
-    # Join back with original df to get all columns, replacing the codes with IDs
-    return df.drop(child_field_name).join(
-        df_children_ids,
-        on="Id",
-        how="left",  # Use left join to keep records even if no children found
-    )
+    result = []
+    for r in records:
+        r = dict(r)
+        codes = r.get(child_field_name, []) or []
+        r[child_field_name] = [code_to_id[c] for c in codes if c in code_to_id]
+        result.append(r)
+    return result
 
 
 @task(name="link_children", cache_policy=INPUTS)
 def link_children_task(
-    df: pl.DataFrame, child_field_name: str, table_name: str
+    records: list[dict], child_field_name: str, table_name: str
 ) -> None:
-    """
-    Create links in the database between parent records and their children.
-
-    Args:
-        df: DataFrame with 'Id' column and child_field_name column containing list of child IDs
-        child_field_name: Name of the link field in the database (e.g., "Municipalities")
-        level: Parent table name (e.g., "DistributionZone")
-    """
+    """Create links in NocoDB between parent records and their children."""
     db_helper = services.db_helper()
     logger = get_run_logger()
-    logger.info(f"Linking {len(df)} records to {child_field_name}")
+    logger.info(f"Linking {len(records)} records to {child_field_name}")
 
     db_helper.link_records(
-        df=df,
+        records=records,
         table_name=table_name,
         link_field_name=child_field_name,
         foreign_key_column=child_field_name,
@@ -186,13 +181,12 @@ def link_children_task(
 @flow(name="load_zones")
 def load_zones_flow(level: str, data_directory: Path) -> None:
     """
-    Main flow to import processed GeoJSON data for a specific level.
+    Main flow to import processed data for a specific level.
 
     Args:
         level: Geographic level name (e.g., "Country", "DistributionZone", "Municipality")
-        data_directory: Source directory for the data
+        data_directory: Project root data directory (e.g. Path("data"))
     """
-    # Get configuration for this level
     if level not in LEVEL_CONFIGS:
         raise ValueError(
             f"Unknown level: {level}. Available levels: {list(LEVEL_CONFIGS.keys())}"
@@ -200,31 +194,41 @@ def load_zones_flow(level: str, data_directory: Path) -> None:
 
     level_config = LEVEL_CONFIGS[level]
 
-    df_source = load_source_data(data_directory, level)
-    # ideally we should do something where we get the existing id, for the data that is already there,
-    # so that we can create new links without having to re-insert the data
-    df = filter_existing_data(df_source, level_config.table_name)
-    df = lookup_parent_task(df, level_config)
-    # Exclude child link columns from insert - they contain codes, not IDs.
-    # Links are created separately via link_children_task.
-    if level_config.child_level:
-        child_field_names = list(level_config.child_level.values())
-        df_insert = df.drop(child_field_names)
+    conn = staging_db.get_connection(data_directory)
+    try:
+        source_records = load_source_data(conn, level)
+    finally:
+        conn.close()
+
+    records, existing_records = split_new_and_existing(
+        source_records, level_config.table_name
+    )
+    records = lookup_parent_task(records, level_config)
+
+    # Update geometry for existing records
+    update_geometry_task(existing_records, level_config.table_name)
+
+    # Exclude child link columns from insert — they contain codes, not IDs
+    child_field_names = list(level_config.child_level.values()) if level_config.child_level else []
+    if child_field_names:
+        insert_records = [{k: v for k, v in r.items() if k not in child_field_names} for r in records]
     else:
-        df_insert = df
-    df = insert_records_task(df_insert, level_config.table_name)
+        insert_records = records
+
+    inserted = insert_records_task(insert_records, level_config.table_name)
+
     # Restore child columns for link_children (need codes for lookup)
-    if level_config.child_level:
-        child_field_names = list(level_config.child_level.values())
-        df = df.join(
-            df_source.select(["Code"] + child_field_names),
-            on="Code",
-            how="left",
-        )
-    if level_config.child_level:
+    if child_field_names:
+        code_to_children = {r["Code"]: {cf: r.get(cf) for cf in child_field_names} for r in source_records}
+        for r in inserted:
+            children_data = code_to_children.get(r.get("Code"), {})
+            r.update(children_data)
+
+    if level_config.child_level and inserted:
         for child_level, child_field_name in level_config.child_level.items():
-            df_links = lookup_children_task(df, child_level, child_field_name)
-            link_children_task(df_links, child_field_name, level_config.table_name)
+            link_records = lookup_children_task(inserted, child_level, child_field_name)
+            if link_records:
+                link_children_task(link_records, child_field_name, level_config.table_name)
 
 
 if __name__ == "__main__":
@@ -237,7 +241,4 @@ if __name__ == "__main__":
     level = sys.argv[1]
     data_directory = Path(sys.argv[2])
 
-    load_zones_flow(
-        level=level,
-        data_directory=data_directory,
-    )
+    load_zones_flow(level=level, data_directory=data_directory)

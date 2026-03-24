@@ -1,4 +1,3 @@
-import polars as pl
 from pipelines.common import services
 from prefect import flow
 
@@ -9,13 +8,13 @@ def clean_actors_flow():
     Delete actors that have a blank name.
     """
     db_helper = services.db_helper()
-    df = db_helper.load_all_records(
+    records = db_helper.load_all_records(
         table_name="Actor",
         fields=["Name", "Id"],
     )
-    df = df.filter(pl.col("Name").is_null())
-    db_helper.delete_records(df, table_name="Actor")
-    return df
+    to_delete = [r for r in records if r.get("Name") is None]
+    db_helper.delete_records(to_delete, table_name="Actor")
+    return to_delete
 
 
 if __name__ == "__main__":
