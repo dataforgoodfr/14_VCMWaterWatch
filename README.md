@@ -8,7 +8,7 @@ Créer une plateforme collaborative et scientifique pour cartographier et analys
 
  - NocoDB = database frontend
  - Next.js = web frontend
- - Python with Prefect and Polars = data transformation scripts
+ - Python with Prefect and DuckDB = data transformation scripts
 
 ## Local Development Environment
 

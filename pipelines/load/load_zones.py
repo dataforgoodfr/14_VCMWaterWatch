@@ -69,11 +69,27 @@ def load_source_data(conn, level: str) -> list[dict]:
     return conn.sql(union_sql).fetchdf().to_dict("records")
 
 
-def filter_existing_data(records: list[dict], table_name: str) -> list[dict]:
-    """Filter out records that already exist in NocoDB."""
+def split_new_and_existing(
+    records: list[dict], table_name: str
+) -> tuple[list[dict], list[dict]]:
+    """Split records into new and existing (by Code).
+
+    Returns:
+        (new_records, existing_records) where existing_records have their NocoDB 'Id' set.
+    """
     existing = load_existing_data(table_name=table_name)
-    existing_codes = {r["Code"] for r in existing}
-    return [r for r in records if r.get("Code") not in existing_codes]
+    existing_code_to_id = {r["Code"]: r["Id"] for r in existing}
+    new_records = []
+    existing_records = []
+    for r in records:
+        code = r.get("Code")
+        if code in existing_code_to_id:
+            r = dict(r)
+            r["Id"] = existing_code_to_id[code]
+            existing_records.append(r)
+        else:
+            new_records.append(r)
+    return new_records, existing_records
 
 
 @task(name="lookup_parent", cache_policy=INPUTS)
@@ -106,6 +122,24 @@ def insert_records_task(records: list[dict], table_name: str) -> list[dict]:
     logger = get_run_logger()
     logger.info(f"Inserting {len(records)} records")
     return db_helper.insert_records(records, table_name)
+
+
+@task(name="update_geometry", cache_policy=NO_CACHE)
+def update_geometry_task(records: list[dict], table_name: str) -> None:
+    """Update the Geometry field for existing records in NocoDB."""
+    db_helper = services.db_helper()
+    logger = get_run_logger()
+    # Only update records that have a Geometry value
+    to_update = [
+        {"Id": r["Id"], "Geometry": r["Geometry"]}
+        for r in records
+        if r.get("Geometry") and r.get("Id")
+    ]
+    if not to_update:
+        logger.info("No geometry updates needed")
+        return
+    logger.info(f"Updating geometry for {len(to_update)} existing records")
+    db_helper.update_records(to_update, table_name)
 
 
 @task(name="lookup_children", cache_policy=INPUTS)
@@ -166,8 +200,13 @@ def load_zones_flow(level: str, data_directory: Path) -> None:
     finally:
         conn.close()
 
-    records = filter_existing_data(source_records, level_config.table_name)
+    records, existing_records = split_new_and_existing(
+        source_records, level_config.table_name
+    )
     records = lookup_parent_task(records, level_config)
+
+    # Update geometry for existing records
+    update_geometry_task(existing_records, level_config.table_name)
 
     # Exclude child link columns from insert — they contain codes, not IDs
     child_field_names = list(level_config.child_level.values()) if level_config.child_level else []
@@ -185,10 +224,11 @@ def load_zones_flow(level: str, data_directory: Path) -> None:
             children_data = code_to_children.get(r.get("Code"), {})
             r.update(children_data)
 
-    if level_config.child_level:
+    if level_config.child_level and inserted:
         for child_level, child_field_name in level_config.child_level.items():
             link_records = lookup_children_task(inserted, child_level, child_field_name)
-            link_children_task(link_records, child_field_name, level_config.table_name)
+            if link_records:
+                link_children_task(link_records, child_field_name, level_config.table_name)
 
 
 if __name__ == "__main__":
