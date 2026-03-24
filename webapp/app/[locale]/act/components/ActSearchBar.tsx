@@ -15,10 +15,19 @@ export default function ActSearchBar({ onSelect }: ActSearchBarProps) {
 	const [open, setOpen] = useState(false)
 	const containerRef = useRef<HTMLDivElement>(null)
 	const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+	/** When true, next query change came from picking a result — skip debounced search so we don't reopen the dropdown. */
+	const skipSearchFromSelectionRef = useRef(false)
 
 	useEffect(() => {
 		if (debounceRef.current) {
 			clearTimeout(debounceRef.current)
+		}
+
+		if (skipSearchFromSelectionRef.current) {
+			skipSearchFromSelectionRef.current = false
+			setResults([])
+			setOpen(false)
+			return
 		}
 
 		if (query.length < 3) {
@@ -85,9 +94,10 @@ export default function ActSearchBar({ onSelect }: ActSearchBarProps) {
 								key={zone.id}
 								className='block w-full px-4 py-3 text-left first:rounded-t-lg last:rounded-b-lg hover:bg-gray-50'
 								onClick={() => {
-									onSelect(zone.id)
+									skipSearchFromSelectionRef.current = true
 									setQuery(zone.fields.Name)
 									setOpen(false)
+									onSelect(zone.id)
 								}}
 							>
 								<div className='text-sm font-medium text-gray-900'>
