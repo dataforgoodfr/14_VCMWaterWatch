@@ -21,7 +21,6 @@ from prefect.cache_policies import NO_CACHE
 
 from pipelines.common import services
 
-# Fields shared by every zone table we export
 ZONE_FIELDS = ["Code", "Name", "Geometry", "PVC Level", "VCM Level"]
 # Extra fields per table (e.g. linked record display values)
 EXTRA_FIELDS = {"DistributionZone": ["ActorName"]}
@@ -35,22 +34,18 @@ ZONE_TABLES = {
 def export_zones_geojson_task(table_name: str, output_dir: Path) -> Path:
     """
     Read all records from a zone table and write a GeoJSON FeatureCollection.
-
     Records without geometry are skipped.
-
-    Returns:
-        Path to the written GeoJSON file.
     """
     logger = get_run_logger()
     db_helper = services.db_helper()
 
     fields = ZONE_FIELDS + EXTRA_FIELDS.get(table_name, [])
-    df = db_helper.load_all_records(table_name=table_name, fields=fields)
-    logger.info(f"Loaded {len(df)} records from {table_name}")
+    records = db_helper.load_all_records(table_name=table_name, fields=fields)
+    logger.info(f"Loaded {len(records)} records from {table_name}")
 
     features = []
     skipped = 0
-    for row in df.iter_rows(named=True):
+    for row in records:
         geometry_str = row.get("Geometry")
         if not geometry_str:
             skipped += 1
@@ -91,17 +86,7 @@ def export_zones_geojson_task(table_name: str, output_dir: Path) -> Path:
 
 @task(name="create_pmtiles", cache_policy=NO_CACHE)
 def create_pmtiles_task(geojson_file: Path, layer: str, output_dir: Path) -> Path:
-    """
-    Convert a GeoJSON file to a PMTiles archive using tippecanoe.
-
-    Args:
-        geojson_file: Path to the input GeoJSON file.
-        layer: Layer name for the vector tiles (e.g. "data_countries").
-        output_dir: Directory where the .pmtiles file will be written.
-
-    Returns:
-        Path to the generated PMTiles file.
-    """
+    """Convert a GeoJSON file to a PMTiles archive using tippecanoe."""
     logger = get_run_logger()
     output_dir.mkdir(parents=True, exist_ok=True)
     pmtiles_file = output_dir / f"{layer}.pmtiles"
@@ -127,13 +112,7 @@ def create_pmtiles_task(geojson_file: Path, layer: str, output_dir: Path) -> Pat
 
 @flow(name="export_pmtiles", persist_result=False)
 def export_pmtiles_flow(data_directory: Path) -> None:
-    """
-    Export zone data from NocoDB to PMTiles.
-
-    Steps:
-      1. For each zone table, export a GeoJSON FeatureCollection to data/staging.
-      2. Convert the GeoJSON files to PMTiles in data/export.
-    """
+    """Export zone data from NocoDB to PMTiles."""
     staging_dir = data_directory / "staging"
     export_dir = data_directory / "export"
 

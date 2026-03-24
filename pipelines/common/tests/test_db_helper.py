@@ -2,13 +2,11 @@
 
 import pytest
 from unittest.mock import Mock, patch
-import polars as pl
 from pipelines.common.db_helper import DatabaseHelper
 
 
 # --- Test fixtures / helpers ---
 
-# Minimal meta API responses for a two-table database
 TABLES_LIST_RESPONSE = {
     "list": [
         {"id": "tbl_actor", "title": "Actor"},
@@ -56,7 +54,6 @@ def _mock_meta_get(url, **kwargs):
     mock_resp.status_code = 200
 
     if url.endswith("/tables") and "/tables/" not in url.rstrip("/tables").split("/tables")[0] + "X":
-        # List tables
         mock_resp.json.return_value = TABLES_LIST_RESPONSE
     elif url.endswith("/tbl_actor"):
         mock_resp.json.return_value = ACTOR_SCHEMA_RESPONSE
@@ -79,7 +76,6 @@ def _make_db_helper() -> DatabaseHelper:
             base_url="https://test.example.com",
             base_id="test_base_id",
         )
-        # After init, replace the side_effect so tests can set their own mocks
         mock_client.get = Mock()
         return db
 
@@ -88,7 +84,6 @@ def _make_db_helper() -> DatabaseHelper:
 
 
 class TestDatabaseHelperInitialization:
-    """Test suite for DatabaseHelper initialization."""
 
     def test_initialization_sets_base_url_and_id(self):
         db = _make_db_helper()
@@ -161,7 +156,6 @@ class TestDatabaseHelperInitialization:
 
     def test_trailing_slash_stripped(self):
         db = _make_db_helper()
-        # base_url should not end with /
         assert not db.base_url.endswith("/")
 
     def test_url_with_api_v3_suffix_not_doubled(self):
@@ -243,11 +237,11 @@ class TestDatabaseHelperLoadFields:
             table_name="Actor", fields=["Id", "Name", "Email"]
         )
 
-        assert isinstance(result, pl.DataFrame)
-        assert result.shape == (2, 3)
-        assert result.columns == ["Id", "Name", "Email"]
-        assert result["Id"].to_list() == [123, 456]
-        assert result["Name"].to_list() == ["Water Company A", "Water Company B"]
+        assert isinstance(result, list)
+        assert len(result) == 2
+        assert list(result[0].keys()) == ["Id", "Name", "Email"]
+        assert [r["Id"] for r in result] == [123, 456]
+        assert [r["Name"] for r in result] == ["Water Company A", "Water Company B"]
 
     def test_load_fields_with_condition(self, db_helper):
         mock_response = Mock()
@@ -269,7 +263,7 @@ class TestDatabaseHelperLoadFields:
         call_args = db_helper.client.get.call_args
         params = call_args[1]["params"]
         assert "(Type,eq,Public)" in params["where"]
-        assert result.shape == (1, 3)
+        assert len(result) == 1
 
     def test_load_fields_with_pagination(self, db_helper):
         mock_response = Mock()
@@ -298,11 +292,8 @@ class TestDatabaseHelperLoadFields:
             table_name="Actor", fields=["Id", "Name", "Email"]
         )
 
-        assert isinstance(result, pl.DataFrame)
-        assert result.is_empty()
-        assert result.columns == ["Id", "Name", "Email"]
-        assert result.schema["Id"] == pl.Int64
-        assert result.schema["Name"] == pl.Utf8
+        assert isinstance(result, list)
+        assert len(result) == 0
 
     def test_load_fields_v3_endpoint_construction(self, db_helper):
         mock_response = Mock()
@@ -349,8 +340,8 @@ class TestDatabaseHelperLinkRecords:
         mock_response.status_code = 200
         db_helper.client.post = Mock(return_value=mock_response)
 
-        df = pl.DataFrame({"Id": [1, 2], "Zone_id": [10, 20]})
-        db_helper.link_records(df, "Actor", "Zones", "Zone_id")
+        records = [{"Id": 1, "Zone_id": 10}, {"Id": 2, "Zone_id": 20}]
+        db_helper.link_records(records, "Actor", "Zones", "Zone_id")
 
         assert db_helper.client.post.call_count == 2
 
@@ -360,28 +351,28 @@ class TestDatabaseHelperLinkRecords:
         mock_response.status_code = 200
         db_helper.client.post = Mock(return_value=mock_response)
 
-        df = pl.DataFrame({"Id": [1], "Zone_ids": [[10, 20, 30]]})
-        db_helper.link_records(df, "Actor", "Zones", "Zone_ids")
+        records = [{"Id": 1, "Zone_ids": [10, 20, 30]}]
+        db_helper.link_records(records, "Actor", "Zones", "Zone_ids")
 
         payload = db_helper.client.post.call_args[1]["json"]
         assert len(payload) == 3
 
     def test_link_records_unknown_table(self, db_helper):
-        df = pl.DataFrame({"Id": [1], "fk": [10]})
+        records = [{"Id": 1, "fk": 10}]
         with pytest.raises(ValueError, match="no link fields"):
-            db_helper.link_records(df, "Zone", "Something", "fk")
+            db_helper.link_records(records, "Zone", "Something", "fk")
 
     def test_link_records_unknown_link_field(self, db_helper):
-        df = pl.DataFrame({"Id": [1], "fk": [10]})
+        records = [{"Id": 1, "fk": 10}]
         with pytest.raises(ValueError, match="not found for table"):
-            db_helper.link_records(df, "Actor", "BadField", "fk")
+            db_helper.link_records(records, "Actor", "BadField", "fk")
 
     def test_link_records_missing_id_column(self, db_helper):
-        df = pl.DataFrame({"Zone_id": [10]})
+        records = [{"Zone_id": 10}]
         with pytest.raises(ValueError, match="Id"):
-            db_helper.link_records(df, "Actor", "Zones", "Zone_id")
+            db_helper.link_records(records, "Actor", "Zones", "Zone_id")
 
     def test_link_records_missing_fk_column(self, db_helper):
-        df = pl.DataFrame({"Id": [1]})
-        with pytest.raises(ValueError, match="not found in DataFrame"):
-            db_helper.link_records(df, "Actor", "Zones", "Zone_id")
+        records = [{"Id": 1}]
+        with pytest.raises(ValueError, match="not found in records"):
+            db_helper.link_records(records, "Actor", "Zones", "Zone_id")

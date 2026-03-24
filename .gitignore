@@ -164,5 +164,7 @@ cython_debug/
 # Precommit hooks: ruff cache
 .ruff_cache
 data/
+# Agents
 .cursor/
+.pi/
 .claude/
