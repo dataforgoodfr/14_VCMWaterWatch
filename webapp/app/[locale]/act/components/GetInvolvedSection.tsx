@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldLabel, FieldError } from '@/components/ui/field'
 
-import { templates } from '../data/templates'
+import { Template } from '../data/templates'
 import TemplateCard from './TemplateCard'
 import TemplateModal from './TemplateModal'
 import DataSubmissionForm from './DataSubmissionForm'
@@ -17,7 +17,11 @@ const ROLES = [
 	{ icon: '🔬', title: 'Water specialists', description: 'Share expertise on water quality & PVC' }
 ]
 
-export default function GetInvolvedSection() {
+interface GetInvolvedSectionProps {
+	templates: Template[]
+}
+
+export default function GetInvolvedSection({ templates }: GetInvolvedSectionProps) {
 	const [openTemplate, setOpenTemplate] = useState<number | null>(null)
 
 	// Join form state

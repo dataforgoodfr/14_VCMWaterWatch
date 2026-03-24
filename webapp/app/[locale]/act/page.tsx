@@ -1,10 +1,20 @@
 import { SectionSeparator } from '@/components/SectionSeparator'
+import { fetchLetterTemplates } from '@/lib/fetchLetterTemplates'
+import { templates as fallbackTemplates } from './data/templates'
 
 import ActSearchSection from './components/ActSearchSection'
 import ActionGuide from './components/ActionGuide'
 import GetInvolvedSection from './components/GetInvolvedSection'
 
-export default function ActPage() {
+export default async function ActPage({ params }: { params: Promise<{ locale: string }> }) {
+	const { locale } = await params
+
+	let templates = await fetchLetterTemplates(locale)
+
+	if (templates.length === 0) {
+		templates = fallbackTemplates
+	}
+
 	return (
 		<main className='container mx-auto px-4 py-16 md:px-8'>
 			<div>
@@ -31,7 +41,7 @@ export default function ActPage() {
 
 				{/* Step 3: Get Involved (Templates + Contribute + Join) */}
 				<section id='involved'>
-					<GetInvolvedSection />
+					<GetInvolvedSection templates={templates} />
 				</section>
 			</div>
 		</main>
