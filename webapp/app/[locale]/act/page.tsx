@@ -1,8 +1,22 @@
+import ActSearchSection from './components/ActSearchSection'
+import ActionGuide from './components/ActionGuide'
+
 export default function ActPage() {
 	return (
-		<main className='mx-auto w-full max-w-5xl px-6 py-16'>
+		<main className='mx-auto w-full max-w-5xl space-y-16 px-6 py-16'>
 			<h1 className='text-3xl font-semibold text-gray-900'>Take action</h1>
-			<p className='mt-4 text-lg text-gray-600'>This page is under construction.</p>
+
+			{/* Step 1: Search */}
+			<section id='search'>
+				<ActSearchSection />
+			</section>
+
+			{/* Step 2: Action Guide */}
+			<section id='guide'>
+				<ActionGuide />
+			</section>
+
+			{/* Steps 3 & 4: placeholder for phase 2 (forms, data submission) */}
 		</main>
 	)
 }
