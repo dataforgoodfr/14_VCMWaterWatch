@@ -1,7 +1,3 @@
-'use client'
-
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-
 const scenarios = [
 	{
 		value: 'green',
@@ -95,20 +91,21 @@ const scenarios = [
 	}
 ]
 
-export default function ScenarioAccordion() {
+export default function ScenarioColumns() {
 	return (
-		<Accordion type='single' collapsible className='w-full'>
+		<div className='grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-stretch'>
 			{scenarios.map(scenario => (
-				<AccordionItem key={scenario.value} value={scenario.value}>
-					<AccordionTrigger className='text-left'>
-						<span className='flex items-center gap-3'>
-							<span className='text-lg'>{scenario.badge}</span>
-							<span className='font-medium'>{scenario.title}</span>
-						</span>
-					</AccordionTrigger>
-					<AccordionContent>{scenario.content}</AccordionContent>
-				</AccordionItem>
+				<div
+					key={scenario.value}
+					className='flex h-full flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-sm'
+				>
+					<div className='mb-3 flex items-start gap-2 border-b border-gray-100 pb-3'>
+						<span className='text-lg leading-none'>{scenario.badge}</span>
+						<h3 className='text-sm font-semibold leading-snug text-gray-900'>{scenario.title}</h3>
+					</div>
+					<div className='min-h-0 flex-1 text-sm'>{scenario.content}</div>
+				</div>
 			))}
-		</Accordion>
+		</div>
 	)
 }

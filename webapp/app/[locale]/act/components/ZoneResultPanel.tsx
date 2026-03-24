@@ -51,6 +51,7 @@ export default function ZoneResultPanel({ zone, loading }: ZoneResultPanelProps)
 					<Row label='Contact' value={fields.ActorEmail?.join(', ')} />
 					<Row label='PVC Level' value={fields['PVC Level']} />
 					<Row label='VCM Level' value={fields['VCM Level']} />
+					<Row label='Municipalities' value={fields.MunicipalityNames?.join(', ')} />
 				</dl>
 			</div>
 		</div>
