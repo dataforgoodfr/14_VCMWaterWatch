@@ -2,6 +2,8 @@ import { SectionSeparator } from '@/components/SectionSeparator'
 
 import ActSearchSection from './components/ActSearchSection'
 import ActionGuide from './components/ActionGuide'
+import ContributeDataSection from './components/ContributeDataSection'
+import JoinProjectSection from './components/JoinProjectSection'
 
 export default function ActPage() {
 	return (
@@ -23,7 +25,15 @@ export default function ActPage() {
 				<ActionGuide />
 			</section>
 
-			{/* Steps 3 & 4: placeholder for phase 2 (forms, data submission) */}
+			{/* Step 3: Contribute Data */}
+			<section id='contribute'>
+				<ContributeDataSection />
+			</section>
+
+			{/* Step 4: Join the Project */}
+			<section id='join'>
+				<JoinProjectSection />
+			</section>
 		</main>
 	)
 }

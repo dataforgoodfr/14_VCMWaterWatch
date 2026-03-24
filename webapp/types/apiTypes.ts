@@ -34,6 +34,8 @@ export type TableTitle =
 	| 'DistributionZone'
 	| 'Municipality'
 	| 'BlogPost'
+	| 'Contribution'
+	| 'Volunteer'
 
 export interface MetaTable {
 	id: string
