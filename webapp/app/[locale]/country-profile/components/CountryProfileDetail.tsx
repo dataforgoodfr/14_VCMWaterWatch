@@ -16,7 +16,7 @@ function formatLinkField(value: unknown): string {
 	}
 
 	if (Array.isArray(value)) {
-		return `${value.length} élément(s)`
+		return `${value.length} item(s)`
 	}
 
 	if (typeof value === 'object') {
@@ -40,7 +40,7 @@ export function CountryProfileDetail({ country, loading, error }: CountryProfile
 	if (loading) {
 		return (
 			<div className='text-navy-800 mt-10 font-[lexend] text-sm' role='status'>
-				Chargement...
+				Loading...
 			</div>
 		)
 	}
@@ -69,12 +69,12 @@ export function CountryProfileDetail({ country, loading, error }: CountryProfile
 				<div className='text-navy-800 flex flex-col gap-4'>
 					<div className='flex items-center gap-1'>
 						<MapPin />
-						<h2 className='font-[lexend] text-[24px] font-medium'>{f.Name} - Résumé des données</h2>
+						<h2 className='font-[lexend] text-[24px] font-medium'>{f.Name} — Data overview</h2>
 					</div>
 					<dl className='flex flex-col items-start gap-10 md:flex-row'>
 						<Image
 							src={imageSrc}
-							alt={f.Name ? `Illustration — ${f.Name}` : ''}
+							alt={f.Name ? `Illustration — ${f.Name}` : 'Country illustration'}
 							width={310}
 							height={240}
 							className='h-auto max-w-[min(100%,600px)] shrink-0 rounded-md object-cover'
@@ -82,15 +82,15 @@ export function CountryProfileDetail({ country, loading, error }: CountryProfile
 						<div className='flex w-full flex-col items-start justify-center'>
 							<div className='flex w-full flex-col items-start justify-around md:flex-row md:items-center'>
 								<div className='flex flex-col items-start md:items-center'>
-									<dt className='text-[16px] font-medium'>Réseau PVC total</dt>
+									<dt className='text-[16px] font-medium'>Total PVC network</dt>
 									<dd className='text-navy-500 text-[23px] font-semibold'>...</dd>
 								</div>
 								<div className='flex flex-col items-start md:items-center'>
-									<dt className='text-[16px] font-medium'>Pourcentage du réseau</dt>
+									<dt className='text-[16px] font-medium'>Share of network</dt>
 									<dd className='text-navy-500 text-[23px] font-semibold'>...</dd>
 								</div>
 								<div className='flex flex-col items-start md:items-center'>
-									<dt className='text-[16px] font-medium'>Zones à risque identifiées</dt>
+									<dt className='text-[16px] font-medium'>Identified risk areas</dt>
 									<dd className='text-navy-500 text-[23px] font-semibold'>
 										{formatLinkField(f.Municipalities) ? `${formatLinkField(f.Municipalities)} municipalities` : '—'}
 									</dd>
@@ -99,7 +99,7 @@ export function CountryProfileDetail({ country, loading, error }: CountryProfile
 
 							<Separator className='my-6 w-full self-stretch bg-gray-300' />
 
-							<p className='text-[17px] font-semibold'>Législation en vigueur</p>
+							<p className='text-[17px] font-semibold'>Applicable legislation</p>
 							<ul className='font-regular list-disc pl-4 text-[17px] text-gray-600'>
 								<li>...</li>
 								<li>...</li>
@@ -114,12 +114,12 @@ export function CountryProfileDetail({ country, loading, error }: CountryProfile
 				<div className='text-navy-800 flex flex-col gap-4'>
 					<div className='flex items-center gap-1'>
 						<TriangleAlert />
-						<h2 className='font-[lexend] text-[24px] font-medium'>Données manquantes</h2>
+						<h2 className='font-[lexend] text-[24px] font-medium'>Missing data</h2>
 					</div>
 
 					<div className='flex w-full flex-col items-start gap-4'>
 						{/* TODO: refactor when data clarified */}
-						{['Inventaire complet du réseau PVC', 'Analyses CVM régulières', 'Plans de remplacement'].map(title => (
+						{['Full PVC network inventory', 'Regular VCM testing', 'Replacement plans'].map(title => (
 							<div key={title} className='flex w-full flex-col border-l-[6px] border-gray-300 bg-white px-4 py-2'>
 								<dt className='font-regular text-[20px]'>{title}</dt>
 								<dd className='text-[16px] text-gray-600'>...</dd>

@@ -1,33 +1,29 @@
 const data = [
 	{
 		date: '1975',
-		title: 'États-Unis',
-		description:
-			"L'EPA (Environmental Protection Agency) classe le CVM comme cancérigène et fixe les premières normes de limitation dans l'eau potable."
+		title: 'United States',
+		description: 'The EPA classifies VCM as a carcinogen and sets the first limits for drinking water.'
 	},
 	{
 		date: '1978',
 		title: 'Europe',
 		description:
-			"Première directive européenne sur la qualité de l'eau destinée à la consommation humaine. Le CVM est identifié comme substance préoccupante."
+			'First European directive on water quality for human consumption. VCM is identified as a substance of concern.'
 	},
 	{
 		date: '1998',
-		title: 'Directive 98/83/CE',
-		description:
-			"Directive européenne fixant la limite à 0,5 µg/L pour le chlorure de vinyle monomère dans l'eau potable."
+		title: 'Directive 98/83/EC',
+		description: 'EU directive setting a limit of 0.5 µg/L for vinyl chloride monomer in drinking water.'
 	},
 	{
 		date: '2010',
 		title: 'France',
-		description:
-			'Publication du plan national santé environnement incluant la surveillance des réseaux PVC vieillissants.'
+		description: 'National environmental health plan published, including monitoring of aging PVC networks.'
 	},
 	{
 		date: '2012',
-		title: 'Renforcement',
-		description:
-			'Plusieurs États membres renforcent les contrôles et lancent des programmes de remplacement des canalisations à risque.'
+		title: 'Tighter controls',
+		description: 'Several member states strengthen oversight and launch programmes to replace at-risk pipes.'
 	}
 ]
 

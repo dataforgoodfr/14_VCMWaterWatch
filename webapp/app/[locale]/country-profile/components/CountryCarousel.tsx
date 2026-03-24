@@ -39,25 +39,25 @@ export function CountryCarousel({ countries }: CountryCarouselProps) {
 			const res = await fetch(`/api/countries/${encodeURIComponent(code)}`)
 
 			if (res.status === 404) {
-				setDetailError('Pays introuvable.')
+				setDetailError('Country not found.')
 				return
 			}
 
 			if (!res.ok) {
-				setDetailError('Impossible de charger les données du pays.')
+				setDetailError('Unable to load country data.')
 				return
 			}
 
 			const data = (await res.json()) as { country: CountryDetailRecord | null }
 
 			if (!data.country) {
-				setDetailError('Pays introuvable.')
+				setDetailError('Country not found.')
 				return
 			}
 
 			setCountryDetail(data.country)
 		} catch {
-			setDetailError('Erreur réseau.')
+			setDetailError('Network error.')
 		} finally {
 			setDetailLoading(false)
 		}

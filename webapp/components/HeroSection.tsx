@@ -19,11 +19,11 @@ export const HeroSection = () => {
 			<div className='relative z-10 container mx-auto px-4 md:px-8'>
 				<div className='max-w-6xl'>
 					<h1 className='bg-navy-400 mb-8 p-4 font-[lexend] leading-16 font-semibold uppercase md:text-5xl lg:text-[52px]'>
-						Cartographier les risques de pollution au CVM/VCM en Europe
+						Mapping CVM/VCM pollution risks across Europe
 					</h1>
 					<p className='mb-8 max-w-4xl text-lg text-blue-50 md:text-[24px]'>
-						Une plateforme collaborative pour documenter et suivre la présence de chlorure de vinyle monomère (CVM) dans
-						les réseaux d&apos;eau potable européens.
+						A collaborative platform to document and track vinyl chloride monomer (VCM) in European drinking water
+						networks.
 					</p>
 					<Button
 						asChild
@@ -31,7 +31,7 @@ export const HeroSection = () => {
 						className='bg-aqua-600 text-md hover:bg-aqua-700 rounded-xl px-8 py-6 font-semibold text-white'
 					>
 						<Link href={ROUTES.MAP}>
-							VOIR LA CARTE <ArrowUpRight className='size-6' />
+							VIEW THE MAP <ArrowUpRight className='size-6' />
 						</Link>
 					</Button>
 				</div>

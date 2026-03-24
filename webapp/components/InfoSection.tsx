@@ -3,21 +3,21 @@ import { InfoCard } from '@/components/InfoCard'
 export const InfoSection = () => {
 	const blocks = [
 		{
-			label: 'Le problème',
+			label: 'The issue',
 			content:
-				"Classé cancérigène certain (groupe 1) par le CIRC, il est associé à des risques d'angiosarcome hépatique et de carcinome hépatocellulaire. Le chlorure de vinyle monomère (CVM ou VCM) est un composé chimique hautement cancérigène qui peut contaminer l'eau potable via les canalisations en PVC vieillissantes."
+				'Classified as a definite human carcinogen (Group 1) by the IARC, it is linked to risks of hepatic angiosarcoma and hepatocellular carcinoma. Vinyl chloride monomer (VCM) is a highly carcinogenic compound that can contaminate drinking water through aging PVC pipes.'
 		},
 		{
-			label: 'Les enjeux',
+			label: 'Why it matters',
 			content:
-				"Des millions de kilomètres de canalisations en PVC sont installés en Europe, dont une partie significative approche de sa fin de vie. La transparence des données reste inégale entre pays, rendant difficile l'évaluation précise des risques pour les populations."
+				'Millions of kilometers of PVC piping are installed across Europe, and a significant share is nearing end of life. Data transparency varies widely between countries, making it hard to assess population-level risk with precision.'
 		}
 	]
 
 	const stats = [
-		{ value: '275 000 km', label: 'de canalisation' },
-		{ value: '12 pays', label: 'européens' },
-		{ value: 'XXX', label: 'de personnes impactées' }
+		{ value: '275,000 km', label: 'of piping' },
+		{ value: '12 countries', label: 'in Europe' },
+		{ value: 'XXX', label: 'people potentially affected' }
 	]
 
 	return (
@@ -25,7 +25,7 @@ export const InfoSection = () => {
 			<div className='container mx-auto px-4 md:px-8'>
 				<InfoCard>
 					<div className='flex flex-col gap-4'>
-						<h3 className='text-navy-800 font-[lexend] text-[32px] font-semibold'>Qu&apos;est-ce que le CVM ?</h3>
+						<h3 className='text-navy-800 font-[lexend] text-[32px] font-semibold'>What is VCM?</h3>
 						<div className='flex flex-col justify-between gap-18 lg:flex-row'>
 							{blocks.map(block => (
 								<div key={block.label} className='flex flex-1 flex-col gap-2.5'>
