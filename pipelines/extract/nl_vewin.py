@@ -1,89 +1,117 @@
+"""
+Prefect workflow for extracting Dutch water company data from Vewin's ArcGIS services.
+Fetches company names and service area geometries, then writes staging tables for
+water companies and distribution zones into DuckDB.
+"""
+
 import json
 from pathlib import Path
+
 import httpx
-from prefect import flow, task
-import polars as pl
-from shapely.geometry import MultiPolygon
+from prefect import flow, get_run_logger, task
 import shapely
+from shapely.geometry import MultiPolygon
 
-layer_definition_api = "https://www.arcgis.com/sharing/rest/content/items/277d87966ce842308506b74535376509/data?f=json"
+from pipelines.common import staging_db
 
-@task(name="get_companies_task")
-def get_companies_task() -> list:
-    """
-    Uses vewin.nl to get water companies.
+LAYER_DEFINITION_API = (
+    "https://www.arcgis.com/sharing/rest/content/items/"
+    "277d87966ce842308506b74535376509/data?f=json"
+)
 
-    Returns a list with all companies' names.
-    """
-    url = layer_definition_api
-    #get_run_logger().info(url)
-    response = httpx.get(url, timeout=30.0)
+GEOJSON_URL = (
+    "https://services5.arcgis.com/ZcRj7hEl3ya9tYHV/arcgis/rest/services/"
+    "Waterbedrijven_Nederland/FeatureServer/0/query"
+)
+
+
+@task(name="extract_nl_vewin_companies")
+def get_companies() -> list[str]:
+    """Fetch water company names from the Vewin layer definition."""
+    logger = get_run_logger()
+    response = httpx.get(LAYER_DEFINITION_API, timeout=30.0)
     response.raise_for_status()
     data = response.json()
 
-    companies_list = []
-    companies_info = data.get("operationalLayers")
-    for layer in companies_info:
+    companies = []
+    for layer in data.get("operationalLayers", []):
         if layer["title"] == "Waterbedrijven":
-            info_list = layer["layerDefinition"]["drawingInfo"]["renderer"]["uniqueValueInfos"]
-            for info in info_list:
-                companies_list.append(info["value"])
-    return companies_list
+            infos = layer["layerDefinition"]["drawingInfo"]["renderer"]["uniqueValueInfos"]
+            companies = [info["value"] for info in infos]
+            break
 
-geojson_url = "https://services5.arcgis.com/ZcRj7hEl3ya9tYHV/arcgis/rest/services/Waterbedrijven_Nederland/FeatureServer/0/query"
+    logger.info(f"Found {len(companies)} companies from Vewin")
+    return companies
 
-@task(name="get_geometry_task")
-def get_geometry_task(name: str) -> dict:
+
+@task(name="extract_nl_vewin_geometry")
+def get_geometry(name: str) -> dict:
+    """Fetch geometry and contact info for a single company."""
     params = {
-    "where": f"Naam='{name}'",
-    "outFields": "*",
-    "returnGeometry": "true",
-    "f": "pgeojson"
+        "where": f"Naam='{name}'",
+        "outFields": "*",
+        "returnGeometry": "true",
+        "f": "pgeojson",
     }
-    
-    #get_run_logger().info(geojson_url)
-    response = httpx.get(geojson_url, params=params, timeout=30.0)
+    response = httpx.get(GEOJSON_URL, params=params, timeout=30.0)
     response.raise_for_status()
-    data = response.json()
+    features = response.json()["features"]
 
-    features = data["features"]
-    company_info = {"Name": features[0]["properties"]["Naam"],
-                    "Phone": features[0]["properties"]["Telefoonnummer"]}
+    info = {
+        "Name": features[0]["properties"]["Naam"],
+        "Phone": features[0]["properties"]["Telefoonnummer"],
+    }
+
     if len(features) == 1:
-        company_info["Geometry"] = json.dumps(features[0]["geometry"])
+        info["Geometry"] = json.dumps(features[0]["geometry"])
     else:
-        geometries = []
-        for feature in features:
-            geometries.append(shapely.from_geojson(json.dumps(feature["geometry"])))
-        print(type(geometries), type(geometries[0]))
-        company_info["Geometry"] = shapely.to_geojson(MultiPolygon(geometries))
-    print("Type Geometry", type(company_info["Geometry"]))
-    return company_info
+        geometries = [
+            shapely.from_geojson(json.dumps(f["geometry"])) for f in features
+        ]
+        info["Geometry"] = shapely.to_geojson(MultiPolygon(geometries))
 
-@flow(name="save_distribution_zones_and_water_companies_task")
-def save_distribution_zones_and_water_companies(path: Path):
-    companies = get_companies_task()
-    distribution_zones = []
+    return info
+
+
+@flow(name="extract_nl_vewin", persist_result=True)
+def extract_nl_vewin(data_directory: Path = Path("data")):
+    """Extract Dutch water companies and distribution zones into staging DuckDB."""
+    logger = get_run_logger()
+    companies_list = get_companies()
+
     water_companies = []
-    for company in companies:
-        row = get_geometry_task(company)
-        row_dz = {"Code": row["Name"],
-                  "CountryCode": "NL",
-                  "Municipalities": [],
-                  "Geometry": row["Geometry"]}
-        distribution_zones.append(row_dz)
-        row_wc = {"Name": row["Name"],
-                  "CountryCode": "NL",
-                  "Source": "Vewin",
-                  "Website": "",
-                  "Phone": row["Phone"],
-                  "Email": "",
-                  "Description": ""}
-        water_companies.append(row_wc)
-    distribution_zones_df = pl.DataFrame(distribution_zones)
-    distribution_zones_df.write_ndjson(path / "staging" / "DistributionZone_nl.ndjson")
-    water_companies_df = pl.DataFrame(water_companies)
-    water_companies_df.write_ndjson(path / "staging" / "WaterCompany_nl.ndjson")
+    distribution_zones = []
 
-if __name__=="__main__":
-    save_distribution_zones_and_water_companies(Path("data"))
+    for company_name in companies_list:
+        row = get_geometry(company_name)
+        water_companies.append({
+            "Name": row["Name"],
+            "CountryCode": "NL",
+            "Source": "Vewin",
+            "Website": "",
+            "Phone": row["Phone"],
+            "Email": "",
+            "Description": "",
+        })
+        distribution_zones.append({
+            "Code": row["Name"],
+            "Name": row["Name"],
+            "CountryCode": "NL",
+            "Municipalities": json.dumps([]),
+            "Geometry": row["Geometry"],
+        })
+
+    conn = staging_db.get_connection(data_directory)
+    try:
+        staging_db.write_table(conn, "WaterCompany_nl_vewin", water_companies)
+        staging_db.write_table(conn, "DistributionZone_nl_vewin", distribution_zones)
+        logger.info(
+            f"Wrote {len(water_companies)} companies and "
+            f"{len(distribution_zones)} zones to staging"
+        )
+    finally:
+        conn.close()
+
+
+if __name__ == "__main__":
+    extract_nl_vewin(Path("data"))

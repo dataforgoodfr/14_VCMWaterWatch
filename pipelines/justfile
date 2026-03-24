@@ -16,6 +16,14 @@ extract-municipalities:
 extract-de-wasserportal:
   uv run python -m pipelines.extract.de_wasserportal
 
+# Extract Dutch water company data from Vewin ArcGIS services.
+extract-nl-vewin:
+  uv run python -m pipelines.extract.nl_vewin
+
+# Extract UK water company data from Ofwat GeoJSON.
+extract-uk-ofwat:
+  uv run python -m pipelines.extract.uk_ofwat
+
 # Convert downloaded GeoJSON files to the staging format.
 transform-geojson:
   uv run python -m pipelines.transform.geojson ${DATA_DIR}
@@ -26,13 +34,13 @@ transform-create-distribution-zones:
 
 # Load all zone data into NocoDB.
 load-zones-country:
-  uv run python -m pipelines.load.load_zones Country ${DATA_DIR}/staging
+  uv run python -m pipelines.load.load_zones Country ${DATA_DIR}
 
 load-zones-municipality:
-  uv run python -m pipelines.load.load_zones Municipality ${DATA_DIR}/staging
+  uv run python -m pipelines.load.load_zones Municipality ${DATA_DIR}
 
 load-zones-distribution:
-  uv run python -m pipelines.load.load_zones DistributionZone ${DATA_DIR}/staging
+  uv run python -m pipelines.load.load_zones DistributionZone ${DATA_DIR}
 
 load-zones:
   @just pipelines load-zones-country
@@ -40,7 +48,7 @@ load-zones:
   @just pipelines load-zones-distribution
 
 load-water-companies:
-  uv run python -m pipelines.load.load_water_companies ${DATA_DIR}/staging
+  uv run python -m pipelines.load.load_water_companies ${DATA_DIR}
 
 # Import water companies from NocoDB staging table (Water Company Import).
 # Requires Country and Municipality data to be loaded first.
