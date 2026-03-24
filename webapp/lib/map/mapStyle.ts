@@ -1,12 +1,15 @@
 import type { StyleSpecification } from 'maplibre-gl'
 import type { LayerProps } from 'react-map-gl/maplibre'
 
+export const WORLD_COUNTRIES_GEOJSON_URL =
+	'https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson'
+
 export const BASE_STYLE: StyleSpecification = {
 	version: 8,
 	sources: {
 		'world-countries': {
 			type: 'geojson',
-			data: 'https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson'
+			data: WORLD_COUNTRIES_GEOJSON_URL
 		}
 	},
 	layers: [
