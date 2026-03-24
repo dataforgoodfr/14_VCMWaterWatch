@@ -18,17 +18,7 @@ interface LetterTemplateRecord {
 	}
 }
 
-// Server-side cache keyed by locale
-const cache = new Map<string, { data: Template[]; timestamp: number }>()
-const CACHE_DURATION_MS = 5 * 60 * 1000 // 5 minutes
-
 export async function fetchLetterTemplates(locale: string): Promise<Template[]> {
-	const cached = cache.get(locale)
-
-	if (cached && Date.now() - cached.timestamp < CACHE_DURATION_MS) {
-		return cached.data
-	}
-
 	try {
 		const tableId = await getTableIdByName('LetterTemplate')
 
@@ -47,24 +37,13 @@ export async function fetchLetterTemplates(locale: string): Promise<Template[]> 
 			throw new Error(`Failed to fetch letter templates: ${response.statusText}`)
 		}
 
-		const templates: Template[] = response.data.records.map(r => ({
+		return response.data.records.map(r => ({
 			icon: r.fields.Icon,
 			title: r.fields.Title,
 			content: r.fields.Content
 		}))
-
-		cache.set(locale, { data: templates, timestamp: Date.now() })
-
-		return templates
 	} catch (error) {
 		console.error('Error fetching letter templates:', error)
-
-		// Return stale cache if available
-		if (cached) {
-			console.warn('Returning stale letter template cache due to fetch error')
-			return cached.data
-		}
-
 		return []
 	}
 }
