@@ -14,6 +14,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 	}
 
 	const zoneId = Number(id)
+
 	if (!Number.isFinite(zoneId)) {
 		return NextResponse.json({ error: 'Invalid zone ID' }, { status: HTTP_STATUS.BadRequest.code })
 	}

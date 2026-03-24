@@ -20,10 +20,10 @@ export default function ActionGuideSidebar() {
 				</p>
 			</div>
 
-			{/* Letter templates */}
+			{/* Letter templates - horizontal row */}
 			<div>
 				<h4 className='text-navy-800 mb-3 text-sm font-semibold'>Letter templates</h4>
-				<div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+				<div className='grid grid-cols-1 gap-3 sm:grid-cols-3'>
 					{templates.map((tpl, i) => (
 						<TemplateCard key={i} icon={tpl.icon} title={tpl.title} onClick={() => setOpenTemplate(i)} />
 					))}
