@@ -84,9 +84,9 @@ export default function ActionGuideSidebar() {
 	return (
 		<div className='space-y-6'>
 			{/* Important reminder */}
-			<div className='rounded-lg border border-blue-200 bg-blue-50 p-4'>
-				<h4 className='text-sm font-semibold text-blue-900'>💡 Important reminder</h4>
-				<p className='mt-2 text-sm text-blue-800'>
+			<div className='border-navy-300 bg-navy-100 rounded-lg border p-4'>
+				<h4 className='text-navy-900 text-sm font-semibold'>💡 Important reminder</h4>
+				<p className='text-navy-800 mt-2 text-sm'>
 					You are paying for a water distribution service. Access to safe, clean drinking water is a legal obligation
 					for your water provider and municipality. You have every right to demand transparency and action.
 				</p>
@@ -94,24 +94,24 @@ export default function ActionGuideSidebar() {
 
 			{/* Letter templates */}
 			<div>
-				<h4 className='mb-3 text-sm font-semibold text-gray-700'>Letter templates</h4>
+				<h4 className='text-navy-800 mb-3 text-sm font-semibold'>Letter templates</h4>
 				<div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
 					{templates.map((tpl, i) => (
 						<button
 							key={i}
 							onClick={() => setOpenTemplate(i)}
-							className='flex h-full min-h-[4.5rem] items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 text-left shadow-sm transition hover:border-gray-300 hover:shadow'
+							className='border-navy-200 bg-navy-50 hover:border-navy-300 flex h-full min-h-[4.5rem] items-center gap-3 rounded-lg border p-3 text-left shadow-sm transition hover:shadow'
 						>
 							<span className='text-xl'>{tpl.icon}</span>
-							<span className='text-sm font-medium text-gray-800'>{tpl.title}</span>
+							<span className='text-navy-800 text-sm font-medium'>{tpl.title}</span>
 						</button>
 					))}
 				</div>
 			</div>
 
 			{/* Notice */}
-			<div className='rounded-lg border border-amber-200 bg-amber-50 p-4'>
-				<p className='text-sm text-amber-800'>
+			<div className='border-aqua-400 bg-aqua-100 rounded-lg border p-4'>
+				<p className='text-aqua-800 text-sm'>
 					⚠️ <strong>Keep written records</strong> of all communications with your water provider, mayor, and elected
 					officials.
 				</p>

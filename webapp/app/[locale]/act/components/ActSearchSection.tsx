@@ -28,7 +28,7 @@ export default function ActSearchSection() {
 
 	return (
 		<div>
-			<h2 className='mb-4 text-xl font-semibold text-gray-800'>Find your distribution zone</h2>
+			<h2 className='text-navy-800 mb-4 font-[lexend] text-2xl font-semibold'>Find your distribution zone</h2>
 			<ActSearchBar onSelect={handleSelect} />
 			<ZoneResultPanel zone={zone} loading={loading} />
 		</div>
