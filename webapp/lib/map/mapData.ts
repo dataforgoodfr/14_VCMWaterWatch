@@ -7,9 +7,11 @@ export interface MapData {
 }
 
 export async function fetchMapData(): Promise<MapData> {
+	const [zones, countries] = await Promise.all([fetchDistributionZonesForMap(), fetchCountriesForMap()])
+
 	return {
-		zones: (await fetchDistributionZonesForMap()) ?? [],
-		countries: (await fetchCountriesForMap()) ?? []
+		zones: zones ?? [],
+		countries: countries ?? []
 	}
 }
 
