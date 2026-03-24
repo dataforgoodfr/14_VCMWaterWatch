@@ -30,8 +30,10 @@ export async function POST(request: Request) {
 		}
 
 		await instance.post(`/data/${process.env.NOCODB_BASE_ID}/${tableId}/records`, {
-			'Data Type': body.dataType,
-			'Document Source': body.documentSource ?? ''
+			fields: {
+				'Data type': body.dataType,
+				'Document Source': body.documentSource ?? ''
+			}
 		})
 
 		return NextResponse.json({ success: true }, { status: HTTP_STATUS.Created.code })

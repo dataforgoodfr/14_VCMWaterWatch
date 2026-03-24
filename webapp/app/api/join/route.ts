@@ -38,10 +38,12 @@ export async function POST(request: Request) {
 		}
 
 		await instance.post(`/data/${process.env.NOCODB_BASE_ID}/${tableId}/records`, {
-			Name: body.name.trim(),
-			Email: body.email.trim(),
-			Expertise: body.expertise.trim(),
-			Message: body.message?.trim() ?? ''
+			fields: {
+				Name: body.name.trim(),
+				Email: body.email.trim(),
+				Expertise: body.expertise.trim(),
+				Message: body.message?.trim() ?? ''
+			}
 		})
 
 		return NextResponse.json({ success: true }, { status: HTTP_STATUS.Created.code })
