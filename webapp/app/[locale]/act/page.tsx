@@ -1,10 +1,17 @@
+import { SectionSeparator } from '@/components/SectionSeparator'
+
 import ActSearchSection from './components/ActSearchSection'
 import ActionGuide from './components/ActionGuide'
 
 export default function ActPage() {
 	return (
-		<main className='mx-auto w-full max-w-5xl space-y-16 px-6 py-16'>
-			<h1 className='text-3xl font-semibold text-gray-900'>Take action</h1>
+		<main className='container mx-auto space-y-16 px-4 py-16 md:px-8'>
+			<div>
+				<h1 className='text-navy-800 font-[lexend] text-3xl font-semibold'>Take action</h1>
+				<div className='mt-6'>
+					<SectionSeparator />
+				</div>
+			</div>
 
 			{/* Step 1: Search */}
 			<section id='search'>
