@@ -57,7 +57,7 @@ def load_source_data(conn, level: str) -> list[dict]:
     """
     # Get all tables in staging schema
     tables = conn.sql(
-        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'staging'"
+        "SELECT table_name FROM information_schema.tables WHERE table_catalog = 'staging'"
     ).fetchall()
     table_names = [t[0] for t in tables if t[0].startswith(level)]
 

@@ -27,14 +27,14 @@ from pipelines.common.db_helper import DatabaseHelper
 def load_water_companies_task(conn) -> list[dict]:
     """Load water companies from staging DB (all WaterCompany* tables)."""
     tables = conn.sql(
-        "SELECT table_schema, table_name FROM information_schema.tables "
+        "SELECT table_catalog, table_name FROM information_schema.tables "
         "WHERE table_name LIKE 'WaterCompany%'"
     ).fetchall()
 
     if not tables:
         return []
 
-    queries = [f'SELECT * FROM {schema}."{tn}"' for schema, tn in tables]
+    queries = [f'SELECT * FROM {catalog}."{tn}"' for catalog, tn in tables]
     union_sql = " UNION ALL ".join(queries)
     records = conn.sql(union_sql).fetchdf().to_dict("records")
 
@@ -91,7 +91,7 @@ def insert_actors_task(records: list[dict], db_helper: DatabaseHelper) -> list[d
         r["Id"] = existing_map.get(r.get("Name"))
 
     to_insert = [
-        {k: v for k, v in r.items() if k in ("Name", "Country_id", "Phone", "Email", "Website", "Description", "Source")}
+        {k: v for k, v in r.items() if k in ("Name", "Type", "Country_id", "Phone", "Email", "Website", "Description", "Source")}
         for r in records if r.get("Id") is None
     ]
     logger.info(f"Inserting {len(to_insert)} actors into the database")
