@@ -23,7 +23,10 @@ export default function DataSubmissionForm({ defaultDataType }: DataSubmissionFo
 
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault()
-		if (!dataType) return
+
+		if (!dataType) {
+			return
+		}
 
 		setSubmitting(true)
 		setError(null)
@@ -40,8 +43,9 @@ export default function DataSubmissionForm({ defaultDataType }: DataSubmissionFo
 			})
 
 			if (!res.ok) {
-				const body = await res.json().catch(() => ({}))
-				throw new Error((body as { error?: string }).error ?? 'Submission failed')
+				const body = (await res.json().catch(() => ({}))) as { error?: string }
+
+				throw new Error(body.error ?? 'Submission failed')
 			}
 
 			setSuccess(true)
@@ -55,7 +59,12 @@ export default function DataSubmissionForm({ defaultDataType }: DataSubmissionFo
 	}
 
 	return (
-		<form onSubmit={handleSubmit} className='space-y-4'>
+		<form
+			onSubmit={e => {
+				void handleSubmit(e)
+			}}
+			className='space-y-4'
+		>
 			<Field>
 				<FieldLabel htmlFor='data-type'>Data type *</FieldLabel>
 				<select
@@ -63,7 +72,7 @@ export default function DataSubmissionForm({ defaultDataType }: DataSubmissionFo
 					required
 					value={dataType}
 					onChange={e => setDataType(e.target.value as DataType)}
-					className='border-input h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]'
+					className='border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px]'
 				>
 					<option value='' disabled>
 						Select a data type…
@@ -88,7 +97,9 @@ export default function DataSubmissionForm({ defaultDataType }: DataSubmissionFo
 
 			{error && <FieldError>{error}</FieldError>}
 
-			{success && <p className='text-sm font-medium text-green-700'>✓ Thank you! Your contribution has been submitted.</p>}
+			{success && (
+				<p className='text-sm font-medium text-green-700'>✓ Thank you! Your contribution has been submitted.</p>
+			)}
 
 			<Button type='submit' disabled={submitting || !dataType} className='w-full'>
 				{submitting ? 'Submitting…' : 'Submit data'}

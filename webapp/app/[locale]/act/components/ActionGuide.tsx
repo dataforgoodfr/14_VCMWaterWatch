@@ -1,5 +1,4 @@
 import ScenarioColumns from './ScenarioColumns'
-import ActionGuideSidebar from './ActionGuideSidebar'
 
 export default function ActionGuide() {
 	return (
@@ -9,8 +8,14 @@ export default function ActionGuide() {
 				Select the scenario that matches your situation to see recommended actions.
 			</p>
 			<ScenarioColumns />
-			<div className='mt-10'>
-				<ActionGuideSidebar />
+
+			{/* Callouts previously in ActionGuideSidebar */}
+			<div className='border-navy-300 bg-navy-100 mt-8 rounded-lg border p-4'>
+				<h4 className='text-navy-900 text-sm font-semibold'>💡 Important reminder</h4>
+				<p className='text-navy-800 mt-2 text-sm'>
+					You are paying for a water distribution service. Access to safe, clean drinking water is a legal obligation
+					for your water provider and municipality. You have every right to demand transparency and action.
+				</p>
 			</div>
 		</div>
 	)

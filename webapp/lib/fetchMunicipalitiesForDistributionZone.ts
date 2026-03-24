@@ -29,6 +29,7 @@ export async function fetchMunicipalityNamesForDistributionZone(distributionZone
 		}
 
 		const names = response.data.records.map(r => r.fields.Name).filter(Boolean)
+
 		return [...new Set(names)].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
 	} catch (error) {
 		console.error('Error fetching municipalities for distribution zone:', error)

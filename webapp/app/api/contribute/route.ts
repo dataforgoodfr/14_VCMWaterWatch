@@ -37,9 +37,6 @@ export async function POST(request: Request) {
 		return NextResponse.json({ success: true }, { status: HTTP_STATUS.Created.code })
 	} catch (error) {
 		console.error('Error in POST /api/contribute:', error)
-		return NextResponse.json(
-			{ error: 'Internal server error' },
-			{ status: HTTP_STATUS.InternalServerError.code }
-		)
+		return NextResponse.json({ error: 'Internal server error' }, { status: HTTP_STATUS.InternalServerError.code })
 	}
 }

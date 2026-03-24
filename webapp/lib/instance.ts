@@ -15,8 +15,13 @@ export interface FetchResponseRecords<T> {
 /** Match pipelines/common/db_helper.py: NOCODB_URL may be host-only; v3 APIs live under /api/v3. */
 function nocoDbApiBaseUrl(): string {
 	const raw = process.env.NOCODB_URL?.trim() ?? ''
-	if (!raw) return ''
+
+	if (!raw) {
+		return ''
+	}
+
 	const base = raw.replace(/\/+$/, '')
+
 	return base.toLowerCase().endsWith('/api/v3') ? base : `${base}/api/v3`
 }
 
