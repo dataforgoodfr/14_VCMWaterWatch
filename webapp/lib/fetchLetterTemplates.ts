@@ -1,6 +1,11 @@
-import { Template } from '@/app/[locale]/act/data/templates'
 import { getTableIdByName } from './fetchMetaTables'
 import { FetchResponseRecords, instance } from './instance'
+
+export interface Template {
+	icon: string
+	title: string
+	content: string
+}
 
 interface LetterTemplateRecord {
 	fields: {
@@ -35,7 +40,7 @@ export async function fetchLetterTemplates(locale: string): Promise<Template[]> 
 		const baseId = process.env.NOCODB_BASE_ID
 
 		const response = await instance.get<FetchResponseRecords<LetterTemplateRecord>>(
-			`/data/${baseId}/${tableId}/records?where=(Active,eq,true)~and(Locale,eq,${locale})&sort=SortOrder`
+			`/data/${baseId}/${tableId}/records?where=(Active,eq,1)~and(Locale,eq,${locale})&sort=${JSON.stringify([{ direction: 'asc', field: 'SortOrder' }])}`
 		)
 
 		if (response.status !== 200) {

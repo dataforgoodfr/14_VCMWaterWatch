@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldLabel, FieldError } from '@/components/ui/field'
 
-import { Template } from '../data/templates'
+import { Template } from '@/lib/fetchLetterTemplates'
 import TemplateCard from './TemplateCard'
 import TemplateModal from './TemplateModal'
 import DataSubmissionForm from './DataSubmissionForm'
