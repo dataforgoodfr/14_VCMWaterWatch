@@ -4,7 +4,11 @@ const nextConfig: NextConfig = {
 	output: 'standalone',
 	reactStrictMode: false,
 	images: {
-		remotePatterns: [{ hostname: 'cdn.shadcnstudio.com' }, { hostname: 'noco-uploads.s3.fr-par.scw.cloud' }]
+		remotePatterns: [
+			{ hostname: 'cdn.shadcnstudio.com' },
+			{ hostname: 'noco-uploads.s3.fr-par.scw.cloud' },
+			{ hostname: 'placehold.co', protocol: 'https' }
+		]
 	}
 }
 
