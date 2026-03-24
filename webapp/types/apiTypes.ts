@@ -144,8 +144,21 @@ export interface DistributionZoneFields {
 export interface DistributionZoneGeoLimitedFields {
 	Name: string
 	Country: Country
+	ActorName?: string[]
 }
 export type DistributionZoneGeoLimitedRecord = Record<DistributionZoneGeoLimitedFields>
+
+export interface DistributionZoneDetailFields {
+	Name: string
+	Code: string
+	'PVC Level': string | null
+	'VCM Level': string | null
+	Country: Country
+	ActorName: string[]
+	ActorEmail: string[]
+	'Municipality Geometries': string[]
+}
+export type DistributionZoneDetailRecord = Record<DistributionZoneDetailFields>
 
 export interface DistributionZoneMapFields {
 	Name: string
