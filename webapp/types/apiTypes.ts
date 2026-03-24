@@ -156,7 +156,9 @@ export interface DistributionZoneDetailFields {
 	Country: Country
 	ActorName: string[]
 	ActorEmail: string[]
-	'Municipality Geometries': string[]
+	/** Resolved server-side from linked Municipality records; not from geometry fields */
+	MunicipalityNames?: string[]
+	'Municipality Geometries'?: string[]
 }
 export type DistributionZoneDetailRecord = Record<DistributionZoneDetailFields>
 

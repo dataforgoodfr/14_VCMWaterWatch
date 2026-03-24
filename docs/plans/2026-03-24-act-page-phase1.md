@@ -5,7 +5,7 @@
 Deliver a functional `/act` page with:
 1. A search that finds distribution zones by municipality/zone/actor name
 2. A results panel showing zone details + color badge
-3. A static action guide with all 3 scenarios (accordion) + sidebar with templates
+3. A static action guide with all 3 scenarios in a three-column layout, plus reminder, letter templates (three columns), and notices below
 
 No forms, no data submission — that's phase 2.
 
@@ -207,17 +207,16 @@ interface ZoneResultPanelProps {
 
 **File:** `webapp/app/[locale]/act/components/ActionGuide.tsx` (new)
 
-Two-column layout: `grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-8`
+Single-column flow: heading, short intro, then the scenario grid, then the follow-up block (reminder + templates + notice). No accordion; no two-column main/sidebar split.
 
-### Left column — Scenarios accordion
+### Scenarios — three columns
 
-Uses `@radix-ui/react-accordion` (already in deps). Three items, all collapsed by default.
+**File:** `webapp/app/[locale]/act/components/ScenarioColumns.tsx` (new)
 
-**File:** `webapp/app/[locale]/act/components/ScenarioAccordion.tsx` (new)
+Responsive grid: one column on small screens, three columns from `lg` (`grid grid-cols-1 gap-6 lg:grid-cols-3`). Each scenario is a card with:
 
-Each accordion item:
-- Trigger: colored badge (circle or pill) + scenario title
-- Content: static English text, hardcoded
+- Header: emoji badge + scenario title
+- Body: static English text, hardcoded
 
 Content per scenario — see requirements doc. Key points:
 - 🟢 Green: 3 lines + CTA link to step 3 (anchor `#contribute`)
@@ -226,15 +225,15 @@ Content per scenario — see requirements doc. Key points:
 
 Numbered steps rendered as an `<ol>` with styled list items. Sub-steps within "Contact your water provider" as nested `<ul>`.
 
-### Right column — Sticky sidebar
+### Below scenarios — reminder, templates, notice
 
 **File:** `webapp/app/[locale]/act/components/ActionGuideSidebar.tsx` (new)
 
-`sticky top-24` on desktop, normal flow on mobile.
+Rendered full width below `ScenarioColumns` (the filename is legacy; it is not a sticky side rail).
 
-Contains:
+Contains, in order:
 1. **"Important reminder"** card — blue/info styled box with the legal reminder text (you're paying for a service, safe water is a legal obligation)
-2. **"Letter templates"** — 3 stacked cards, each clickable:
+2. **"Letter templates"** — heading plus a responsive grid: one column on small screens, **three columns** from `md` (`grid grid-cols-1 md:grid-cols-3`). Each cell is a clickable card:
    - Icon + title ("Letter to the mayor", "Email to water company", "Letter to MP")
    - On click: opens a `Sheet` (radix dialog, already have `sheet.tsx`) with template text + copy button
 3. **⚠️ Notice** — "Keep written records of all communications"
@@ -304,7 +303,7 @@ export default function ActPage() {
 | `webapp/app/[locale]/act/components/ActSearchBar.tsx` | New | 4 |
 | `webapp/app/[locale]/act/components/ZoneResultPanel.tsx` | New | 5 |
 | `webapp/app/[locale]/act/components/ActionGuide.tsx` | New | 6 |
-| `webapp/app/[locale]/act/components/ScenarioAccordion.tsx` | New | 6 |
+| `webapp/app/[locale]/act/components/ScenarioColumns.tsx` | New | 6 |
 | `webapp/app/[locale]/act/components/ActionGuideSidebar.tsx` | New | 6 |
 | `webapp/app/[locale]/act/components/TemplateModal.tsx` | New | 6 |
 
@@ -319,7 +318,7 @@ export default function ActPage() {
 | 3. Detail endpoint | 1 |
 | 4. Debounced autocomplete | 1.5 |
 | 5. Results panel | 1.5 |
-| 6. Static action guide + sidebar + templates | 2.5 |
+| 6. Static action guide (scenarios + templates) | 2.5 |
 | 7. Page shell | 0.5 |
 
 ---

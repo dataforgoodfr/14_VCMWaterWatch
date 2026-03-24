@@ -82,7 +82,7 @@ export default function ActionGuideSidebar() {
 	const [openTemplate, setOpenTemplate] = useState<number | null>(null)
 
 	return (
-		<div className='space-y-6 lg:sticky lg:top-24'>
+		<div className='space-y-6'>
 			{/* Important reminder */}
 			<div className='rounded-lg border border-blue-200 bg-blue-50 p-4'>
 				<h4 className='text-sm font-semibold text-blue-900'>💡 Important reminder</h4>
@@ -93,18 +93,20 @@ export default function ActionGuideSidebar() {
 			</div>
 
 			{/* Letter templates */}
-			<div className='space-y-3'>
-				<h4 className='text-sm font-semibold text-gray-700'>Letter templates</h4>
-				{templates.map((tpl, i) => (
-					<button
-						key={i}
-						onClick={() => setOpenTemplate(i)}
-						className='flex w-full items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 text-left shadow-sm transition hover:border-gray-300 hover:shadow'
-					>
-						<span className='text-xl'>{tpl.icon}</span>
-						<span className='text-sm font-medium text-gray-800'>{tpl.title}</span>
-					</button>
-				))}
+			<div>
+				<h4 className='mb-3 text-sm font-semibold text-gray-700'>Letter templates</h4>
+				<div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+					{templates.map((tpl, i) => (
+						<button
+							key={i}
+							onClick={() => setOpenTemplate(i)}
+							className='flex h-full min-h-[4.5rem] items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 text-left shadow-sm transition hover:border-gray-300 hover:shadow'
+						>
+							<span className='text-xl'>{tpl.icon}</span>
+							<span className='text-sm font-medium text-gray-800'>{tpl.title}</span>
+						</button>
+					))}
+				</div>
 			</div>
 
 			{/* Notice */}

@@ -1,12 +1,34 @@
 """
 Prefect workflow for building a SearchIndex field on DistributionZone records.
-The SearchIndex concatenates zone name, municipality names, and actor names
-to enable search across all three.
+The SearchIndex concatenates zone name, municipality names (from the zone's
+Municipalities link), and actor names to enable search across all three.
 """
 
 from prefect import flow, task
 from prefect.cache_policies import NO_CACHE
 from pipelines.common import services
+
+
+def _linked_record_ids(links) -> list[int]:
+    """Extract numeric Ids from a NocoDB Links field (list/dict/scalar)."""
+    if links is None:
+        return []
+    ids: list[int] = []
+    if isinstance(links, list):
+        for item in links:
+            if isinstance(item, dict):
+                raw = item.get("Id", item.get("id"))
+            else:
+                raw = item
+            if raw is not None:
+                ids.append(int(raw))
+    elif isinstance(links, dict):
+        raw = links.get("Id", links.get("id"))
+        if raw is not None:
+            ids.append(int(raw))
+    else:
+        ids.append(int(links))
+    return ids
 
 
 @task(name="build_search_index", cache_policy=NO_CACHE)
@@ -15,38 +37,29 @@ def build_search_index_task(db_helper):
     Build a SearchIndex text field for each DistributionZone by combining
     zone name, municipality names, and actor names.
     """
-    # Load distribution zones
-    zones = db_helper.load_all_records(
-        "DistributionZone",
-        fields=["Id", "Name", "ActorName"],
-    )
-
-    # Load municipalities to get their names grouped by zone
+    # Municipality → zone link title varies in NocoDB; use DistributionZone.Municipalities instead.
     municipalities = db_helper.load_all_records(
         "Municipality",
-        fields=["Id", "Name", "DistributionZone"],
+        fields=["Id", "Name"],
     )
-
-    # Build a map of zone ID -> list of municipality names
-    zone_municipalities: dict[int, list[str]] = {}
+    id_to_name: dict[int, str] = {}
     for muni in municipalities:
-        dz_links = muni.get("DistributionZone")
-        if dz_links and isinstance(dz_links, list):
-            for dz in dz_links:
-                dz_id = dz.get("Id") if isinstance(dz, dict) else dz
-                if dz_id:
-                    zone_municipalities.setdefault(dz_id, []).append(muni["Name"])
-        elif dz_links and isinstance(dz_links, dict):
-            dz_id = dz_links.get("Id")
-            if dz_id:
-                zone_municipalities.setdefault(dz_id, []).append(muni["Name"])
+        mid = muni.get("Id")
+        if mid is not None and muni.get("Name") is not None:
+            id_to_name[int(mid)] = muni["Name"]
+
+    zones = db_helper.load_all_records(
+        "DistributionZone",
+        fields=["Id", "Name", "ActorName", "Municipalities"],
+    )
 
     # Build search index for each zone
     updates = []
     for zone in zones:
         parts = [zone["Name"]]
 
-        muni_names = zone_municipalities.get(zone["Id"], [])
+        muni_ids = _linked_record_ids(zone.get("Municipalities"))
+        muni_names = [id_to_name[i] for i in muni_ids if i in id_to_name]
         if muni_names:
             parts.append(", ".join(muni_names))
 
