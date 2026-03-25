@@ -1,4 +1,5 @@
 import { CountryMapRecord, DistributionZoneGeoLimitedRecord, DistributionZoneMapRecord } from '@/types/apiTypes'
+import { sanitizeNocoDbLikeValue, sanitizeSearchQuery } from '@/lib/security/searchQuery'
 import { FetchResponseRecords, instance } from './instance'
 import { getTableIdByName } from './fetchMetaTables'
 
@@ -60,10 +61,22 @@ export async function fetchCountriesForMap() {
 
 export async function fetchDistributionZonesLimitedFieldsGeo({ query }: FetchDistributionZonesParams) {
 	try {
+		const safe = sanitizeSearchQuery(query)
+		const likeValue = safe ? sanitizeNocoDbLikeValue(safe) : ''
+
+		if (!likeValue) {
+			return null
+		}
+
 		const DistributionZoneId = await getTableIdByName('DistributionZone')
 
+		if (!DistributionZoneId) {
+			return null
+		}
+
 		const distributionZonesResponse = await instance.get<FetchResponseRecords<DistributionZoneGeoLimitedRecord>>(
-			`/data/${process.env.NOCODB_BASE_ID}/${DistributionZoneId}/records?where=(Name,like,${query})&fields=Name,Country&l=10`
+			`/data/${process.env.NOCODB_BASE_ID}/${DistributionZoneId}/records`,
+			{ params: { where: `(Name,like,${likeValue})`, fields: 'Name,Country', l: 10 } }
 		)
 
 		if (distributionZonesResponse.status !== 200) {
@@ -73,8 +86,8 @@ export async function fetchDistributionZonesLimitedFieldsGeo({ query }: FetchDis
 		const distributionZonesData: FetchResponseRecords<DistributionZoneGeoLimitedRecord> = distributionZonesResponse.data
 
 		return distributionZonesData.records || null
-	} catch (error) {
-		console.error('Error fetching distribution zones:', error)
+	} catch {
+		console.error('Error fetching distribution zones for search')
 		return null
 	}
 }
