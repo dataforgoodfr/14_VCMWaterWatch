@@ -28,5 +28,6 @@ function nocoDbApiBaseUrl(): string {
 export const instance = axios.create({
 	baseURL: nocoDbApiBaseUrl(),
 	timeout: 1000,
-	headers: { 'xc-token': process.env.NOCODB_TOKEN ?? '' }
+	headers: { 'xc-token': process.env.NOCODB_TOKEN ?? '' },
+	proxy: false
 })
