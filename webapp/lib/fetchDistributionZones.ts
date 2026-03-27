@@ -76,7 +76,7 @@ export async function fetchDistributionZonesLimitedFieldsGeo({ query }: FetchDis
 
 		const distributionZonesResponse = await instance.get<FetchResponseRecords<DistributionZoneGeoLimitedRecord>>(
 			`/data/${process.env.NOCODB_BASE_ID}/${DistributionZoneId}/records`,
-			{ params: { where: `(Name,like,${likeValue})`, fields: 'Name,Country', l: 10 } }
+			{ params: { where: `(SearchIndex,like,${likeValue})`, fields: 'Name,Country,ActorName', l: 10 } }
 		)
 
 		if (distributionZonesResponse.status !== 200) {

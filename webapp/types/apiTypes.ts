@@ -34,6 +34,9 @@ export type TableTitle =
 	| 'DistributionZone'
 	| 'Municipality'
 	| 'BlogPost'
+	| 'Contribution'
+	| 'Volunteer'
+	| 'LetterTemplate'
 
 export interface MetaTable {
 	id: string
@@ -144,8 +147,23 @@ export interface DistributionZoneFields {
 export interface DistributionZoneGeoLimitedFields {
 	Name: string
 	Country: Country
+	ActorName?: string[]
 }
 export type DistributionZoneGeoLimitedRecord = Record<DistributionZoneGeoLimitedFields>
+
+export interface DistributionZoneDetailFields {
+	Name: string
+	Code: string
+	'PVC Level': string | null
+	'VCM Level': string | null
+	Country: Country
+	ActorName: string[]
+	ActorEmail: string[]
+	/** Resolved server-side from linked Municipality records; not from geometry fields */
+	MunicipalityNames?: string[]
+	'Municipality Geometries'?: string[]
+}
+export type DistributionZoneDetailRecord = Record<DistributionZoneDetailFields>
 
 export interface DistributionZoneMapFields {
 	Name: string
