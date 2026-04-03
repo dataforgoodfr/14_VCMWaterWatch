@@ -14,10 +14,10 @@ services:
       - NOCODB_URL=${NOCODB_URL}
       - NOCODB_TOKEN=${NOCODB_TOKEN}
     restart: unless-stopped
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.vcmwaterwatch.rule=Host(`vcmwaterwatch.services.d4g.fr`)
-      - traefik.http.routers.vcmwaterwatch.entryPoints=webtls
-      - traefik.http.routers.vcmwaterwatch.tls=true
-      - traefik.docker.network=d4g-internal
-      - traefik.http.services.vcmwaterwatch.loadbalancer.server.port=3000
+    # labels:
+    #   - traefik.enable=true
+    #   - traefik.http.routers.vcmwaterwatch.rule=Host(`vcm-watch.eu`)
+    #   - traefik.http.routers.vcmwaterwatch.entryPoints=webtls
+    #   - traefik.http.routers.vcmwaterwatch.tls=true
+    #   - traefik.docker.network=d4g-internal
+    #   - traefik.http.services.vcmwaterwatch.loadbalancer.server.port=3000
