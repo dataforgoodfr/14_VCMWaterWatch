@@ -117,20 +117,25 @@ def split_new_and_existing(
 
     Returns:
         (new_records, existing_records) where existing_records have their NocoDB 'Id' set.
+    Deduplicates by Code within each group.
     """
     existing = load_existing_data(table_name=table_name)
     existing_code_to_id = {r["Code"]: r["Id"] for r in existing}
-    new_records = []
-    existing_records = []
+    new_records: dict[str, dict] = {}
+    existing_records: dict[str, dict] = {}
     for r in records:
         code = r.get("Code")
+        if code is None:
+            continue
         if code in existing_code_to_id:
-            r = dict(r)
-            r["Id"] = existing_code_to_id[code]
-            existing_records.append(r)
+            if code not in existing_records:
+                r = dict(r)
+                r["Id"] = existing_code_to_id[code]
+                existing_records[code] = r
         else:
-            new_records.append(r)
-    return new_records, existing_records
+            if code not in new_records:
+                new_records[code] = r
+    return list(new_records.values()), list(existing_records.values())
 
 
 @task(name="lookup_parent", cache_policy=INPUTS)

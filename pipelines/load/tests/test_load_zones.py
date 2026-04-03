@@ -1,6 +1,8 @@
 """Tests for load_zones deduplication logic."""
 import duckdb
 from pipelines.load.load_zones import load_source_data
+from unittest.mock import patch
+from pipelines.load.load_zones import split_new_and_existing
 
 
 def _setup_staging(conn, table_name: str, records: list[dict]):
@@ -54,3 +56,28 @@ class TestLoadSourceDataDedup:
     def test_empty_tables_returns_empty(self):
         result = load_source_data(self.conn, "DistributionZone")
         assert result == []
+
+
+class TestSplitNewAndExistingDedup:
+
+    @patch("pipelines.load.load_zones.load_existing_data", return_value=[])
+    def test_deduplicates_new_records_by_code(self, mock_load):
+        records = [
+            {"Code": "A", "Name": "A1"},
+            {"Code": "A", "Name": "A2"},
+            {"Code": "B", "Name": "B1"},
+        ]
+        new, existing = split_new_and_existing(records, "DistributionZone")
+        new_codes = [r["Code"] for r in new]
+        assert sorted(new_codes) == ["A", "B"]
+
+    @patch("pipelines.load.load_zones.load_existing_data", return_value=[{"Code": "A", "Id": 1}])
+    def test_existing_records_also_deduped(self, mock_load):
+        records = [
+            {"Code": "A", "Name": "A1"},
+            {"Code": "A", "Name": "A2"},
+        ]
+        new, existing = split_new_and_existing(records, "DistributionZone")
+        assert len(new) == 0
+        assert len(existing) == 1
+
