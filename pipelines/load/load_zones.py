@@ -64,9 +64,50 @@ def load_source_data(conn, level: str) -> list[dict]:
     if not table_names:
         return []
 
-    queries = [f"SELECT * FROM staging.\"{tn}\"" for tn in table_names]
+    # Collect all columns across tables so UNION ALL works even when schemas differ
+    all_columns: dict[str, str] = {}  # name -> type
+    for tn in table_names:
+        cols = conn.sql(
+            f"SELECT column_name, data_type FROM information_schema.columns "
+            f"WHERE table_catalog = 'staging' AND table_name = '{tn}'"
+        ).fetchall()
+        for col_name, col_type in cols:
+            if col_name not in all_columns:
+                all_columns[col_name] = col_type
+
+    col_names = sorted(all_columns.keys())
+    queries = []
+    for tn in table_names:
+        table_cols = {
+            r[0] for r in conn.sql(
+                f"SELECT column_name FROM information_schema.columns "
+                f"WHERE table_catalog = 'staging' AND table_name = '{tn}'"
+            ).fetchall()
+        }
+        select_parts = [
+            f'"{c}"' if c in table_cols else f"NULL AS \"{c}\""
+            for c in col_names
+        ]
+        queries.append(f"SELECT {', '.join(select_parts)} FROM staging.\"{tn}\"")
+
     union_sql = " UNION ALL ".join(queries)
-    return conn.sql(union_sql).fetchdf().to_dict("records")
+    records = conn.sql(union_sql).fetchdf().to_dict("records")
+
+    # Deduplicate by Code, preferring rows with more non-null fields
+    seen: dict[str, dict] = {}
+    for r in records:
+        code = r.get("Code")
+        if code is None:
+            continue
+        if code not in seen:
+            seen[code] = r
+        else:
+            # Keep the row with more non-null values
+            existing_non_null = sum(1 for v in seen[code].values() if v is not None)
+            new_non_null = sum(1 for v in r.values() if v is not None)
+            if new_non_null > existing_non_null:
+                seen[code] = r
+    return list(seen.values())
 
 
 def split_new_and_existing(
@@ -155,7 +196,11 @@ def lookup_children_task(
     result = []
     for r in records:
         r = dict(r)
-        codes = r.get(child_field_name, []) or []
+        codes = r.get(child_field_name)
+        if codes is None or (hasattr(codes, '__len__') and len(codes) == 0):
+            codes = []
+        else:
+            codes = list(codes)
         r[child_field_name] = [code_to_id[c] for c in codes if c in code_to_id]
         result.append(r)
     return result
@@ -218,15 +263,16 @@ def load_zones_flow(level: str, data_directory: Path) -> None:
     inserted = insert_records_task(insert_records, level_config.table_name)
 
     # Restore child columns for link_children (need codes for lookup)
+    all_to_link = list(inserted) + list(existing_records)
     if child_field_names:
         code_to_children = {r["Code"]: {cf: r.get(cf) for cf in child_field_names} for r in source_records}
-        for r in inserted:
+        for r in all_to_link:
             children_data = code_to_children.get(r.get("Code"), {})
             r.update(children_data)
 
-    if level_config.child_level and inserted:
+    if level_config.child_level and all_to_link:
         for child_level, child_field_name in level_config.child_level.items():
-            link_records = lookup_children_task(inserted, child_level, child_field_name)
+            link_records = lookup_children_task(all_to_link, child_level, child_field_name)
             if link_records:
                 link_children_task(link_records, child_field_name, level_config.table_name)
 
