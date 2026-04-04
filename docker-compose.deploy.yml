@@ -1,4 +1,32 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nocodb}
+      POSTGRES_USER: ${POSTGRES_USER:-nocodb}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nocodb}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  nocodb:
+    image: "nocodb/nocodb:0.301.1"
+    expose:
+      - 8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NC_DB: "pg://postgres:5432?u=${POSTGRES_USER:-nocodb}&p=${POSTGRES_PASSWORD:-changeme}&d=${POSTGRES_DB:-nocodb}"
+    volumes:
+      - nocodb-data:/usr/app/data
+    restart: unless-stopped
+
   webapp:
     build:
       context: .
@@ -13,4 +41,10 @@ services:
       - NOCODB_BASE_ID=${NOCODB_BASE_ID}
       - NOCODB_URL=${NOCODB_URL}
       - NOCODB_TOKEN=${NOCODB_TOKEN}
+    depends_on:
+      - nocodb
     restart: unless-stopped
+
+volumes:
+  postgres-data:
+  nocodb-data:
