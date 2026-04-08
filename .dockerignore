@@ -1,6 +1,6 @@
 webapp/node_modules
 webapp/.next
-.env*
+**/.env*
 *.md
 data/
 !data/export

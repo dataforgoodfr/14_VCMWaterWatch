@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-nocodb}
       POSTGRES_USER: ${POSTGRES_USER:-nocodb}
@@ -23,6 +23,7 @@ services:
         condition: service_healthy
     environment:
       NC_DB: "pg://postgres:5432?u=${POSTGRES_USER:-nocodb}&p=${POSTGRES_PASSWORD:-changeme}&d=${POSTGRES_DB:-nocodb}"
+      SERVICE_URL_NOCODB-SERVICE_8080: /nocodb
     volumes:
       - nocodb-data:/usr/app/data
     restart: unless-stopped
@@ -41,6 +42,9 @@ services:
       - NOCODB_BASE_ID=${NOCODB_BASE_ID}
       - NOCODB_URL=${NOCODB_URL}
       - NOCODB_TOKEN=${NOCODB_TOKEN}
+      - SERVICE_URL_WEBAPP-SERVICE_3000=/
+      - NODE_ENV=production
+      - NODE_OPTIONS=--max-old-space-size=1536
     depends_on:
       - nocodb
     restart: unless-stopped
