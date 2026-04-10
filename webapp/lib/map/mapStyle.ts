@@ -10,7 +10,7 @@ export const DISTRIBUTION_ZONES_PM_TILES_URL = `pmtiles://${DISTRIBUTION_ZONES_P
 export const COUNTRIES_SOURCE_LAYER = 'data_countries'
 export const DISTRIBUTION_ZONES_SOURCE_LAYER = 'data_distribution_zones'
 
-export const MAP_DISTRIBUTION_ZONES_MIN_ZOOM = 7
+export const MAP_DISTRIBUTION_ZONES_MIN_ZOOM = 6
 
 const COUNTRIES_LOWZOOM_FILL_COLOR: ExpressionSpecification = ['coalesce', ['get', 'map_color'], '#eceff2']
 
