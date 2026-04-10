@@ -4,10 +4,10 @@ import { useEffect } from 'react'
 
 import { useRouter } from 'next/navigation'
 
-import { COUNTRIES_PM_TILES_PUBLIC_PATH, DISTRIBUTION_ZONES_PM_TILES_PUBLIC_PATH } from '@/lib/map/mapStyle'
+import { DISTRIBUTION_ZONES_PM_TILES_PUBLIC_PATH, WORLD_COUNTRIES_GEOJSON_URL } from '@/lib/map/mapStyle'
 import { ROUTES } from '@/routes/routes'
 
-const COUNTRIES_PM_TILES_PREFETCH_ID = 'prefetch-map-countries-pmtiles'
+const WORLD_COUNTRIES_GEOJSON_PREFETCH_ID = 'prefetch-map-world-countries-geojson'
 const DISTRIBUTION_ZONES_PM_TILES_PREFETCH_ID = 'prefetch-map-distribution-zones-pmtiles'
 
 interface MapRoutePrefetchProps {
@@ -20,7 +20,7 @@ export function MapRoutePrefetch({ locale }: MapRoutePrefetchProps) {
 	useEffect(() => {
 		router.prefetch(`/${locale}${ROUTES.MAP}`)
 
-		const prefetchPmTilesArchive = (id: string, href: string) => {
+		const prefetchAsset = (id: string, href: string, as: string) => {
 			if (document.head.querySelector(`link#${id}`)) {
 				return
 			}
@@ -29,14 +29,14 @@ export function MapRoutePrefetch({ locale }: MapRoutePrefetchProps) {
 
 			link.id = id
 			link.rel = 'prefetch'
-			link.as = 'fetch'
+			link.as = as
 			link.href = href
 			link.crossOrigin = 'anonymous'
 			document.head.appendChild(link)
 		}
 
-		prefetchPmTilesArchive(COUNTRIES_PM_TILES_PREFETCH_ID, COUNTRIES_PM_TILES_PUBLIC_PATH)
-		prefetchPmTilesArchive(DISTRIBUTION_ZONES_PM_TILES_PREFETCH_ID, DISTRIBUTION_ZONES_PM_TILES_PUBLIC_PATH)
+		prefetchAsset(WORLD_COUNTRIES_GEOJSON_PREFETCH_ID, WORLD_COUNTRIES_GEOJSON_URL, 'fetch')
+		prefetchAsset(DISTRIBUTION_ZONES_PM_TILES_PREFETCH_ID, DISTRIBUTION_ZONES_PM_TILES_PUBLIC_PATH, 'fetch')
 	}, [locale, router])
 
 	return null

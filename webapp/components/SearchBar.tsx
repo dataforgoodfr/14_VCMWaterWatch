@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { Field } from '@/components/ui/field'
+import { Search } from 'lucide-react'
+
 import { Input } from '@/components/ui/input'
 import type { GeocodePlace } from '@/lib/geocode/photon'
 import { cn } from '@/lib/utils'
@@ -106,25 +107,33 @@ export function SearchBar({ onSelectPlace }: SearchBarProps) {
 	}
 
 	return (
-		<div className='bg-card text-card-foreground w-[min(100vw-2rem,22rem)] rounded-md border shadow-md'>
-			<form onSubmit={handleSubmit} className='flex gap-2 p-3'>
-				<Field orientation='horizontal' className='min-w-0 flex-1'>
+		<div className='relative w-full'>
+			<form onSubmit={handleSubmit} className='w-full'>
+				<div className='relative'>
+					<Search
+						className='text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2'
+						aria-hidden
+					/>
 					<Input
 						type='search'
 						placeholder='Search for a municipality…'
 						value={query}
 						onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
 						autoComplete='off'
+						className='border-navy-100 h-11 bg-white py-2 pr-3 pl-9 shadow-none'
 					/>
-				</Field>
+				</div>
 			</form>
 
 			{showHint && (
-				<p className='text-muted-foreground border-t px-3 py-2 text-xs'>Enter at least {MIN_QUERY_CHARS} characters.</p>
+				<p className='text-muted-foreground mt-1.5 px-0.5 text-xs'>Enter at least {MIN_QUERY_CHARS} characters.</p>
 			)}
 
 			{showSuggestionsPanel && (
-				<ul className='max-h-72 overflow-y-auto border-t text-sm' role='listbox'>
+				<ul
+					className='border-navy-100 absolute top-full right-0 left-0 z-20 mt-1 max-h-72 overflow-y-auto rounded-md border bg-white text-sm shadow-none'
+					role='listbox'
+				>
 					{places.map(place => (
 						<li key={place.id}>
 							<button
