@@ -181,6 +181,7 @@ export interface CountryMapFields {
 	Geometry: string
 	'PVC Level'?: string | null
 	'VCM Level'?: string | null
+	'Map Color'?: string | null
 }
 export type CountryMapRecord = Record<CountryMapFields>
 

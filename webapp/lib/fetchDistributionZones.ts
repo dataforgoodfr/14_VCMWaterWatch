@@ -5,7 +5,7 @@ import { getTableIdByName } from './fetchMetaTables'
 
 const ZONE_MAP_FIELDS = 'Name,Code,Geometry,Municipality Geometries,PVC Level,VCM Level,Country'
 
-const COUNTRY_MAP_FIELDS = 'Name,Code,Geometry,PVC Level,VCM Level'
+const COUNTRY_MAP_FIELDS = 'Name,Code,Geometry,PVC Level,VCM Level,Map Color'
 
 export interface FetchDistributionZonesParams {
 	query: string
