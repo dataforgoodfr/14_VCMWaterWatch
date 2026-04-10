@@ -4,10 +4,15 @@ import { useEffect } from 'react'
 
 import { useRouter } from 'next/navigation'
 
-import { DISTRIBUTION_ZONES_PM_TILES_PUBLIC_PATH, WORLD_COUNTRIES_GEOJSON_URL } from '@/lib/map/mapStyle'
+import {
+	COUNTRIES_PM_TILES_PUBLIC_PATH,
+	DISTRIBUTION_ZONES_PM_TILES_PUBLIC_PATH,
+	WORLD_COUNTRIES_GEOJSON_URL
+} from '@/lib/map/mapStyle'
 import { ROUTES } from '@/routes/routes'
 
 const WORLD_COUNTRIES_GEOJSON_PREFETCH_ID = 'prefetch-map-world-countries-geojson'
+const COUNTRIES_PM_TILES_PREFETCH_ID = 'prefetch-map-countries-pmtiles'
 const DISTRIBUTION_ZONES_PM_TILES_PREFETCH_ID = 'prefetch-map-distribution-zones-pmtiles'
 
 interface MapRoutePrefetchProps {
@@ -36,6 +41,7 @@ export function MapRoutePrefetch({ locale }: MapRoutePrefetchProps) {
 		}
 
 		prefetchAsset(WORLD_COUNTRIES_GEOJSON_PREFETCH_ID, WORLD_COUNTRIES_GEOJSON_URL, 'fetch')
+		prefetchAsset(COUNTRIES_PM_TILES_PREFETCH_ID, COUNTRIES_PM_TILES_PUBLIC_PATH, 'fetch')
 		prefetchAsset(DISTRIBUTION_ZONES_PM_TILES_PREFETCH_ID, DISTRIBUTION_ZONES_PM_TILES_PUBLIC_PATH, 'fetch')
 	}, [locale, router])
 
