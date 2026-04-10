@@ -1,33 +1,76 @@
+import type { ComponentType } from 'react'
+
 import Image from 'next/image'
 
-import { MapPin, TriangleAlert } from 'lucide-react'
+import { FlaskConical, MapPin, Percent, TrainTrack, TriangleAlert } from 'lucide-react'
 
 import { InfoCard } from '@/components/InfoCard'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
+import { Card, CardContent } from '@/components/ui/card'
 import type { CountryDetailRecord } from '@/types/apiTypes'
-import { Separator } from '@/components/ui/separator'
 
-function formatLinkField(value: unknown): string {
-	if (value === null || value === undefined) {
+const numberFmt = new Intl.NumberFormat('en-US')
+
+function formatStatText(value: string | null): string {
+	if (value == null || value.trim() === '') {
 		return '—'
 	}
 
-	if (typeof value === 'number') {
-		return String(value)
+	return value
+}
+
+function countryNumericOrLinkCount(value: unknown): number | null {
+	if (value == null) {
+		return null
+	}
+
+	if (typeof value === 'number' && Number.isFinite(value)) {
+		return value
+	}
+
+	if (typeof value === 'string') {
+		const parsed = Number.parseFloat(value)
+
+		if (Number.isFinite(parsed)) {
+			return parsed
+		}
 	}
 
 	if (Array.isArray(value)) {
-		return `${value.length} item(s)`
+		return value.length
 	}
 
-	if (typeof value === 'object') {
-		return JSON.stringify(value)
+	return null
+}
+
+function formatCountStat(value: unknown, nounPhrase: string): string {
+	const n = countryNumericOrLinkCount(value)
+
+	if (n == null || n <= 0) {
+		return '—'
 	}
 
-	if (typeof value === 'string' || typeof value === 'boolean') {
-		return String(value)
-	}
+	return `${numberFmt.format(n)} ${nounPhrase}`
+}
 
-	return '—'
+interface StatCardProps {
+	icon: ComponentType<{ className?: string }>
+	title: string
+	value: string
+}
+
+function StatCard({ icon: Icon, title, value }: StatCardProps) {
+	return (
+		<Card className='rounded-sm border-gray-300 bg-transparent py-4 shadow-none'>
+			<CardContent className='flex flex-col items-center gap-3 text-center'>
+				<div className='flex items-center justify-center gap-2'>
+					<Icon className='size-5 shrink-0 text-gray-600' aria-hidden />
+					<span className='text-[16px] leading-snug font-medium text-gray-600'>{title}</span>
+				</div>
+				<p className='text-navy-500 text-[28px] leading-tight font-semibold'>{value}</p>
+			</CardContent>
+		</Card>
+	)
 }
 
 interface CountryProfileDetailProps {
@@ -63,6 +106,15 @@ export function CountryProfileDetail({ country, loading, error }: CountryProfile
 	const f = country.fields
 	const imageSrc = f.Url ?? 'https://placehold.co/310x240.png'
 
+	const pvcDisplay = formatStatText(f['PVC Level'] ?? null)
+	const vcmDisplay = formatStatText(f['VCM Level'] ?? null)
+	const distributionZonesCount = countryNumericOrLinkCount(f['Distribution Zones'])
+
+	const analysesDisplay =
+		distributionZonesCount != null && distributionZonesCount > 0 ? numberFmt.format(distributionZonesCount) : '—'
+
+	const municipalitiesDisplay = formatCountStat(f.Municipalities, 'municipalities')
+
 	return (
 		<section className='mt-10 mb-8 flex flex-col gap-8' aria-live='polite'>
 			<InfoCard bgClassName='bg-navy-50'>
@@ -71,42 +123,38 @@ export function CountryProfileDetail({ country, loading, error }: CountryProfile
 						<MapPin />
 						<h2 className='font-[lexend] text-[24px] font-medium'>{f.Name} — Data overview</h2>
 					</div>
-					<dl className='flex flex-col items-start gap-10 md:flex-row'>
-						<Image
-							src={imageSrc}
-							alt={f.Name ? `Illustration — ${f.Name}` : 'Country illustration'}
-							width={310}
-							height={240}
-							className='h-auto max-w-[min(100%,600px)] shrink-0 rounded-md object-cover'
-						/>
-						<div className='flex w-full flex-col items-start justify-center'>
-							<div className='flex w-full flex-col items-start justify-around md:flex-row md:items-center'>
-								<div className='flex flex-col items-start md:items-center'>
-									<dt className='text-[16px] font-medium'>Total PVC network</dt>
-									<dd className='text-navy-500 text-[23px] font-semibold'>...</dd>
-								</div>
-								<div className='flex flex-col items-start md:items-center'>
-									<dt className='text-[16px] font-medium'>Share of network</dt>
-									<dd className='text-navy-500 text-[23px] font-semibold'>...</dd>
-								</div>
-								<div className='flex flex-col items-start md:items-center'>
-									<dt className='text-[16px] font-medium'>Identified risk areas</dt>
-									<dd className='text-navy-500 text-[23px] font-semibold'>
-										{formatLinkField(f.Municipalities) ? `${formatLinkField(f.Municipalities)} municipalities` : '—'}
-									</dd>
-								</div>
+					<dl className='flex flex-col items-start gap-10 md:flex-row md:items-start'>
+						<div className='w-full shrink-0 md:max-w-[48%] md:basis-[48%]'>
+							<Image
+								src={imageSrc}
+								alt={f.Name ? `Illustration — ${f.Name}` : 'Country illustration'}
+								width={640}
+								height={300}
+								className='h-[300px] w-full rounded-md object-cover'
+							/>
+						</div>
+						<div className='flex w-full min-w-0 flex-1 flex-col items-start justify-center md:w-auto'>
+							<div className='grid w-full grid-cols-1 gap-4 md:grid-cols-2'>
+								<StatCard icon={TrainTrack} title='VCM impacted network' value={pvcDisplay} />
+								<StatCard icon={Percent} title='VCM exposure rate' value={vcmDisplay} />
+								<StatCard icon={FlaskConical} title='Number of VCM analyses' value={analysesDisplay} />
+								<StatCard icon={MapPin} title='Identified risk zones' value={municipalitiesDisplay} />
 							</div>
-
-							<Separator className='my-6 w-full self-stretch bg-gray-300' />
-
-							<p className='text-[17px] font-semibold'>Applicable legislation</p>
-							<ul className='font-regular list-disc pl-4 text-[17px] text-gray-600'>
-								<li>...</li>
-								<li>...</li>
-								<li>...</li>
-							</ul>
 						</div>
 					</dl>
+
+					<Accordion type='single' collapsible className='w-full'>
+						<AccordionItem value='more-details' className='border-navy-200 border-b-0'>
+							<AccordionTrigger className='text-navy-800 py-3 font-[lexend] text-[19px] font-medium hover:no-underline'>
+								More details
+							</AccordionTrigger>
+							<AccordionContent className='pb-2'>
+								<ul className='font-regular list-disc pl-5 text-[17px] text-gray-600'>
+									<li>...</li>
+								</ul>
+							</AccordionContent>
+						</AccordionItem>
+					</Accordion>
 				</div>
 			</InfoCard>
 
