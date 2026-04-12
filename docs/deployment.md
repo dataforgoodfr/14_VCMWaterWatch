@@ -12,3 +12,7 @@
 ## Notifications
 
  - Configure under Notifications in Coolify, currently using Resend
+
+## Resources
+
+ - Postgres database configured in Coolify resources, with daily backups
