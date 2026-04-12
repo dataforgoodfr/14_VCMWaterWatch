@@ -2,8 +2,8 @@
 Prefect workflow to export zone data from NocoDB as PMTiles.
 
 Reads zone records (Country, DistributionZone) from NocoDB, produces a GeoJSON
-FeatureCollection per table in data/staging, then converts them to PMTiles in
-data/export.
+FeatureCollection per table in a staging directory, then converts them to PMTiles
+in the destination directory.
 
 Output GeoJSON fields per feature:
  - Geometry (from NocoDB)
@@ -13,6 +13,7 @@ Output GeoJSON fields per feature:
 """
 
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -111,19 +112,26 @@ def create_pmtiles_task(geojson_file: Path, layer: str, output_dir: Path) -> Pat
 
 
 @flow(name="export_pmtiles", persist_result=False)
-def export_pmtiles_flow(data_directory: Path) -> None:
-    """Export zone data from NocoDB to PMTiles."""
-    staging_dir = data_directory / "staging"
-    export_dir = data_directory / "export"
+def export_pmtiles_flow(destination: Path) -> None:
+    """Export zone data from NocoDB to PMTiles.
+
+    Args:
+        destination: Directory where .pmtiles files are written directly.
+            Intermediate GeoJSON files go to a sibling ``staging/`` directory.
+    """
+    staging_dir = (destination / "../staging").resolve()
+    staging_dir.mkdir(parents=True, exist_ok=True)
+    destination.mkdir(parents=True, exist_ok=True)
 
     for table, layer in ZONE_TABLES.items():
         geojson_path = export_zones_geojson_task(
             table_name=table, output_dir=staging_dir
         )
         create_pmtiles_task(
-            geojson_file=geojson_path, layer=layer, output_dir=export_dir
+            geojson_file=geojson_path, layer=layer, output_dir=destination
         )
 
 
 if __name__ == "__main__":
-    export_pmtiles_flow(data_directory=Path("data"))
+    destination = Path(os.environ.get("PM_TILES_DIR", "data/export"))
+    export_pmtiles_flow(destination=destination)
