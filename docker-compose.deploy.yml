@@ -1,7 +1,10 @@
 networks:
+  # Coolify automatically adds an additional, internal network
+  # The ONLY containers that need to be on the coolify network,
+  # are the ones that need direct access to the externally declared resources
+  # (i.e. the postgres server)
   coolify:
     external: true
-
 
 services:
   # Not used!  This is normally provided by Coolify (in resources)
@@ -53,11 +56,32 @@ services:
       - NOCODB_TOKEN=${NOCODB_TOKEN}
       - NOCODB_URL=${NOCODB_URL:-http://nocodb:8080}
       - NODE_ENV=production
+      - PM_TILES_DIR=${PM_TILES_DIR:-/public/pmtiles}
       # Limit mem - otherwise it won't build on the Coolify VM
       - NODE_OPTIONS=--max-old-space-size=1536
     depends_on:
       - nocodb
     restart: unless-stopped
+    volumes:
+      - pmtiles-data:/public/pmtiles
+
+  worker:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.worker
+    expose:
+      - 3000
+    environment:
+      - NOCODB_BASE_ID=${NOCODB_BASE_ID}
+      - NOCODB_TOKEN=${NOCODB_TOKEN}
+      - NOCODB_URL=${NOCODB_URL:-http://nocodb:8080}
+      - PM_TILES_DIR=${PM_TILES_DIR:-/public/pmtiles}
+    depends_on:
+      - nocodb
+    restart: unless-stopped
+    volumes:
+      - pmtiles-data:/public/pmtiles
 
 volumes:
   nocodb-data:
+  pmtiles-data:

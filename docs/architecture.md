@@ -27,8 +27,8 @@
                        │                     │
                        ▼                     ▼
           ┌────────────────────┐   ┌─────────────────────┐
-          │  PMTiles Files     │   │  NocoDB              │
-          │  (data/export/)    │   │  (PostgreSQL-backed)  │
+          │  pmtiles-data      │   │  NocoDB              │
+          │  (Docker volume)   │   │  (PostgreSQL-backed)  │
           │                    │   │                       │
           │ • data_countries   │   │ Tables:               │
           │ • data_distribution│   │ • Country             │
@@ -38,33 +38,39 @@
                        │           │ • Interaction          │
                        │           │ • Template             │
                        │           │ • Analysis             │
-                       │           └──────────┬────────────┘
-                       │                      │
-                       │                      │ NocoDB REST API
-                       │                      │
-┌──────────────────────┴──────────────────────┴──────────────────────┐
-│                  Python Pipelines (pipelines/)                      │
-│                       Orchestrated by Prefect                       │
-│                                                                     │
-│  ┌──────────┐   ┌────────────┐   ┌────────┐   ┌────────────────┐  │
-│  │ Extract  │──▶│ Transform  │──▶│  Load  │──▶│ Export         │  │
-│  │          │   │            │   │        │   │                │  │
-│  │ download │   │ create     │   │ load   │   │ NocoDB→GeoJSON │  │
-│  │ _munici… │   │ _distribu… │   │ _zones │   │ →tippecanoe   │  │
-│  │ uk_ofwat │   │ geojson    │   │ load   │   │ →PMTiles      │  │
-│  │ nl_vewin │   │            │   │ _water │   │                │  │
-│  │ de_wass… │   │            │   │ _comp… │   └────────────────┘  │
-│  └──────────┘   └────────────┘   └────────┘                       │
-│       │               │                                            │
-│       ▼               ▼                                            │
-│  ┌──────────────────────────┐                                      │
-│  │ DuckDB (data/)           │   ┌──────────────────────────────┐   │
-│  │ • raw.duckdb             │   │ Tasks (in-DB operations)     │   │
-│  │ • staging.duckdb         │   │ • calculate_distribution_zone│   │
-│  │                          │   │ • clean_blank_actors         │   │
-│  │ In-memory conn ATTACHes  │   │ • build_search_index         │   │
+                       │           └──────┬───────┬────────┘
+                       │                  │       │
+                       │    NocoDB REST   │       │ Webhooks
+                       │                  │       │
+┌──────────────────────┴──────────────────┴───────┼──────────────────┐
+│                  Python Pipelines (pipelines/)   │                  │
+│                       Orchestrated by Prefect    │                  │
+│                                                  │                  │
+│  ┌──────────┐   ┌────────────┐   ┌────────┐     │                  │
+│  │ Extract  │──▶│ Transform  │──▶│  Load  │     │                  │
+│  │          │   │            │   │        │     │                  │
+│  │ download │   │ create     │   │ load   │     │                  │
+│  │ _munici… │   │ _distribu… │   │ _zones │     │                  │
+│  │ uk_ofwat │   │ geojson    │   │ load   │     │                  │
+│  │ nl_vewin │   │            │   │ _water │     │                  │
+│  │ de_wass… │   │            │   │ _comp… │     │                  │
+│  └──────────┘   └────────────┘   └────────┘     │                  │
+│       │               │                         │                  │
+│       ▼               ▼                         ▼                  │
+│  ┌──────────────────────────┐   ┌──────────────────────────────┐   │
+│  │ DuckDB (data/)           │   │ Pipeline Worker (FastAPI)    │   │
+│  │ • raw.duckdb             │   │ • /webhooks/nocodb endpoint  │   │
+│  │ • staging.duckdb         │   │ • Debounced trigger (60s)    │   │
+│  │                          │   │ • Runs export_pmtiles flow   │   │
+│  │ In-memory conn ATTACHes  │   │ • Writes to pmtiles-data vol │   │
 │  │ both as raw.* / staging.*│   └──────────────────────────────┘   │
 │  └──────────────────────────┘                                      │
+│                                 ┌──────────────────────────────┐   │
+│                                 │ Tasks (in-DB operations)     │   │
+│                                 │ • calculate_distribution_zone│   │
+│                                 │ • clean_blank_actors         │   │
+│                                 │ • build_search_index         │   │
+│                                 └──────────────────────────────┘   │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -149,6 +155,11 @@ In-database operations on NocoDB data:
 - `clean_blank_actors` — Remove empty actor records
 - `build_search_index` — Build search index data
 
+#### Scripts (`scripts/`)
+One-shot data seeding or migration scripts (not part of recurring pipelines):
+- `seed-letter-templates` — Seed the LetterTemplate table with default templates
+- `seed-norway-distribution-zones` — Create a DistributionZone and Actor for each Norwegian municipality
+
 ### 4. DuckDB (`data/`)
 
 Used as a **local staging database** for the ETL pipelines. Not accessed at runtime by the web application.
@@ -162,9 +173,9 @@ Used as a **local staging database** for the ETL pipelines. Not accessed at runt
 
 [PMTiles](https://protomaps.com/docs/pmtiles) is a **single-file vector tile archive** format, enabling efficient map rendering without a tile server.
 
-**Generation:** The export pipeline reads geometry data from NocoDB, produces GeoJSON, then converts to PMTiles using `tippecanoe`.
+**Generation:** The export pipeline reads geometry data from NocoDB, produces GeoJSON, then converts to PMTiles using `tippecanoe`. In production, the pipeline worker triggers this automatically via NocoDB webhooks (with 60s debounce). Locally, run via `just pipelines export-pmtiles`.
 
-**Serving:** The Next.js app serves PMTiles via a custom route handler (`/pmtiles/[...path]`) that supports HTTP Range requests. Files are resolved from `public/pmtiles/` or `data/export/`.
+**Serving:** The Next.js app serves PMTiles via a custom route handler (`/pmtiles/[...path]`) that supports HTTP Range requests. The file directory is configured via the `PM_TILES_DIR` env var — in production this points to the shared Docker volume (`/public/pmtiles`), in local dev to `data/export`.
 
 **Consumption:** The MapLibre GL client registers a `pmtiles://` protocol adapter that fetches tile data via Range requests, rendering vector layers for countries and distribution zones directly in the browser.
 
@@ -182,7 +193,12 @@ External Sources (Eurostat, Ofwat, Vewin, ...)
         ▼  [Load]
       NocoDB  ◄──── Manual edits by volunteers
         │
-        ├──▶ [Export] ──▶ PMTiles (data/export/)
+        ├──▶ [Webhook] ──▶ Pipeline Worker (debounced)
+        │                       │
+        │                   [Export]
+        │                       │
+        │                       ▼
+        │               pmtiles-data volume
         │                       │
         │                       ▼
         │               Next.js /pmtiles/* ──▶ MapLibre GL (browser)
@@ -192,7 +208,16 @@ External Sources (Eurostat, Ofwat, Vewin, ...)
 
 ## Deployment
 
-- **Web app:** Docker container deployed via Coolify to `vcmwaterwatch.services.d4g.fr`
-- **NocoDB:** Hosted instance at `noco.services.dataforgood.fr`
-- **Pipelines:** Run manually (via `just` commands) or locally by developers
-- **Reverse proxy:** Traefik (via Docker labels in `docker-compose.deploy.yml`)
+All services are defined in `docker-compose.deploy.yml` and deployed via [Coolify](https://coolify.services.d4g.fr/).
+
+| Service | Image / Build | Purpose |
+|---|---|---|
+| **webapp** | `deploy/Dockerfile` (Next.js) | Web application, serves pages + PMTiles |
+| **nocodb** | `nocodb/nocodb:0.301.1` | Data management UI + REST API |
+| **worker** | `deploy/Dockerfile.worker` (FastAPI) | Receives NocoDB webhooks, runs export pipelines |
+| **postgres** | Provided by Coolify as external resource | Database for NocoDB |
+
+- **Shared volume:** `pmtiles-data` — mounted into both `webapp` (read) and `worker` (read/write) at `/public/pmtiles`
+- **Networking:** Coolify external network for postgres access; all services communicate over the default Docker Compose network
+- **Webhook URL** (configured in NocoDB): `http://worker:3000/webhooks/nocodb`
+- **ETL pipelines** (extract/transform/load): Run manually by developers via `just` commands — not deployed as services
