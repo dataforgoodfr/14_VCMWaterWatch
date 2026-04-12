@@ -45,9 +45,7 @@ services:
       - coolify
 
   webapp:
-    build:
-      context: .
-      dockerfile: deploy/Dockerfile
+    image: ghcr.io/dataforgoodfr/14_vcmwaterwatch/webapp:latest
     expose:
       - 3000
     environment:
@@ -58,7 +56,6 @@ services:
       - NODE_ENV=production
       - PM_TILES_DIR=${PM_TILES_DIR:-/public/pmtiles}
       # Limit mem - otherwise it won't build on the Coolify VM
-      - NODE_OPTIONS=--max-old-space-size=1536
     depends_on:
       - nocodb
     restart: unless-stopped
@@ -66,9 +63,7 @@ services:
       - pmtiles-data:/public/pmtiles
 
   worker:
-    build:
-      context: .
-      dockerfile: deploy/Dockerfile.worker
+    image: ghcr.io/dataforgoodfr/14_vcmwaterwatch/worker:latest
     expose:
       - 3000
     environment:
