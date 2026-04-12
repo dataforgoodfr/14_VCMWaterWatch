@@ -1,3 +1,10 @@
+networks:
+  coolify:
+    external: true
+  default:
+    driver: bridge
+
+
 services:
   # Not used!  This is normally provided by Coolify (in resources)
   # postgres:
@@ -33,6 +40,9 @@ services:
     volumes:
       - nocodb-data:/usr/app/data
     restart: unless-stopped
+    networks:
+      - coolify
+      - default
 
   webapp:
     build:
@@ -51,6 +61,8 @@ services:
     depends_on:
       - nocodb
     restart: unless-stopped
+    networks:
+      - default
 
 volumes:
   nocodb-data:
