@@ -72,6 +72,24 @@ Then press Ctrl+O to write out, Enter to save, and Ctrl+X to exit. This will ind
 Pushes to the main branch will be deployed automatically using [Coolify](https://coolify.services.d4g.fr/).
 The service is accessible at [vcmwaterwatch.services.d4g.fr](https://vcmwaterwatch.services.d4g.fr).
 
+## Pipeline Worker
+
+A lightweight FastAPI service runs alongside the webapp to handle data pipeline triggers.
+
+- **NocoDB webhooks** → the worker receives webhook POSTs over the Docker internal network
+- **PMTiles generation** → triggered automatically when Country or DistributionZone records change
+- **Shared volume** → generated PMTiles are written to `pmtiles-data` Docker volume, mounted by both worker and webapp at `/public/pmtiles`
+- **Webhook URL** (configured in NocoDB): `http://worker:3000/webhooks/nocodb`
+
+To run the export manually (local dev):
+```bash
+just pipelines export-pmtiles
+```
+
+### Adding new webhook triggers
+
+Edit `pipelines/worker/app.py` to map additional NocoDB table changes to pipeline flows.
+
 ## Git Conventions
 
 ### Branch Naming
