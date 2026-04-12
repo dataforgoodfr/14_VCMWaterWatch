@@ -22,18 +22,33 @@ app = FastAPI(title="VCM WaterWatch Pipeline Worker")
 # Tables whose changes should trigger a PMTiles rebuild
 PMTILES_TRIGGER_TABLES = {"Country", "DistributionZone"}
 
+# Debounce delay — how long to wait after the last webhook before running the flow.
+# Override via WEBHOOK_DEBOUNCE_SECONDS env var. Default 60s.
+DEBOUNCE_SECONDS = float(os.environ.get("WEBHOOK_DEBOUNCE_SECONDS", "60"))
 
-def _run_in_background(flow_fn, **kwargs):
-    """Run a Prefect flow in a background thread so the webhook returns immediately."""
+# Lock and timer for debounce
+_debounce_lock = threading.Lock()
+_debounce_timer: threading.Timer | None = None
 
-    def target():
-        try:
-            flow_fn(**kwargs)
-        except Exception:
-            logger.exception("Background flow failed")
 
-    thread = threading.Thread(target=target, daemon=True)
-    thread.start()
+def _run_flow():
+    """Run the export flow. Called by the debounce timer."""
+    try:
+        data_dir = Path(os.environ.get("PM_TILES_DIR", "data/export"))
+        export_pmtiles_flow(destination=data_dir)
+    except Exception:
+        logger.exception("Export flow failed")
+
+
+def _schedule_export():
+    """Schedule (or reschedule) the export flow after DEBOUNCE_SECONDS."""
+    global _debounce_timer
+    with _debounce_lock:
+        if _debounce_timer is not None:
+            _debounce_timer.cancel()
+        _debounce_timer = threading.Timer(DEBOUNCE_SECONDS, _run_flow)
+        _debounce_timer.daemon = True
+        _debounce_timer.start()
 
 
 @app.get("/health")
@@ -46,8 +61,8 @@ def nocodb_webhook(payload: dict):
     """
     Handle NocoDB webhook payloads.
 
-    When a relevant table is changed, triggers the PMTiles export flow
-    in a background thread.
+    When a relevant table is changed, schedules the PMTiles export flow
+    with debounce — rapid successive webhooks coalesce into a single run.
     """
     table_name = None
     if isinstance(payload.get("data"), dict):
@@ -55,10 +70,9 @@ def nocodb_webhook(payload: dict):
 
     if table_name in PMTILES_TRIGGER_TABLES:
         logger.info(
-            f"Webhook received for table {table_name}, triggering PMTiles export"
+            f"Webhook received for table {table_name}, scheduling PMTiles export"
         )
-        data_dir = Path(os.environ.get("PM_TILES_DIR", "data/export"))
-        _run_in_background(export_pmtiles_flow, destination=data_dir)
+        _schedule_export()
         return JSONResponse(
             status_code=202,
             content={"status": "accepted", "pipeline": "export_pmtiles"},
