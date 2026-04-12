@@ -34,9 +34,49 @@ def load_water_companies_task(conn) -> list[dict]:
     if not tables:
         return []
 
-    queries = [f'SELECT * FROM {catalog}."{tn}"' for catalog, tn in tables]
+    # Collect all columns across tables so UNION ALL works with different schemas
+    all_columns: dict[str, str] = {}
+    for catalog, tn in tables:
+        cols = conn.sql(
+            f"SELECT column_name, data_type FROM information_schema.columns "
+            f"WHERE table_catalog = '{catalog}' AND table_name = '{tn}'"
+        ).fetchall()
+        for col_name, col_type in cols:
+            if col_name not in all_columns:
+                all_columns[col_name] = col_type
+
+    col_names = sorted(all_columns.keys())
+    queries = []
+    for catalog, tn in tables:
+        table_cols = {
+            r[0] for r in conn.sql(
+                f"SELECT column_name FROM information_schema.columns "
+                f"WHERE table_catalog = '{catalog}' AND table_name = '{tn}'"
+            ).fetchall()
+        }
+        select_parts = [
+            f'"{c}"' if c in table_cols else f'NULL AS "{c}"'
+            for c in col_names
+        ]
+        queries.append(f"SELECT {', '.join(select_parts)} FROM {catalog}.\"{tn}\"")
+
     union_sql = " UNION ALL ".join(queries)
     records = conn.sql(union_sql).fetchdf().to_dict("records")
+
+    # Deduplicate by Name, preferring rows with more non-null fields
+    seen: dict[str, dict] = {}
+    for r in records:
+        name = r.get("Name")
+        if name is None:
+            continue
+        if name not in seen:
+            seen[name] = r
+        else:
+            existing_non_null = sum(1 for v in seen[name].values() if v is not None)
+            new_non_null = sum(1 for v in r.values() if v is not None)
+            if new_non_null > existing_non_null:
+                seen[name] = r
+    records = list(seen.values())
 
     for r in records:
         r["Type"] = "Water Company"
