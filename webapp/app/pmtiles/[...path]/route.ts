@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import type { NextRequest } from 'next/server'
 
-const PM_TILES_DIR = process.env.PM_TILES_DIR
+const PM_TILES_DIR = process.env.PM_TILES_DIR!
 
 if (!PM_TILES_DIR) {
 	throw new Error('PM_TILES_DIR environment variable is not set')
