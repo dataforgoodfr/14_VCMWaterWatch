@@ -40,7 +40,6 @@ services:
     restart: unless-stopped
     networks:
       - coolify
-      - default
 
   webapp:
     build:
@@ -59,8 +58,6 @@ services:
     depends_on:
       - nocodb
     restart: unless-stopped
-    networks:
-      - default
 
 volumes:
   nocodb-data:
