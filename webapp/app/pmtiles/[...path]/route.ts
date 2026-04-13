@@ -3,10 +3,14 @@ import path from 'node:path'
 
 import type { NextRequest } from 'next/server'
 
-const PM_TILES_DIR = process.env.PM_TILES_DIR!
+function getPmTilesDir(): string {
+	const dir = process.env.PM_TILES_DIR
 
-if (!PM_TILES_DIR) {
-	throw new Error('PM_TILES_DIR environment variable is not set')
+	if (!dir) {
+		throw new Error('PM_TILES_DIR environment variable is not set')
+	}
+
+	return dir
 }
 
 function sanitizePath(parts: string[]): string | null {
@@ -30,7 +34,7 @@ async function resolvePmTilesPath(parts: string[]): Promise<string | null> {
 		return null
 	}
 
-	const candidate = path.join(PM_TILES_DIR, safePath)
+	const candidate = path.join(getPmTilesDir(), safePath)
 
 	try {
 		await access(candidate)
