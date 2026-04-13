@@ -138,7 +138,7 @@ def split_new_and_existing(
     return list(new_records.values()), list(existing_records.values())
 
 
-@task(name="lookup_parent", cache_policy=INPUTS)
+@task(name="lookup_parent", cache_policy=NO_CACHE)
 def lookup_parent_task(records: list[dict], level_config: LevelConfig) -> list[dict]:
     """
     Lookup the parent data for the given level.
@@ -256,7 +256,7 @@ def load_zones_flow(level: str, data_directory: Path) -> None:
     records = lookup_parent_task(records, level_config)
 
     # Update geometry for existing records
-    update_geometry_task(existing_records, level_config.table_name)
+    # update_geometry_task(existing_records, level_config.table_name)
 
     # Exclude child link columns from insert — they contain codes, not IDs
     child_field_names = list(level_config.child_level.values()) if level_config.child_level else []

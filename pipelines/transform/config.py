@@ -40,6 +40,7 @@ LEVEL_CONFIGS: Dict[str, LevelConfig] = {
 
 EUROPEAN_COUNTRIES = {
     "AT": "Austria",
+    "BE": "Belgium",
     "CH": "Switzerland",
     "DK": "Denmark",
     "FR": "France",
