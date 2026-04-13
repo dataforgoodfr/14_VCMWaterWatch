@@ -5,7 +5,7 @@ name: Build and Push Docker Images
 
 on:
   push:
-    branches: [main, nicg/task/81-ghcr-docker-publish]
+    branches: [main]
   workflow_dispatch:
 
 env:
