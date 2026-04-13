@@ -47,6 +47,7 @@ services:
 
   webapp:
     image: ghcr.io/dataforgoodfr/14_vcmwaterwatch/webapp:latest
+    pull_policy: always
     expose:
       - 3000
     environment:
@@ -65,6 +66,7 @@ services:
 
   worker:
     image: ghcr.io/dataforgoodfr/14_vcmwaterwatch/worker:latest
+    pull_policy: always
     expose:
       - 3000
     environment:
