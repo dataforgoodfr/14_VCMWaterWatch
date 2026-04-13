@@ -17,10 +17,8 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
-# ideally these should be exported at the time of the build so that we can take into account new data,
-# but the export does not currently run on the coolify deployment server
-# (problem of polars compatibility)
-COPY ./data/export ./public/pmtiles
+# PMTiles are served from the pmtiles-data Docker volume mounted at /public/pmtiles
+# (see docker-compose.deploy.yml). For local dev, set PM_TILES_DIR to point at data/export.
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 USER nextjs

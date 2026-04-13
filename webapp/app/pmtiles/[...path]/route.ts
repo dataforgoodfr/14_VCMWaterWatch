@@ -3,8 +3,15 @@ import path from 'node:path'
 
 import type { NextRequest } from 'next/server'
 
-const PUBLIC_PM_TILES_DIR = path.join(process.cwd(), 'public', 'pmtiles')
-const REPO_EXPORT_PM_TILES_DIR = path.join(process.cwd(), '..', 'data', 'export')
+function getPmTilesDir(): string {
+	const dir = process.env.PM_TILES_DIR
+
+	if (!dir) {
+		throw new Error('PM_TILES_DIR environment variable is not set')
+	}
+
+	return dir
+}
 
 function sanitizePath(parts: string[]): string | null {
 	if (parts.length === 0) {
@@ -27,18 +34,15 @@ async function resolvePmTilesPath(parts: string[]): Promise<string | null> {
 		return null
 	}
 
-	const candidates = [path.join(PUBLIC_PM_TILES_DIR, safePath), path.join(REPO_EXPORT_PM_TILES_DIR, safePath)]
+	const candidate = path.join(getPmTilesDir(), safePath)
 
-	for (const candidate of candidates) {
-		try {
-			await access(candidate)
-			return candidate
-		} catch {
-			// try next candidate
-		}
+	try {
+		await access(candidate)
+
+		return candidate
+	} catch {
+		return null
 	}
-
-	return null
 }
 
 function parseRange(rangeHeader: string, fileSize: number): { start: number; end: number } | null {
