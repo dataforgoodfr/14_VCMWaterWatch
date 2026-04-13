@@ -38,6 +38,7 @@ services:
     environment:
       # Set up POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB and POSTGRES_SERVER in Coolify
       NC_DB: "pg://${POSTGRES_SERVER:-postgres}:5432?u=${POSTGRES_USER:-nocodb}&p=${POSTGRES_PASSWORD:-changeme}&d=${POSTGRES_DB:-nocodb}"
+      NC_ALLOW_LOCAL_HOOKS: true
     volumes:
       - nocodb-data:/usr/app/data
     restart: unless-stopped

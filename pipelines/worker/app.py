@@ -3,6 +3,9 @@ Lightweight FastAPI service that receives NocoDB webhooks and triggers
 Prefect pipeline flows.
 
 Runs inside the Docker network — not exposed to the internet.
+
+Webhooks need to be set up on NocoDB: 
+https://nocodb.com/docs/product-docs/automation/webhook/create-webhook
 """
 
 import logging
@@ -15,6 +18,10 @@ from fastapi.responses import JSONResponse
 
 from pipelines.export.export_pmtiles import export_pmtiles_flow
 
+logging.basicConfig(
+    level=os.environ.get("LOG_LEVEL", "INFO"),
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="VCM WaterWatch Pipeline Worker")

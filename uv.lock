@@ -16,6 +16,7 @@ dependencies = [
     { name = "pyogrio" },
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "python-dotenv" },
     { name = "tippecanoe" },
     { name = "uvicorn", extra = ["standard"] },
 ]
@@ -31,6 +32,7 @@ requires-dist = [
     { name = "pyogrio", specifier = ">=0.12.1" },
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "pytest-cov", specifier = ">=4.1.0" },
+    { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "tippecanoe", specifier = ">=2.72.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.34.0" },
 ]
