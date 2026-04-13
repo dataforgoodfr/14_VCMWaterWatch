@@ -45,14 +45,18 @@ _debounce_timer: threading.Timer | None = None
 _search_debounce_lock = threading.Lock()
 _search_debounce_timer: threading.Timer | None = None
 
+# Serialize all Prefect flow runs so only one ephemeral server exists at a time
+_flow_run_lock = threading.Lock()
+
 
 def _run_flow():
     """Run the export flow. Called by the debounce timer."""
-    try:
-        data_dir = Path(os.environ.get("PM_TILES_DIR", "data/export"))
-        export_pmtiles_flow(destination=data_dir)
-    except Exception:
-        logger.exception("Export flow failed")
+    with _flow_run_lock:
+        try:
+            data_dir = Path(os.environ.get("PM_TILES_DIR", "data/export"))
+            export_pmtiles_flow(destination=data_dir)
+        except Exception:
+            logger.exception("Export flow failed")
 
 
 def _schedule_export():
@@ -68,10 +72,11 @@ def _schedule_export():
 
 def _run_search_index_flow():
     """Run the search index flow. Called by the debounce timer."""
-    try:
-        build_search_index()
-    except Exception:
-        logger.exception("Search index flow failed")
+    with _flow_run_lock:
+        try:
+            build_search_index()
+        except Exception:
+            logger.exception("Search index flow failed")
 
 
 def _schedule_search_index():
