@@ -17,6 +17,7 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from pipelines.export.export_pmtiles import export_pmtiles_flow
+from pipelines.tasks.build_search_index import build_search_index
 
 logging.basicConfig(
     level=os.environ.get("LOG_LEVEL", "INFO"),
@@ -29,13 +30,20 @@ app = FastAPI(title="VCM WaterWatch Pipeline Worker")
 # Tables whose changes should trigger a PMTiles rebuild
 PMTILES_TRIGGER_TABLES = {"Country", "DistributionZone"}
 
+# Tables whose changes should trigger a search index rebuild
+SEARCH_INDEX_TRIGGER_TABLES = {"DistributionZone", "Municipality"}
+
 # Debounce delay — how long to wait after the last webhook before running the flow.
 # Override via WEBHOOK_DEBOUNCE_SECONDS env var. Default 60s.
 DEBOUNCE_SECONDS = float(os.environ.get("WEBHOOK_DEBOUNCE_SECONDS", "60"))
 
-# Lock and timer for debounce
+# Lock and timer for PMTiles debounce
 _debounce_lock = threading.Lock()
 _debounce_timer: threading.Timer | None = None
+
+# Lock and timer for search index debounce
+_search_debounce_lock = threading.Lock()
+_search_debounce_timer: threading.Timer | None = None
 
 
 def _run_flow():
@@ -58,6 +66,25 @@ def _schedule_export():
         _debounce_timer.start()
 
 
+def _run_search_index_flow():
+    """Run the search index flow. Called by the debounce timer."""
+    try:
+        build_search_index()
+    except Exception:
+        logger.exception("Search index flow failed")
+
+
+def _schedule_search_index():
+    """Schedule (or reschedule) the search index flow after DEBOUNCE_SECONDS."""
+    global _search_debounce_timer
+    with _search_debounce_lock:
+        if _search_debounce_timer is not None:
+            _search_debounce_timer.cancel()
+        _search_debounce_timer = threading.Timer(DEBOUNCE_SECONDS, _run_search_index_flow)
+        _search_debounce_timer.daemon = True
+        _search_debounce_timer.start()
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -75,14 +102,26 @@ def nocodb_webhook(payload: dict):
     if isinstance(payload.get("data"), dict):
         table_name = payload["data"].get("table_name")
 
+    scheduled = []
+
     if table_name in PMTILES_TRIGGER_TABLES:
         logger.info(
             f"Webhook received for table {table_name}, scheduling PMTiles export"
         )
         _schedule_export()
+        scheduled.append("export_pmtiles")
+
+    if table_name in SEARCH_INDEX_TRIGGER_TABLES:
+        logger.info(
+            f"Webhook received for table {table_name}, scheduling search index rebuild"
+        )
+        _schedule_search_index()
+        scheduled.append("build_search_index")
+
+    if scheduled:
         return JSONResponse(
             status_code=202,
-            content={"status": "accepted", "pipeline": "export_pmtiles"},
+            content={"status": "accepted", "pipelines": scheduled},
         )
 
     logger.info(f"Webhook received for table {table_name}, ignoring")
