@@ -22,7 +22,7 @@ from prefect.cache_policies import NO_CACHE
 
 from pipelines.common import services
 
-ZONE_FIELDS = ["Code", "Name", "Geometry", "PVC Level", "VCM Level"]
+ZONE_FIELDS = ["Code", "Name", "Geometry", "PVC Level", "VCM Level", "Map Color"]
 # Extra fields per table (e.g. linked record display values)
 EXTRA_FIELDS = {"DistributionZone": ["ActorName"]}
 ZONE_TABLES = {
