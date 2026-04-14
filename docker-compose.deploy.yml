@@ -63,6 +63,8 @@ services:
     restart: unless-stopped
     volumes:
       - pmtiles-data:/public/pmtiles
+    labels:
+      - 'traefik.http.middlewares.mybasicauth.basicauth.users=vcm:$2y$05$U9xfGncXlz8eRkC6itgtOul/aDhTeHz.qBBXk6hss4xyBbT.cpgn6'
 
   worker:
     image: ghcr.io/dataforgoodfr/14_vcmwaterwatch/worker:latest
