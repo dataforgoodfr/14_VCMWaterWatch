@@ -14,7 +14,9 @@ Output GeoJSON fields per feature:
 
 import json
 import os
+import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 from prefect import flow, get_run_logger, task
@@ -93,21 +95,28 @@ def create_pmtiles_task(geojson_file: Path, layer: str, output_dir: Path) -> Pat
     output_dir.mkdir(parents=True, exist_ok=True)
     pmtiles_file = output_dir / f"{layer}.pmtiles"
 
-    command = [
-        "tippecanoe",
-        "-zg",
-        "--force",
-        "-o",
-        str(pmtiles_file),
-        "--layer",
-        layer,
-        "--coalesce-densest-as-needed",
-        "--extend-zooms-if-still-dropping",
-        str(geojson_file),
-    ]
+    # Write to a temp file first, then atomically move into place so the
+    # destination is never left in a partial/corrupt state.
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tmp_file = Path(tmp_dir) / f"{layer}.pmtiles"
 
-    logger.info(f"Running: {' '.join(command)}")
-    subprocess.run(command, check=True)
+        command = [
+            "tippecanoe",
+            "-zg",
+            "--force",
+            "-o",
+            str(tmp_file),
+            "--layer",
+            layer,
+            "--coalesce-densest-as-needed",
+            "--extend-zooms-if-still-dropping",
+            str(geojson_file),
+        ]
+
+        logger.info(f"Running: {' '.join(command)}")
+        subprocess.run(command, check=True)
+        shutil.move(str(tmp_file), str(pmtiles_file))
+
     logger.info(f"Created {pmtiles_file}")
     return pmtiles_file
 
