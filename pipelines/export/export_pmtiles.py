@@ -57,6 +57,7 @@ def export_zones_geojson_task(table_name: str, output_dir: Path) -> Path:
             "name": row["Name"],
             "pvc_level": row.get("PVC Level"),
             "vcm_level": row.get("VCM Level"),
+            "map_color": row.get("Map Color"),
         }
         if table_name == "DistributionZone":
             actor_names = row.get("ActorName")
