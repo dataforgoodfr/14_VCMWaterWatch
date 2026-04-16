@@ -7,6 +7,7 @@ in the destination directory.
 
 Output GeoJSON fields per feature:
  - Geometry (from NocoDB)
+ - noco_id (NocoDB primary key)
  - PVC Level
  - VCM Level
  - company_name (DistributionZone only, from linked Actor records)
