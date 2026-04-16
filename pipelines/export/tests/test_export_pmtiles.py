@@ -106,7 +106,7 @@ class TestExportZonesGeojson:
             )
 
         collection = json.loads(path.read_text())
-        assert collection["features"] == []
+        assert collection["features"] == []  # empty list — Id field irrelevant here
 
 
 def _sample_geojson() -> dict:
