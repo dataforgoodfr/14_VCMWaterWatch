@@ -1,6 +1,6 @@
 """
 Download and convert the commune GPKG file to GeoJSON.
-Produces file data/raw/municipalities.geojson
+Produces files data/raw/municipalities.geojson and data/raw/pt_concelhos_municipalities.geojson
 """
 from pathlib import Path
 from prefect import flow, task
@@ -95,11 +95,28 @@ def dissolve_pt_concelhos(
     return output_path
 
 
+@task(name="download concelhos CSV")
+def download_concelhos_csv(dest_directory: Path) -> Path:
+    dst = dest_directory / "pt_concelhos.csv"
+    if dst.exists():
+        return dst
+    source = "https://raw.githubusercontent.com/centraldedados/codigos_postais/master/data/concelhos.csv"
+    urlretrieve(source, dst)
+    return dst
+
+
 @flow(name="download_municipality")
 def download_municipality(data_directory: Path):
     gpkg = download_commune_gpkg(data_directory / "raw")
     geojson = convert_gpkg_to_geojson(
         gpkg, data_directory / "raw" / "municipalities.geojson"
+    )
+    # PT concelhos (dissolved from parishes)
+    concelhos_csv = download_concelhos_csv(data_directory / "raw")
+    dissolve_pt_concelhos(
+        geojson,
+        concelhos_csv,
+        data_directory / "raw" / "pt_concelhos_municipalities.geojson",
     )
     return geojson
 
