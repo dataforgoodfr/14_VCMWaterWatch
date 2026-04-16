@@ -24,7 +24,7 @@ from prefect.cache_policies import NO_CACHE
 
 from pipelines.common import services
 
-ZONE_FIELDS = ["Code", "Name", "Geometry", "PVC Level", "VCM Level", "Map Color"]
+ZONE_FIELDS = ["Id", "Code", "Name", "Geometry", "PVC Level", "VCM Level", "Map Color"]
 # Extra fields per table (e.g. linked record display values)
 EXTRA_FIELDS = {"DistributionZone": ["ActorName"]}
 ZONE_TABLES = {
@@ -55,6 +55,7 @@ def export_zones_geojson_task(table_name: str, output_dir: Path) -> Path:
             continue
         geometry = json.loads(geometry_str)
         props = {
+            "noco_id": row.get("Id"),
             "code": row["Code"],
             "name": row["Name"],
             "pvc_level": row.get("PVC Level"),
