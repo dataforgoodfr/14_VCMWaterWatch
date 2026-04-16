@@ -15,17 +15,17 @@ class TestExportZonesGeojson:
         """Records with geometry become Features; records without are skipped."""
         fake_records = [
             {
-                "Code": "DE", "Name": "Germany",
+                "Id": 1, "Code": "DE", "Name": "Germany",
                 "Geometry": '{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,0]]]}',
                 "PVC Level": "High", "VCM Level": "Medium",
             },
             {
-                "Code": "FR", "Name": "France",
+                "Id": 2, "Code": "FR", "Name": "France",
                 "Geometry": '{"type":"Polygon","coordinates":[[[2,2],[3,2],[3,3],[2,2]]]}',
                 "PVC Level": "Low", "VCM Level": None,
             },
             {
-                "Code": "XX", "Name": "NoGeom",
+                "Id": 3, "Code": "XX", "Name": "NoGeom",
                 "Geometry": None,
                 "PVC Level": None, "VCM Level": None,
             },
@@ -51,15 +51,18 @@ class TestExportZonesGeojson:
         assert de["properties"]["code"] == "DE"
         assert de["properties"]["pvc_level"] == "High"
         assert de["properties"]["vcm_level"] == "Medium"
+        assert de["properties"]["noco_id"] == 1
         assert de["geometry"]["type"] == "Polygon"
 
         fr = collection["features"][1]
         assert fr["properties"]["code"] == "FR"
         assert fr["properties"]["vcm_level"] is None
+        assert fr["properties"]["noco_id"] == 2
 
     def test_distribution_zone_produces_valid_feature_collection(self, tmp_path):
         """DistributionZone table exports with company name from ActorName."""
         fake_df = [{
+            "Id": 42,
             "Code": "DZ001",
             "Name": "Water Zone Alpha",
             "Geometry": '{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]}',
@@ -88,6 +91,7 @@ class TestExportZonesGeojson:
         assert zone["properties"]["code"] == "DZ001"
         assert zone["properties"]["name"] == "Water Zone Alpha"
         assert zone["properties"]["company_name"] == "Water Company Alpha"
+        assert zone["properties"]["noco_id"] == 42
         assert zone["geometry"]["type"] == "Polygon"
 
     def test_empty_table_produces_empty_collection(self, tmp_path):
