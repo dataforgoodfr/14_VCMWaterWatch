@@ -194,10 +194,18 @@ def update_population_task(records: list[dict], table_name: str) -> None:
 
     Only runs if any record carries a Population value (not all zone types have one).
     """
+    import math
+
+    def _valid_population(v) -> bool:
+        try:
+            return not math.isnan(v)
+        except (TypeError, ValueError):
+            return False
+
     to_update = [
         {"Id": r["Id"], "Population": r["Population"]}
         for r in records
-        if r.get("Id") and r.get("Population") is not None
+        if r.get("Id") and _valid_population(r.get("Population"))
     ]
     if not to_update:
         return

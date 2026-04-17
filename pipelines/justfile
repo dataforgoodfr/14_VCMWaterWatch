@@ -32,7 +32,8 @@ transform-geojson:
 transform-create-distribution-zones:
   uv run python -m pipelines.transform.create_distribution_zones ${DATA_DIR}
 
-# Load all zone data into NocoDB.
+# Load all zone data (from Staging) into NocoDB.
+# Run AFTER transform tasks!
 load-zones-country:
   uv run python -m pipelines.load.load_zones Country ${DATA_DIR}
 
