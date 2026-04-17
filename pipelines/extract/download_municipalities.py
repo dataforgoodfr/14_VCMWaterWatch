@@ -13,10 +13,10 @@ from prefect.cache_policies import NO_CACHE
 
 @task(name="download commune gpkg")
 def download_commune_gpkg(dest_directory: Path) -> Path:
-    dst = dest_directory / "COMM_RG_01M_2016_2035.gpkg"
+    dst = dest_directory / "COMM_RG_01M_2016_4326.gpkg"
     if dst.exists():
         return dst
-    source = "https://gisco-services.ec.europa.eu/distribution/v2/communes/gpkg/COMM_RG_01M_2016_3035.gpkg"
+    source = "https://gisco-services.ec.europa.eu/distribution/v2/communes/gpkg/COMM_RG_01M_2016_4326.gpkg"
     urlretrieve(source, dst)
     return dst
 
@@ -66,7 +66,7 @@ def load_communes_to_duckdb(conn: duckdb.DuckDBPyConnection, gpkg: Path) -> None
         CREATE TABLE communes AS
         SELECT
             * EXCLUDE (geom, CNTR_CODE),
-            ST_Transform(geom, 'EPSG:3035', 'EPSG:4326') AS geom,
+            geom,
             REPLACE(CNTR_CODE, 'UK', 'GB') AS CNTR_CODE
         FROM st_read('{gpkg}')
     """)
