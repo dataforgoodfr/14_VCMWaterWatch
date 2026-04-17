@@ -1,11 +1,22 @@
+/**
+ * NocoDB single-select options for the `Map Color` column.
+ * These are the only valid values; NocoDB enforces the constraint.
+ */
 export type ColorCode = 'green' | 'yellow' | 'orange' | 'red' | 'gray'
 
 /**
- * Return the NocoDB `Map Color` value cast to `ColorCode`, or `null` if the
- * value is absent.  `Map Color` is the single source of truth for zone / country
- * colouring (see `pipelines/export/export_pmtiles.py` and
- * `webapp/lib/map/distributionZoneRisk.ts`).  No derivation from VCM / PVC
- * levels is performed here.
+ * Return the NocoDB `Map Color` value as a `ColorCode`, or `null` if absent.
+ *
+ * `Map Color` is a NocoDB single-select with exactly these options:
+ * - `'red'`: Non-compliant
+ * - `'orange'`: Reinforced vigilance
+ * - `'yellow'`: Vigilance
+ * - `'green'`: Compliant
+ * - `'gray'`: Unknown
+ *
+ * Since NocoDB enforces the single-select constraint, any non-null return
+ * is guaranteed to be a valid `ColorCode` key in `colorCodeConfig`.
+ * An unknown value at runtime would be a NocoDB data issue, not an app bug.
  */
 export function colorCodeFromMapColor(mapColor: string | null | undefined): ColorCode | null {
 	return (mapColor ?? null) as ColorCode | null
