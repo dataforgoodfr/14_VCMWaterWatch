@@ -7,6 +7,10 @@ _default:
   @echo ""
   @echo "Run 'just <recipe>' to execute a task."
 
+# Download country boundary data from GISCO and convert to GeoJSON.
+extract-countries:
+  uv run python -m pipelines.extract.download_countries
+
 # Download municipalities data and process it into GeoJSON.
 extract-municipalities:
   uv run python -m pipelines.extract.download_municipalities
