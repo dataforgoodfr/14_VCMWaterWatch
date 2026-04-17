@@ -17,7 +17,7 @@ export function MapLoadingFallback() {
 
 	return (
 		<div
-			className='relative flex h-[calc(100vh-168px)] min-h-[400px] w-full items-center justify-center bg-white'
+			className='relative flex h-screen w-full items-center justify-center bg-white'
 			role='status'
 			aria-busy='true'
 			aria-live='polite'

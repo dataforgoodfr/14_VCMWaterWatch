@@ -11,7 +11,7 @@ const FILTERS: {
 }[] = [
 	{
 		id: 'confirme',
-		label: 'Confirmé',
+		label: 'Confirmed',
 		className:
 			'border-1 border-[var(--risk-confirme-border)] bg-[var(--risk-confirme-bg)] text-[var(--risk-confirme-border)]',
 		ringClass: 'ring-[var(--risk-confirme-border)]'
@@ -32,7 +32,7 @@ const FILTERS: {
 	},
 	{
 		id: 'inconnu',
-		label: 'Inconnu',
+		label: 'Unknown',
 		className:
 			'border-1 border-[var(--risk-inconnu-border)] bg-[var(--risk-inconnu-bg)] text-[var(--risk-inconnu-border)]',
 		ringClass: 'ring-[var(--risk-inconnu-border)]'

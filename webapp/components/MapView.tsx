@@ -1,17 +1,24 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 
 import maplibregl from 'maplibre-gl'
-import type { MapLibreEvent } from 'maplibre-gl'
-import { PMTiles, Protocol, type Header } from 'pmtiles'
+import type { MapLayerMouseEvent, MapLibreEvent } from 'maplibre-gl'
+import { Protocol } from 'pmtiles'
 import Map from 'react-map-gl/maplibre'
-import type { MapRef } from 'react-map-gl/maplibre'
+import type { MapRef, ViewStateChangeEvent } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
 import type { GeocodePlace } from '@/lib/geocode/photon'
 import { distributionZoneTierFilter, type MapRiskTier } from '@/lib/map/distributionZoneRisk'
-import { createBaseMapStyle, DISTRIBUTION_ZONES_PM_TILES_PUBLIC_PATH } from '@/lib/map/mapStyle'
+import { createBaseMapStyle, MAP_DISTRIBUTION_ZONES_MIN_ZOOM } from '@/lib/map/mapStyle'
+import {
+	mapTooltipPvcFromNocoLink,
+	pvcTooltipBadgeFromTileProperty,
+	rawTooltipPvcFromFeatureProperties,
+	tilePropertyString
+} from '@/lib/map/mapTooltipPvcBadge'
+import { cn } from '@/lib/utils'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 
 import { MapRiskFilters } from './MapRiskFilters'
@@ -20,19 +27,163 @@ import { SearchBar } from './SearchBar'
 let protocolRegistered = false
 let pmtilesProtocol: Protocol | null = null
 
-function headerToBoundsLngLat(header: Header) {
-	return [
-		[header.minLon, header.minLat],
-		[header.maxLon, header.maxLat]
-	] as [[number, number], [number, number]]
-}
+const MAP_INTRO_VIEW_STATE = {
+	longitude: -18,
+	latitude: 28,
+	zoom: 1.45
+} as const
+
+const MAP_NORWAY_SPAIN_BOUNDS: [[number, number], [number, number]] = [
+	[-9.9, 35.4],
+	[31.2, 65.4]
+]
 
 const DISTRIBUTION_ZONES_LAYER_IDS = ['distribution-zones-fill', 'distribution-zones-outline'] as const
+
+const COUNTRY_LOWZOOM_LAYER_IDS = ['countries-lowzoom-fill', 'countries-lowzoom-outline'] as const
+
+const RISK_FILTER_LAYER_IDS = [...COUNTRY_LOWZOOM_LAYER_IDS, ...DISTRIBUTION_ZONES_LAYER_IDS] as const
+
+const DISTRIBUTION_ZONE_PICK_LAYER_ID = DISTRIBUTION_ZONES_LAYER_IDS[0]
+
+function emptyMapMoveSubscriptionCleanup() {
+	/* not subscribed */
+}
+
+interface ZoneCardState {
+	lng: number
+	lat: number
+	name: string
+	tooltipPvcRaw: string | null
+	zoneId: number | null
+}
+
+function parseDistributionZoneIdFromProperties(props: Record<string, unknown>): number | null {
+	const v = props.noco_id ?? props.id ?? props.Id
+
+	if (typeof v === 'number' && Number.isFinite(v)) {
+		return v
+	}
+
+	if (typeof v === 'string') {
+		const n = Number(v)
+
+		return Number.isFinite(n) ? n : null
+	}
+
+	return null
+}
+
+function parseDistributionZoneIdFromFeature(feature: {
+	id?: string | number | undefined
+	properties?: unknown
+}): number | null {
+	const fid = feature.id
+
+	if (typeof fid === 'number' && Number.isFinite(fid)) {
+		return fid
+	}
+
+	if (typeof fid === 'string') {
+		const n = Number(fid)
+
+		return Number.isFinite(n) ? n : null
+	}
+
+	const props = feature.properties
+
+	if (props !== null && typeof props === 'object' && !Array.isArray(props)) {
+		return parseDistributionZoneIdFromProperties(props as Record<string, unknown>)
+	}
+
+	return null
+}
+
+function displayZoneName(value: unknown): string {
+	if (typeof value === 'string') {
+		const trimmed = value.trim()
+
+		return trimmed !== '' ? trimmed : '—'
+	}
+
+	if (typeof value === 'number' && Number.isFinite(value)) {
+		return String(value)
+	}
+
+	return '—'
+}
 
 export function MapView() {
 	const mapRef = useRef<MapRef>(null)
 	const [mapLoaded, setMapLoaded] = useState(false)
 	const [riskFilter, setRiskFilter] = useState<MapRiskTier | null>(null)
+	const [zoneCard, setZoneCard] = useState<ZoneCardState | null>(null)
+	const [zoneDetailTooltipPvc, setZoneDetailTooltipPvc] = useState<string | null | undefined>(undefined)
+	const [mapCursor, setMapCursor] = useState('')
+	const [mapZoom, setMapZoom] = useState<number>(MAP_INTRO_VIEW_STATE.zoom)
+
+	const zonesLayerVisible = mapZoom >= MAP_DISTRIBUTION_ZONES_MIN_ZOOM
+
+	const zoneCardScreenSnap = useSyncExternalStore(
+		useCallback(
+			onStoreChange => {
+				if (!mapLoaded || !zoneCard) {
+					return emptyMapMoveSubscriptionCleanup
+				}
+
+				const map = mapRef.current?.getMap()
+
+				if (!map) {
+					return emptyMapMoveSubscriptionCleanup
+				}
+
+				map.on('move', onStoreChange)
+
+				return () => {
+					map.off('move', onStoreChange)
+				}
+			},
+			[mapLoaded, zoneCard]
+		),
+		() => {
+			if (!zoneCard) {
+				return null
+			}
+
+			const map = mapRef.current?.getMap()
+
+			if (!map) {
+				return null
+			}
+
+			const p = map.project([zoneCard.lng, zoneCard.lat])
+
+			return `${p.x.toFixed(2)},${p.y.toFixed(2)}`
+		},
+		() => null
+	)
+
+	const zoneCardScreen = useMemo(() => {
+		if (zoneCardScreenSnap === null) {
+			return null
+		}
+
+		const comma = zoneCardScreenSnap.indexOf(',')
+
+		if (comma === -1) {
+			return null
+		}
+
+		const x = Number(zoneCardScreenSnap.slice(0, comma))
+		const y = Number(zoneCardScreenSnap.slice(comma + 1))
+
+		if (!Number.isFinite(x) || !Number.isFinite(y)) {
+			return null
+		}
+
+		return { x, y }
+	}, [zoneCardScreenSnap])
+
 	const mapStyle = useMemo(() => createBaseMapStyle(), [])
 
 	useEffect(() => {
@@ -53,28 +204,67 @@ export function MapView() {
 		)
 	}, [])
 
+	const closeZoneCard = useCallback(() => {
+		setZoneDetailTooltipPvc(undefined)
+		setZoneCard(null)
+	}, [])
+
+	const onMapClick = useCallback(
+		(e: MapLayerMouseEvent) => {
+			const feature = e.features?.find(f => f.layer?.id === DISTRIBUTION_ZONE_PICK_LAYER_ID)
+
+			if (!feature?.properties) {
+				closeZoneCard()
+				return
+			}
+
+			const props = feature.properties as Record<string, unknown>
+			const name = displayZoneName(props.name)
+			const { lng, lat } = e.lngLat
+			const tooltipPvcRaw = rawTooltipPvcFromFeatureProperties(props)
+			const zoneId = parseDistributionZoneIdFromFeature(feature)
+
+			console.log('[MapView] click zone', {
+				featureId: feature.id,
+				zoneId,
+				props
+			})
+
+			setZoneDetailTooltipPvc(undefined)
+			setZoneCard({ lng, lat, name, tooltipPvcRaw, zoneId })
+		},
+		[closeZoneCard]
+	)
+
+	const onMapMouseMove = useCallback((e: MapLayerMouseEvent) => {
+		const overZone = Boolean(e.features?.some(f => f.layer?.id === DISTRIBUTION_ZONE_PICK_LAYER_ID))
+
+		setMapCursor(overZone ? 'pointer' : '')
+	}, [])
+
+	const onMapMove = useCallback((e: ViewStateChangeEvent) => {
+		const z = e.viewState.zoom
+
+		setMapZoom(z)
+		setRiskFilter(prev => (z >= MAP_DISTRIBUTION_ZONES_MIN_ZOOM ? prev : null))
+	}, [])
+
 	const onMapLoad = useCallback((e: MapLibreEvent) => {
 		const map = e.target
 
 		setMapLoaded(true)
+		setMapZoom(map.getZoom())
 
-		const run = async () => {
-			try {
-				const url = new URL(DISTRIBUTION_ZONES_PM_TILES_PUBLIC_PATH, window.location.origin).href
-				const header = await new PMTiles(url).getHeader()
-
-				map.fitBounds(headerToBoundsLngLat(header), {
-					padding: { top: 24, bottom: 24, left: 24, right: 24 },
-					duration: 900,
-					linear: false,
-					maxZoom: header.maxZoom
-				})
-			} catch {
-				// ignore
-			}
+		const zoomToRegion = () => {
+			map.fitBounds(MAP_NORWAY_SPAIN_BOUNDS, {
+				padding: 56,
+				duration: 1600,
+				linear: false,
+				maxZoom: 10.5
+			})
 		}
 
-		void run()
+		window.setTimeout(zoomToRegion, 320)
 	}, [])
 
 	useEffect(() => {
@@ -90,37 +280,145 @@ export function MapView() {
 
 		const filter = riskFilter === null ? null : distributionZoneTierFilter(riskFilter)
 
-		for (const id of DISTRIBUTION_ZONES_LAYER_IDS) {
+		for (const id of RISK_FILTER_LAYER_IDS) {
 			if (map.getLayer(id)) {
 				map.setFilter(id, filter)
 			}
 		}
 	}, [mapLoaded, riskFilter])
 
+	useEffect(() => {
+		if (!zoneCard) {
+			return
+		}
+
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') {
+				closeZoneCard()
+			}
+		}
+
+		window.addEventListener('keydown', onKey)
+
+		return () => window.removeEventListener('keydown', onKey)
+	}, [zoneCard, closeZoneCard])
+
+	useEffect(() => {
+		if (!zoneCard?.zoneId) {
+			return
+		}
+
+		const id = zoneCard.zoneId
+		const ac = new AbortController()
+
+		void (async () => {
+			try {
+				const res = await fetch(`/api/distributionzone/${id}`, { signal: ac.signal })
+
+				if (!res.ok) {
+					if (!ac.signal.aborted) {
+						setZoneDetailTooltipPvc(null)
+					}
+
+					return
+				}
+
+				const body = (await res.json()) as { fields?: Record<string, unknown> }
+				const f = body.fields
+
+				const raw =
+					f !== undefined && f !== null && 'MapTooltipPvcLevel' in f
+						? tilePropertyString(f.MapTooltipPvcLevel)
+						: mapTooltipPvcFromNocoLink(f?.['Map - Tooltip'])
+
+				if (!ac.signal.aborted) {
+					setZoneDetailTooltipPvc(raw)
+				}
+			} catch {
+				if (!ac.signal.aborted) {
+					setZoneDetailTooltipPvc(null)
+				}
+			}
+		})()
+
+		return () => ac.abort()
+	}, [zoneCard?.zoneId])
+
+	const tooltipPvcRawForBadge = useMemo(() => {
+		if (!zoneCard) {
+			return null
+		}
+
+		if (zoneCard.zoneId != null) {
+			if (zoneDetailTooltipPvc !== undefined) {
+				return zoneDetailTooltipPvc
+			}
+
+			return zoneCard.tooltipPvcRaw
+		}
+
+		return zoneCard.tooltipPvcRaw
+	}, [zoneCard, zoneDetailTooltipPvc])
+
+	const zoneCardPvcBadge = zoneCard ? pvcTooltipBadgeFromTileProperty(tooltipPvcRawForBadge) : null
+
 	return (
-		<div className='relative h-[calc(100vh-168px)] min-h-[400px] w-full'>
-			<div className='absolute top-4 left-4 z-10 flex max-w-[min(100%,36rem)] flex-col gap-3'>
-				<Card className='border-navy-100 gap-0 bg-white py-0 shadow-none'>
-					<CardContent className='px-4 py-4'>
-						<div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
-							<CardTitle className='text-navy-800 shrink-0 font-sans text-[14px] font-normal'>Risks</CardTitle>
-							<MapRiskFilters active={riskFilter} onChange={setRiskFilter} />
-						</div>
-					</CardContent>
-				</Card>
+		<div className='relative h-screen w-full'>
+			<div className='absolute top-4 left-4 z-10 flex w-[min(36rem,calc(100%-2rem))] flex-col gap-3'>
 				<SearchBar onSelectPlace={onSelectPlace} />
+				{zonesLayerVisible ? (
+					<Card className='border-navy-100 gap-0 bg-white py-0 shadow-none'>
+						<CardContent className='px-4 py-4'>
+							<div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
+								<CardTitle className='text-navy-800 shrink-0 font-sans text-[14px] font-normal'>Risks</CardTitle>
+								<MapRiskFilters active={riskFilter} onChange={setRiskFilter} />
+							</div>
+						</CardContent>
+					</Card>
+				) : null}
 			</div>
-			<Map
-				ref={mapRef}
-				initialViewState={{
-					longitude: 10,
-					latitude: 50,
-					zoom: 3.5
-				}}
-				mapStyle={mapStyle}
-				style={{ width: '100%', height: '100%' }}
-				onLoad={onMapLoad}
-			/>
+			<div className='relative h-full w-full'>
+				<Map
+					ref={mapRef}
+					cursor={mapCursor}
+					initialViewState={{
+						longitude: MAP_INTRO_VIEW_STATE.longitude,
+						latitude: MAP_INTRO_VIEW_STATE.latitude,
+						zoom: MAP_INTRO_VIEW_STATE.zoom
+					}}
+					interactiveLayerIds={[DISTRIBUTION_ZONE_PICK_LAYER_ID]}
+					mapStyle={mapStyle}
+					style={{ width: '100%', height: '100%' }}
+					onClick={onMapClick}
+					onLoad={onMapLoad}
+					onMove={onMapMove}
+					onMouseMove={onMapMouseMove}
+				/>
+				{zoneCard && zoneCardScreen ? (
+					<div className='pointer-events-none absolute inset-0 z-20'>
+						<div
+							className='pointer-events-auto absolute max-w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-full'
+							style={{ left: zoneCardScreen.x, top: zoneCardScreen.y, marginTop: -8 }}
+						>
+							<Card className='border-navy-100 gap-0 bg-white py-0 shadow-md'>
+								<CardContent className='flex flex-col gap-2 px-4 py-3'>
+									<p className='text-navy-800 text-sm font-medium'>{zoneCard.name}</p>
+									{zoneCardPvcBadge ? (
+										<span
+											className={cn(
+												'inline-flex w-fit rounded-3xl px-3 py-1.5 text-left text-xs font-medium',
+												zoneCardPvcBadge.className
+											)}
+										>
+											{zoneCardPvcBadge.label}
+										</span>
+									) : null}
+								</CardContent>
+							</Card>
+						</div>
+					</div>
+				) : null}
+			</div>
 		</div>
 	)
 }
