@@ -188,6 +188,25 @@ def update_geometry_task(records: list[dict], table_name: str) -> None:
     db_helper.update_records(to_update, table_name)
 
 
+@task(name="update_population", cache_policy=NO_CACHE)
+def update_population_task(records: list[dict], table_name: str) -> None:
+    """Update the Population field for existing records in NocoDB.
+
+    Only runs if any record carries a Population value (not all zone types have one).
+    """
+    to_update = [
+        {"Id": r["Id"], "Population": r["Population"]}
+        for r in records
+        if r.get("Id") and r.get("Population") is not None
+    ]
+    if not to_update:
+        return
+    logger = get_run_logger()
+    logger.info(f"Updating population for {len(to_update)} existing records")
+    db_helper = services.db_helper()
+    db_helper.update_records(to_update, table_name)
+
+
 @task(name="lookup_children", cache_policy=INPUTS)
 def lookup_children_task(
     records: list[dict], child_level: str, child_field_name: str
@@ -257,6 +276,9 @@ def load_zones_flow(level: str, data_directory: Path) -> None:
 
     # Update geometry for existing records
     # update_geometry_task(existing_records, level_config.table_name)
+
+    # Update population for existing records (no-op if zone type has no Population)
+    update_population_task(existing_records, level_config.table_name)
 
     # Exclude child link columns from insert — they contain codes, not IDs
     child_field_names = list(level_config.child_level.values()) if level_config.child_level else []
