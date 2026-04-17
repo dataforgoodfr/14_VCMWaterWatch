@@ -154,10 +154,6 @@ def download_municipality(data_directory: Path):
     municipalities_geojson = raw / "municipalities.geojson"
     pt_concelhos_geojson = raw / "pt_concelhos_municipalities.geojson"
 
-    # Short-circuit if both outputs already exist
-    if municipalities_geojson.exists() and pt_concelhos_geojson.exists():
-        return municipalities_geojson
-
     gpkg = download_commune_gpkg(raw)
     lau_csv, year = download_lau_population(raw)
     concelhos_csv = download_concelhos_csv(raw)
