@@ -9,6 +9,7 @@ from pipelines.load.import_water_companies_from_staging import (
     _check_duplicates,
     validate_and_split_rows_task,
     write_staging_and_load_task,
+    ReferenceData,
 )
 
 
@@ -37,14 +38,21 @@ class TestParseMunicipalities:
 
 def _make_ref(
     country=None, municipality=None, distribution_zone=None, actor=None,
-) -> dict[str, list[dict]]:
-    """Build minimal ref dict for validation tests."""
-    return {
-        "Country": country if country is not None else [],
-        "Municipality": municipality if municipality is not None else [],
-        "DistributionZone": distribution_zone if distribution_zone is not None else [],
-        "Actor": actor if actor is not None else [],
-    }
+) -> ReferenceData:
+    """Build a ReferenceData instance for validation tests."""
+    countries = country or []
+    municipalities = municipality or []
+    zones = distribution_zone or []
+    actors = actor or []
+    return ReferenceData(
+        country_by_name={r["Name"].lower(): r for r in countries if r.get("Name")},
+        country_by_code={r["Code"].lower(): r for r in countries if r.get("Code")},
+        municipality_by_name={r["Name"].lower(): r for r in municipalities if r.get("Name")},
+        municipality_by_code={r["Code"].lower(): r for r in municipalities if r.get("Code")},
+        zone_codes={r["Code"].lower() for r in zones if r.get("Code")},
+        zone_names={r["Name"].lower() for r in zones if r.get("Name")},
+        actor_names={r["Name"].lower() for r in actors if r.get("Name")},
+    )
 
 
 class TestValidateCountry:
