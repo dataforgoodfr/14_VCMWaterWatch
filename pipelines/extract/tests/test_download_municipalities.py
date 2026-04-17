@@ -31,7 +31,7 @@ def _make_communes_table(conn: duckdb.DuckDBPyConnection, include_population: bo
         conn.sql("""
             CREATE TABLE communes AS
             SELECT 'AT70701' AS COMM_ID, 'Test AT'  AS COMM_NAME, 'AT' AS CNTR_CODE,
-                   NULL      AS NSI_CODE, NULL AS NUTS_CODE,
+                   '70701'   AS NSI_CODE, NULL AS NUTS_CODE,
                    ST_GeomFromText('POLYGON((0 0, 1 0, 1 1, 0 1, 0 0))') AS geom,
                    NULL::BIGINT AS POPULATION
             UNION ALL
@@ -48,7 +48,7 @@ def _make_communes_table(conn: duckdb.DuckDBPyConnection, include_population: bo
         conn.sql("""
             CREATE TABLE communes AS
             SELECT 'AT70701' AS COMM_ID, 'Test AT'  AS COMM_NAME, 'AT' AS CNTR_CODE,
-                   NULL      AS NSI_CODE, NULL AS NUTS_CODE,
+                   '70701'   AS NSI_CODE, NULL AS NUTS_CODE,
                    ST_GeomFromText('POLYGON((0 0, 1 0, 1 1, 0 1, 0 0))') AS geom
             UNION ALL
             SELECT 'PT10105A', 'Parish A', 'PT', '010501', NULL,
@@ -63,13 +63,17 @@ def _make_communes_table(conn: duckdb.DuckDBPyConnection, include_population: bo
 
 
 def _make_lau_csv(path: Path, year: int) -> None:
-    """Write a minimal LAU CSV with POP_<year> column."""
+    """Write a minimal LAU CSV with POP_<year> column.
+
+    GISCO_ID format is CNTR_CODE_NSI_CODE (e.g. AT_70701),
+    which matches communes via NSI_CODE + CNTR_CODE.
+    """
     path.write_text(
-        f"GISCO_ID,LAU_ID,LAU_NAME,POP_{year}\n"
-        f"AT70701,70701,Test AT,12345\n"
-        f"PT10105A,10105A,Parish A,500\n"
-        f"PT10105B,10105B,Parish B,300\n"
-        f"PT10106A,10106A,Parish C,200\n"
+        f"GISCO_ID,CNTR_CODE,LAU_NAME,POP_{year}\n"
+        f"AT_70701,AT,Test AT,12345\n"
+        f"PT_010501,PT,Parish A,500\n"
+        f"PT_010502,PT,Parish B,300\n"
+        f"PT_010601,PT,Parish C,200\n"
     )
 
 

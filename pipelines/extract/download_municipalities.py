@@ -100,7 +100,8 @@ def add_population_to_communes(
         UPDATE communes
         SET POPULATION = lau."{pop_col}"
         FROM read_csv('{lau_csv}', header=true) AS lau
-        WHERE communes.COMM_ID = lau.GISCO_ID
+        WHERE communes.NSI_CODE = split_part(lau.GISCO_ID, '_', 2)
+          AND communes.CNTR_CODE = lau.CNTR_CODE
     """)
 
 
