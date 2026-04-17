@@ -133,6 +133,7 @@ export interface DistributionZoneFields {
 	Geometry: string
 	'PVC Level': string | null
 	'VCM Level': string | null
+	'Map Color'?: string | null
 	CreatedAt: string
 	UpdatedAt: string
 	Country_id: number
@@ -157,6 +158,7 @@ export interface DistributionZoneDetailFields {
 	Code: string
 	'PVC Level': string | null
 	'VCM Level': string | null
+	'Map Color'?: string | null
 	Country: Country
 	ActorName: string[]
 	ActorEmail: string[]
@@ -176,6 +178,7 @@ export interface DistributionZoneMapFields {
 	Geometry: string
 	'PVC Level': string | null
 	'VCM Level': string | null
+	'Map Color'?: string | null
 	Country: Country
 }
 export type DistributionZoneMapRecord = Record<DistributionZoneMapFields>
