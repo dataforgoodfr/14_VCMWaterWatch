@@ -10,6 +10,8 @@ export const DISTRIBUTION_ZONES_PM_TILES_URL = `pmtiles://${DISTRIBUTION_ZONES_P
 export const COUNTRIES_SOURCE_LAYER = 'data_countries'
 export const DISTRIBUTION_ZONES_SOURCE_LAYER = 'data_distribution_zones'
 
+export const COUNTRIES_FILL_LAYER_ID = 'countries-fill'
+export const COUNTRIES_OUTLINE_LAYER_ID = 'countries-outline'
 export const MAP_DISTRIBUTION_ZONES_MIN_ZOOM = 4.5
 
 export const WORLD_COUNTRIES_GEOJSON_URL =
@@ -46,28 +48,27 @@ export function createBaseMapStyle(
 				id: 'world-countries-outline',
 				type: 'line',
 				source: 'world-countries',
+				maxzoom: MAP_DISTRIBUTION_ZONES_MIN_ZOOM,
 				paint: {
 					'line-color': '#b0bfc9',
 					'line-width': 1
 				}
 			},
 			{
-				id: 'countries-lowzoom-fill',
+				id: COUNTRIES_FILL_LAYER_ID,
 				type: 'fill',
 				source: 'countries-vector',
 				'source-layer': COUNTRIES_SOURCE_LAYER,
-				maxzoom: MAP_DISTRIBUTION_ZONES_MIN_ZOOM,
 				paint: {
 					'fill-color': buildMapFeatureFillColor(resolveRiskColor),
 					'fill-opacity': 0.88
 				}
 			},
 			{
-				id: 'countries-lowzoom-outline',
+				id: COUNTRIES_OUTLINE_LAYER_ID,
 				type: 'line',
 				source: 'countries-vector',
 				'source-layer': COUNTRIES_SOURCE_LAYER,
-				maxzoom: MAP_DISTRIBUTION_ZONES_MIN_ZOOM,
 				paint: {
 					'line-color': buildMapFeatureLineColor(resolveRiskColor),
 					'line-width': 0.8
