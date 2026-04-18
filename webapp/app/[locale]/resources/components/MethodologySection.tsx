@@ -1,8 +1,4 @@
-import Link from 'next/link'
-
-import { ArrowUpRight } from 'lucide-react'
-
-import { Button } from '@/components/ui/button'
+import CtaBanner from './CtaBanner'
 
 // Each card uses a simple styled span (circle + text character) instead of a lucide icon.
 // This matches the design mockup which shows minimal circle icons.
@@ -144,25 +140,12 @@ export default function MethodologySection() {
 			{/* Who to contact CTA */}
 			<div>
 				<h3 className='text-navy-800 mb-4 font-[lexend] text-lg font-semibold'>Who to contact?</h3>
-				<div className='bg-navy-900 flex flex-col items-start justify-between gap-4 rounded-xl px-6 py-6 sm:flex-row sm:items-center'>
-					<div>
-						<p className='font-[lexend] text-base font-semibold text-white'>Questions about the methodology?</p>
-						<p className='mt-1 text-sm text-white/70'>
-							Reach out to our scientific team or join the open-source project to propose improvements.
-						</p>
-					</div>
-					<Button
-						asChild
-						variant='outlinePrimary'
-						size='xl'
-						className='shrink-0 border-white text-white hover:bg-white hover:text-navy-900'
-					>
-						<Link href='/act#involved' className='text-[15px]'>
-							Get in touch
-							<ArrowUpRight className='transition-transform group-hover:translate-x-1 group-hover:-translate-y-1' />
-						</Link>
-					</Button>
-				</div>
+				<CtaBanner
+					title='Questions about the methodology?'
+					subtitle='Reach out to our scientific team or join the open-source project to propose improvements.'
+					buttonLabel='Get in touch'
+					href='/act#involved'
+				/>
 			</div>
 		</div>
 	)

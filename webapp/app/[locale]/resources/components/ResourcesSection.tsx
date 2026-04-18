@@ -1,13 +1,13 @@
-import Link from 'next/link'
-
-import { ArrowUpRight } from 'lucide-react'
-
-import { Button } from '@/components/ui/button'
-
 import ResourceCard, { type ResourceCardProps } from './ResourceCard'
+import CtaBanner from './CtaBanner'
 
-const MOCK_RESOURCES: ResourceCardProps[] = [
+interface MockResource extends ResourceCardProps {
+	id: string
+}
+
+const MOCK_RESOURCES: MockResource[] = [
 	{
+		id: 'citizen-guide-water-quality',
 		type: 'guide',
 		title: 'Citizen Guide to Water Quality Testing',
 		description:
@@ -16,6 +16,7 @@ const MOCK_RESOURCES: ResourceCardProps[] = [
 		actionUrl: '#'
 	},
 	{
+		id: 'european-pvc-pipe-report-2023',
 		type: 'report',
 		title: 'European PVC Pipe Infrastructure Report 2023',
 		description:
@@ -24,6 +25,7 @@ const MOCK_RESOURCES: ResourceCardProps[] = [
 		actionUrl: '#'
 	},
 	{
+		id: 'request-water-quality-data',
 		type: 'guide',
 		title: 'How to Request Water Quality Data from Authorities',
 		description:
@@ -32,6 +34,7 @@ const MOCK_RESOURCES: ResourceCardProps[] = [
 		actionUrl: '#'
 	},
 	{
+		id: 'letter-template-water-provider',
 		type: 'template',
 		title: 'Letter Template: Request to Water Provider',
 		description:
@@ -40,6 +43,7 @@ const MOCK_RESOURCES: ResourceCardProps[] = [
 		actionUrl: '#'
 	},
 	{
+		id: 'vcm-health-risks-factsheet',
 		type: 'factsheet',
 		title: 'VCM Health Risks – Key Facts',
 		description:
@@ -48,6 +52,7 @@ const MOCK_RESOURCES: ResourceCardProps[] = [
 		actionUrl: '#'
 	},
 	{
+		id: 'pvc-pipe-degradation-webinar',
 		type: 'video',
 		title: 'Understanding PVC Pipe Degradation (Webinar)',
 		description:
@@ -73,24 +78,18 @@ export default function ResourcesSection() {
 			{/* 3-column grid */}
 			<div className='grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3'>
 				{MOCK_RESOURCES.map(resource => (
-					<ResourceCard key={resource.title} {...resource} />
+					<ResourceCard key={resource.id} {...resource} />
 				))}
 			</div>
 
 			{/* CTA banner */}
-			<div className='bg-navy-900 mt-10 flex flex-col items-start justify-between gap-4 rounded-xl px-6 py-6 sm:flex-row sm:items-center'>
-				<div>
-					<p className='font-[lexend] text-lg font-semibold text-white'>Have a resource to share?</p>
-					<p className='mt-1 text-sm text-white/70'>
-						Help the community grow by submitting a guide, report, or any relevant material.
-					</p>
-				</div>
-				<Button asChild variant='outlinePrimary' size='xl' className='shrink-0 border-white text-white hover:bg-white hover:text-navy-900'>
-					<Link href='/act#involved' className='text-[15px]'>
-						Contact us
-						<ArrowUpRight className='transition-transform group-hover:translate-x-1 group-hover:-translate-y-1' />
-					</Link>
-				</Button>
+			<div className='mt-10'>
+				<CtaBanner
+					title='Have a resource to share?'
+					subtitle='Help the community grow by submitting a guide, report, or any relevant material.'
+					buttonLabel='Contact us'
+					href='/act#involved'
+				/>
 			</div>
 		</div>
 	)
