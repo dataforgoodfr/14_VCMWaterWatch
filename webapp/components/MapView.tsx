@@ -274,9 +274,7 @@ export function MapView() {
 
 	const onMapMouseMove = useCallback((e: MapLayerMouseEvent) => {
 		const overInteractive = Boolean(
-			e.features?.some(
-				f => f.layer?.id === DISTRIBUTION_ZONE_PICK_LAYER_ID || f.layer?.id === COUNTRIES_FILL_LAYER_ID
-			)
+			e.features?.some(f => f.layer?.id === DISTRIBUTION_ZONE_PICK_LAYER_ID || f.layer?.id === COUNTRIES_FILL_LAYER_ID)
 		)
 
 		setMapCursor(overInteractive ? 'pointer' : '')
@@ -385,7 +383,7 @@ export function MapView() {
 		})()
 
 		return () => ac.abort()
-	}, [zoneCard?.zoneId])
+	}, [zoneCard?.zoneId, zoneCard?.kind])
 
 	const zoneCardPvcBadge = zoneCard ? pvcTooltipBadgeFromTileProperty(zoneCard.tooltipPvcRaw) : null
 
