@@ -106,6 +106,14 @@ describe('pvcCountryTooltipBadgeFromTileProperty', () => {
 		expect(badge!.style.borderColor).toBe('#64748b')
 	})
 
+	it('returns gray badge for "unknown"', () => {
+		const badge = pvcCountryTooltipBadgeFromTileProperty('unknown')
+
+		expect(badge).not.toBeNull()
+		expect(badge!.label).toBe('PVC presence unknown')
+		expect(badge!.style.borderColor).toBe('#64748b')
+	})
+
 	it('returns null for null/empty/zone-style values', () => {
 		expect(pvcCountryTooltipBadgeFromTileProperty(null)).toBeNull()
 		expect(pvcCountryTooltipBadgeFromTileProperty('')).toBeNull()
@@ -120,6 +128,14 @@ describe('vcmCountryTooltipBadgeFromTileProperty', () => {
 		expect(badge).not.toBeNull()
 		expect(badge!.label).toBe('No VCM data')
 		expect(badge!.style.borderColor).toBe('#64748b')
+	})
+
+	it('returns yellow badge for "positive_analysis"', () => {
+		const badge = vcmCountryTooltipBadgeFromTileProperty('positive_analysis')
+
+		expect(badge).not.toBeNull()
+		expect(badge!.label).toBe('Positive VCM analysis')
+		expect(badge!.style.borderColor).toBe('#a16207')
 	})
 
 	it('returns orange badge for "confirmed_localized_contamination"', () => {

@@ -153,6 +153,10 @@ const COUNTRY_PVC_TOOLTIP_BADGES = buildCaseInsensitiveMap({
 	unknown_length: {
 		label: 'PVC network length unknown',
 		style: tierStyle('inconnu')
+	},
+	unknown: {
+		label: 'PVC presence unknown',
+		style: tierStyle('inconnu')
 	}
 })
 
@@ -160,6 +164,14 @@ const COUNTRY_VCM_TOOLTIP_BADGES = buildCaseInsensitiveMap({
 	unknown: {
 		label: 'No VCM data',
 		style: tierStyle('inconnu')
+	},
+	positive_analysis: {
+		label: 'Positive VCM analysis',
+		style: {
+			borderColor: colorCodeConfig.yellow.border,
+			backgroundColor: colorCodeConfig.yellow.bg,
+			color: colorCodeConfig.yellow.border
+		}
 	},
 	confirmed_localized_contamination: {
 		label: 'Localized VCM contamination',
