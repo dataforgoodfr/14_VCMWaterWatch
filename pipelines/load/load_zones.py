@@ -283,7 +283,7 @@ def load_zones_flow(level: str, data_directory: Path) -> None:
     records = lookup_parent_task(records, level_config)
 
     # Update geometry for existing records
-    # update_geometry_task(existing_records, level_config.table_name)
+    update_geometry_task(existing_records, level_config.table_name)
 
     # Update population for existing records (no-op if zone type has no Population)
     update_population_task(existing_records, level_config.table_name)
