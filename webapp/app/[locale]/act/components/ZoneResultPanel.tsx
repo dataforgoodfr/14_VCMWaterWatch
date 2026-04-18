@@ -39,8 +39,8 @@ export default function ZoneResultPanel({ zone, loading }: ZoneResultPanelProps)
 					{fields.Country && <p className='text-navy-600 text-sm'>{fields.Country.fields.Name}</p>}
 				</div>
 				<span
-					className='inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-white'
-					style={{ backgroundColor: config.solid }}
+					className='inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium'
+					style={{ backgroundColor: config.bg, borderColor: config.border, color: config.border }}
 				>
 					{config.label}
 				</span>
