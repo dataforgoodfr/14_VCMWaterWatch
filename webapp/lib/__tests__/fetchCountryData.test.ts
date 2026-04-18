@@ -104,6 +104,23 @@ describe('fetchCountryDataForCountry', () => {
 		expect(result).toEqual([])
 	})
 
+	it('filters out rows with empty or whitespace-only Content', async () => {
+		const rows = [
+			makeRow({ Content: 'real content', Order: 1 }),
+			makeRow({ Content: '', Order: 2 }),
+			makeRow({ Content: '   ', Order: 3 }),
+			makeRow({ Content: null, Order: 4 })
+		]
+
+		mockGetTableIdByName.mockResolvedValue('table-abc')
+		mockGet.mockResolvedValue({ status: 200, data: { records: rows } })
+
+		const result = await fetchCountryDataForCountry(7, 'en')
+
+		expect(result).toHaveLength(1)
+		expect(result[0]?.fields.Content).toBe('real content')
+	})
+
 	it('returns empty array when server responds with non-200 status', async () => {
 		mockGetTableIdByName.mockResolvedValue('table-abc')
 		mockGet.mockResolvedValue({ status: 500, statusText: 'Internal Server Error' })

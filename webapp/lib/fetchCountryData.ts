@@ -46,5 +46,6 @@ async function fetchRows(tableId: string, countryId: number, language: string): 
 		throw new Error(`Failed to fetch CountryData: ${response.statusText}`)
 	}
 
-	return response.data.records ?? []
+	// Drop rows with no Content — NocoDB stores placeholder rows per Type/Order even when empty
+	return (response.data.records ?? []).filter(r => (r.fields.Content ?? '').trim() !== '')
 }
