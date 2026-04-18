@@ -1,6 +1,6 @@
 import type { ExpressionSpecification, FilterSpecification } from 'maplibre-gl'
 
-import { colorCodeConfig } from '@/lib/colorCode'
+import { colorCodeConfig, type MapRiskTier } from '@/lib/colorCode'
 
 // Re-export for backwards compat — canonical definition now in colorCode.ts
 export type { MapRiskTier } from '@/lib/colorCode'
@@ -37,7 +37,7 @@ export function buildMapFeatureLineColor(): ExpressionSpecification {
 	]
 }
 
-export function distributionZoneTierFilter(tier: import('@/lib/colorCode').MapRiskTier): FilterSpecification {
+export function distributionZoneTierFilter(tier: MapRiskTier): FilterSpecification {
 	switch (tier) {
 		case 'confirme':
 			return ['==', MAP_COLOR_KEY, 'red']
@@ -47,5 +47,9 @@ export function distributionZoneTierFilter(tier: import('@/lib/colorCode').MapRi
 			return ['==', MAP_COLOR_KEY, 'green']
 		case 'inconnu':
 			return ['any', ['==', MAP_COLOR_KEY, 'gray'], ['==', MAP_COLOR_KEY, 'grey'], ['==', MAP_COLOR_KEY, '']]
+		default: {
+			const _exhaustive: never = tier
+			throw new Error(`Unknown tier: ${_exhaustive}`)
+		}
 	}
 }
