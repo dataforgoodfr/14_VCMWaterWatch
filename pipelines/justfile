@@ -69,4 +69,4 @@ export-pmtiles:
   uv run python -m pipelines.export.export_pmtiles
 
 test:
-  uv run pytest
+  uv run python -m pytest

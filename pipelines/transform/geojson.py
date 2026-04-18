@@ -38,14 +38,16 @@ def transform_geojson_task(
         if level_config.parent_level:
             parent_code = properties.get(level_config.parent_property)
 
-        rows.append(
-            {
-                "Name": title,
-                "Code": code,
-                "Geometry": json.dumps(geometry),
-                "ParentCode": parent_code,
-            }
-        )
+        row = {
+            "Name": title,
+            "Code": code,
+            "Geometry": json.dumps(geometry),
+            "ParentCode": parent_code,
+        }
+        if level_config.extra_properties:
+            for prop_key, col_name in level_config.extra_properties.items():
+                row[col_name] = properties.get(prop_key)
+        rows.append(row)
 
     return rows
 

@@ -15,6 +15,30 @@ def client():
 
 
 @pytest.fixture(autouse=True)
+def reset_app_state():
+    """Cancel pending debounce timers and wait for any running flow to finish."""
+    import pipelines.worker.app as app_module
+
+    def _cancel_timers():
+        with app_module._debounce_lock:
+            if app_module._debounce_timer is not None:
+                app_module._debounce_timer.cancel()
+                app_module._debounce_timer = None
+        with app_module._search_debounce_lock:
+            if app_module._search_debounce_timer is not None:
+                app_module._search_debounce_timer.cancel()
+                app_module._search_debounce_timer = None
+
+    _cancel_timers()
+    # Wait for any in-flight flow run to finish before starting the next test
+    acquired = app_module._flow_run_lock.acquire(timeout=10.0)
+    if acquired:
+        app_module._flow_run_lock.release()
+    yield
+    _cancel_timers()
+
+
+@pytest.fixture(autouse=True)
 def zero_debounce():
     """Default to zero debounce so existing tests don't need to wait."""
     import pipelines.worker.app as app_module
@@ -46,7 +70,8 @@ class TestWebhookEndpoint:
         mock_flow.assert_called_once()
 
     def test_webhook_triggers_on_distribution_zone(self, client):
-        with patch("pipelines.worker.app.export_pmtiles_flow") as mock_flow:
+        with patch("pipelines.worker.app.export_pmtiles_flow") as mock_flow, \
+                patch("pipelines.worker.app.build_search_index"):
             mock_flow.return_value = None
             response = client.post(
                 "/webhooks/nocodb",

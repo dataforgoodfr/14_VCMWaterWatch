@@ -13,6 +13,7 @@ class LevelConfig:
     title_property: str  # Property name in GeoJSON to map to "Title"
     code_property: str  # Property name in GeoJSON to map to "Code"
     parent_property: str | None = None  # Property name in GeoJSON to map to Parent.Code
+    extra_properties: dict[str, str] | None = None  # GeoJSON property → staging column
 
 
 # Configuration map for each level
@@ -35,6 +36,7 @@ LEVEL_CONFIGS: Dict[str, LevelConfig] = {
         title_property="COMM_NAME",
         code_property="COMM_ID",
         parent_property="CNTR_CODE",
+        extra_properties={"POPULATION": "Population"},
     ),
 }
 
