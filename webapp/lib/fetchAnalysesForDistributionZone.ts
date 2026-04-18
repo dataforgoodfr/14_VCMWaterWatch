@@ -45,7 +45,7 @@ export async function fetchRecentAnalyses(distributionZoneId: number): Promise<R
 			return []
 		}
 
-		const sort = JSON.stringify([{ direction: 'desc', field: 'Date' }])
+		const sort = JSON.stringify([{ direction: 'desc', field: 'CVMMeasure' }])
 
 		const response = await instance.get<FetchResponseRecords<NocoRecord<AnalysisFields>>>(
 			`/data/${process.env.NOCODB_BASE_ID}/${tableId}/records?where=(DistributionZone_id,eq,${distributionZoneId})&sort=${sort}&fields=Date,CVMMeasure&pageSize=3`,
