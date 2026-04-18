@@ -78,7 +78,7 @@ export default function GetInvolvedSection({ templates }: GetInvolvedSectionProp
 				<div className='border-navy-200 bg-navy-50 rounded-xl border p-5'>
 					<h3 className='text-navy-800 mb-1 text-lg font-semibold'>📝 Letter templates</h3>
 					<p className='text-navy-600 mb-4 text-sm'>
-						Contact your local officials and water providers to demand transparency.
+						Contact your local or national officials and your water provider to demand transparency.
 					</p>
 					<div className='space-y-3'>
 						{templates.map((tpl, i) => (
