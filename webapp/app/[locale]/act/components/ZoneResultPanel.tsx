@@ -29,7 +29,7 @@ export default function ZoneResultPanel({ zone, loading }: ZoneResultPanelProps)
 
 	const { fields } = zone
 	const colorCode = colorCodeFromMapColor(fields['Map Color'])
-	const config = colorCode ? colorCodeConfig[colorCode] : null
+	const config = colorCodeConfig[colorCode]
 
 	return (
 		<div className='border-navy-800 bg-navy-50 mt-6 rounded-r-2xl border-l-4 p-6 shadow-sm'>
@@ -38,13 +38,12 @@ export default function ZoneResultPanel({ zone, loading }: ZoneResultPanelProps)
 					<h3 className='text-navy-800 text-lg font-semibold'>{fields.Name}</h3>
 					{fields.Country && <p className='text-navy-600 text-sm'>{fields.Country.fields.Name}</p>}
 				</div>
-				{config && (
-					<span
-						className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${config.bg} text-white`}
-					>
-						{config.label}
-					</span>
-				)}
+				<span
+					className='inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-white'
+					style={{ backgroundColor: config.solid }}
+				>
+					{config.label}
+				</span>
 			</div>
 
 			<div className='border-navy-200 mt-4 border-t pt-4'>

@@ -11,19 +11,13 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 
 import type { GeocodePlace } from '@/lib/geocode/photon'
 import { distributionZoneTierFilter, type MapRiskTier } from '@/lib/map/distributionZoneRisk'
-import {
-	COUNTRIES_FILL_LAYER_ID,
-	COUNTRIES_OUTLINE_LAYER_ID,
-	createBaseMapStyle,
-	MAP_DISTRIBUTION_ZONES_MIN_ZOOM
-} from '@/lib/map/mapStyle'
+import { createBaseMapStyle, MAP_DISTRIBUTION_ZONES_MIN_ZOOM } from '@/lib/map/mapStyle'
 import {
 	mapTooltipPvcFromNocoLink,
 	pvcTooltipBadgeFromTileProperty,
 	rawTooltipPvcFromFeatureProperties,
 	tilePropertyString
 } from '@/lib/map/mapTooltipPvcBadge'
-import { cn } from '@/lib/utils'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 
 import { MapRiskFilters } from './MapRiskFilters'
@@ -45,9 +39,7 @@ const MAP_NORWAY_SPAIN_BOUNDS: [[number, number], [number, number]] = [
 
 const DISTRIBUTION_ZONES_LAYER_IDS = ['distribution-zones-fill', 'distribution-zones-outline'] as const
 
-const COUNTRY_LAYER_IDS = [COUNTRIES_FILL_LAYER_ID, COUNTRIES_OUTLINE_LAYER_ID] as const
-
-const RISK_FILTER_LAYER_IDS = [...COUNTRY_LAYER_IDS, ...DISTRIBUTION_ZONES_LAYER_IDS] as const
+const RISK_FILTER_LAYER_IDS = [...DISTRIBUTION_ZONES_LAYER_IDS] as const
 
 const DISTRIBUTION_ZONE_PICK_LAYER_ID = DISTRIBUTION_ZONES_LAYER_IDS[0]
 
@@ -410,10 +402,8 @@ export function MapView() {
 									<p className='text-navy-800 text-sm font-medium'>{zoneCard.name}</p>
 									{zoneCardPvcBadge ? (
 										<span
-											className={cn(
-												'inline-flex w-fit rounded-3xl px-3 py-1.5 text-left text-xs font-medium',
-												zoneCardPvcBadge.className
-											)}
+											className='inline-flex w-fit rounded-3xl border px-3 py-1.5 text-left text-xs font-medium'
+											style={zoneCardPvcBadge.style}
 										>
 											{zoneCardPvcBadge.label}
 										</span>

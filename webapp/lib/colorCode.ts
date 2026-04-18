@@ -5,7 +5,7 @@
 export type ColorCode = 'green' | 'yellow' | 'orange' | 'red' | 'gray'
 
 /**
- * Return the NocoDB `Map Color` value as a `ColorCode`, or `null` if absent.
+ * Return the NocoDB `Map Color` value as a `ColorCode`, defaulting to `'gray'`.
  *
  * `Map Color` is a NocoDB single-select with exactly these options:
  * - `'red'`: Non-compliant
@@ -18,14 +18,74 @@ export type ColorCode = 'green' | 'yellow' | 'orange' | 'red' | 'gray'
  * is guaranteed to be a valid `ColorCode` key in `colorCodeConfig`.
  * An unknown value at runtime would be a NocoDB data issue, not an app bug.
  */
-export function colorCodeFromMapColor(mapColor: string | null | undefined): ColorCode | null {
-	return (mapColor ?? null) as ColorCode | null
+export function colorCodeFromMapColor(mapColor: string | null | undefined): ColorCode {
+	switch ((mapColor ?? '').toLowerCase()) {
+		case 'red':    return 'red'
+		case 'orange': return 'orange'
+		case 'yellow': return 'yellow'
+		case 'green':  return 'green'
+		default:       return 'gray'
+	}
 }
 
-export const colorCodeConfig: Record<ColorCode, { bg: string; text: string; label: string }> = {
-	green: { bg: 'bg-green-500', text: 'text-green-700', label: 'Compliant' },
-	yellow: { bg: 'bg-yellow-400', text: 'text-yellow-700', label: 'Vigilance' },
-	orange: { bg: 'bg-orange-500', text: 'text-orange-700', label: 'Reinforced vigilance' },
-	red: { bg: 'bg-red-500', text: 'text-red-700', label: 'Non-compliant' },
-	gray: { bg: 'bg-gray-400', text: 'text-gray-700', label: 'Unknown' }
+/**
+ * Derive a color code from VCM/PVC level values.
+ * Placeholder logic — update when thresholds are confirmed with data team.
+ */
+export function deriveColorCode(vcmLevel: string | null, pvcLevel: string | null): ColorCode {
+	// Use the worse of the two levels
+	const levels = [vcmLevel, pvcLevel].filter(Boolean)
+
+	if (levels.some(l => l === 'Non conforme' || l === 'Non-conforme')) {
+		return 'red'
+	}
+
+	if (levels.some(l => l === 'Vigilance renforcée')) {
+		return 'orange'
+	}
+
+	if (levels.some(l => l === 'Vigilance')) {
+		return 'yellow'
+	}
+
+	if (levels.length === 0) return 'gray'
+	return 'green'
+}
+
+export const colorCodeConfig: Record<
+	ColorCode,
+	{
+		label: string
+		/** Saturated hex — badge backgrounds, legend dots */
+		solid: string
+		/** Light hex — map polygon fills, filter-button backgrounds */
+		bg: string
+		/** Dark hex — map strokes, filter-button borders */
+		border: string
+	}
+> = {
+	red:    { label: 'Non-compliant',        solid: '#ef4444', bg: '#fee2e2', border: '#dc2626' },
+	orange: { label: 'Reinforced vigilance', solid: '#f97316', bg: '#fed7aa', border: '#ea580c' },
+	yellow: { label: 'Vigilance',            solid: '#facc15', bg: '#fef08a', border: '#a16207' },
+	green:  { label: 'Compliant',            solid: '#22c55e', bg: '#dcfce7', border: '#16a34a' },
+	gray:   { label: 'Unknown',              solid: '#9ca3af', bg: '#f1f5f9', border: '#64748b' },
+}
+
+/** Canonical type for the four risk tiers shown on the map */
+export type MapRiskTier = 'confirme' | 'probable' | 'absent' | 'inconnu'
+
+export const riskTierConfig: Record<
+	MapRiskTier,
+	{
+		label: string
+		/** Light hex — map polygon fills, filter-button backgrounds */
+		bg: string
+		/** Dark hex — map strokes, filter-button borders */
+		border: string
+	}
+> = {
+	confirme: { label: 'Confirmed', bg: colorCodeConfig.red.bg,    border: colorCodeConfig.red.border },
+	probable: { label: 'Probable',  bg: colorCodeConfig.orange.bg,  border: colorCodeConfig.orange.border },
+	absent:   { label: 'Absent',    bg: colorCodeConfig.green.bg,   border: colorCodeConfig.green.border },
+	inconnu:  { label: 'Unknown',   bg: colorCodeConfig.gray.bg,    border: colorCodeConfig.gray.border },
 }

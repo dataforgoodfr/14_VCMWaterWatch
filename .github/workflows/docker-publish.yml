@@ -14,24 +14,16 @@ env:
 
 jobs:
   pre-commit:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-      - uses: pre-commit/action@v3.0.0
+    uses: ./.github/workflows/pre-commit.yaml
 
   python-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-      - run: uv sync
-      - run: uv run pytest
+    uses: ./.github/workflows/python-tests.yaml
+
+  vitest:
+    uses: ./.github/workflows/vitest.yaml
 
   build-webapp:
-    needs: [pre-commit, python-tests]
+    needs: [pre-commit, python-tests, vitest]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -62,7 +54,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   build-worker:
-    needs: [pre-commit, python-tests]
+    needs: [pre-commit, python-tests, vitest]
     runs-on: ubuntu-latest
     permissions:
       contents: read

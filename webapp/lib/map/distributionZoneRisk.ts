@@ -1,67 +1,42 @@
 import type { ExpressionSpecification, FilterSpecification } from 'maplibre-gl'
 
-export type MapRiskTier = 'confirme' | 'probable' | 'absent' | 'inconnu'
+import { colorCodeConfig, type MapRiskTier } from '@/lib/colorCode'
 
-// `map_color` is a NocoDB single-select column (values: red, orange, yellow, green, gray).
-// Normalise to lowercase so match expressions below are case-insensitive.
-// Coalesces to '' when absent so missing values fall to the inconnu default.
-const MAP_COLOR_KEY: ExpressionSpecification = ['downcase', ['to-string', ['coalesce', ['get', 'map_color'], '']]]
+// Re-export for backwards compat — canonical definition now in colorCode.ts
+export type { MapRiskTier } from '@/lib/colorCode'
 
-const MAP_COLOR_ORANGE_BG = '#fed7aa'
-const MAP_COLOR_ORANGE_BORDER = '#ea580c'
+const MAP_COLOR_KEY: ExpressionSpecification = [
+	'downcase', ['to-string', ['coalesce', ['get', 'map_color'], '']]
+]
 
-const MAP_COLOR_YELLOW_BG = '#fef08a'
-const MAP_COLOR_YELLOW_BORDER = '#a16207'
-
-export function buildMapFeatureFillColor(resolve: (cssVarName: string) => string): ExpressionSpecification {
-	const inconnu = resolve('--risk-inconnu-bg')
-
+export function buildMapFeatureFillColor(): ExpressionSpecification {
 	return [
 		'match',
 		MAP_COLOR_KEY,
-		'red',
-		resolve('--risk-confirme-bg'),
-		'orange',
-		MAP_COLOR_ORANGE_BG,
-		'yellow',
-		MAP_COLOR_YELLOW_BG,
-		'green',
-		resolve('--risk-absent-bg'),
-		'gray',
-		inconnu,
-		'grey',
-		inconnu,
-		inconnu // absent / null map_color → inconnu
+		'red',    colorCodeConfig.red.bg,
+		'orange', colorCodeConfig.orange.bg,
+		'yellow', colorCodeConfig.yellow.bg,
+		'green',  colorCodeConfig.green.bg,
+		'gray',   colorCodeConfig.gray.bg,
+		'grey',   colorCodeConfig.gray.bg,
+		colorCodeConfig.gray.bg, // default
 	]
 }
 
-export function buildMapFeatureLineColor(resolve: (cssVarName: string) => string): ExpressionSpecification {
-	const inconnu = resolve('--risk-inconnu-border')
-
+export function buildMapFeatureLineColor(): ExpressionSpecification {
 	return [
 		'match',
 		MAP_COLOR_KEY,
-		'red',
-		resolve('--risk-confirme-border'),
-		'orange',
-		MAP_COLOR_ORANGE_BORDER,
-		'yellow',
-		MAP_COLOR_YELLOW_BORDER,
-		'green',
-		resolve('--risk-absent-border'),
-		'gray',
-		inconnu,
-		'grey',
-		inconnu,
-		inconnu // absent / null map_color → inconnu
+		'red',    colorCodeConfig.red.border,
+		'orange', colorCodeConfig.orange.border,
+		'yellow', colorCodeConfig.yellow.border,
+		'green',  colorCodeConfig.green.border,
+		'gray',   colorCodeConfig.gray.border,
+		'grey',   colorCodeConfig.gray.border,
+		colorCodeConfig.gray.border, // default
 	]
 }
 
-// Map tier filter buttons to map_color values:
-//   confirme → red
-//   probable → orange or yellow (both represent vigilance states)
-//   absent   → green
-//   inconnu  → gray / grey / no map_color set
 export function distributionZoneTierFilter(tier: MapRiskTier): FilterSpecification {
 	switch (tier) {
 		case 'confirme':
@@ -72,5 +47,9 @@ export function distributionZoneTierFilter(tier: MapRiskTier): FilterSpecificati
 			return ['==', MAP_COLOR_KEY, 'green']
 		case 'inconnu':
 			return ['any', ['==', MAP_COLOR_KEY, 'gray'], ['==', MAP_COLOR_KEY, 'grey'], ['==', MAP_COLOR_KEY, '']]
+		default: {
+			const _exhaustive: never = tier
+			throw new Error(`Unknown tier: ${_exhaustive}`)
+		}
 	}
 }

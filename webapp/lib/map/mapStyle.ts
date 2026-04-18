@@ -1,7 +1,6 @@
 import type { StyleSpecification } from 'maplibre-gl'
 
 import { buildMapFeatureFillColor, buildMapFeatureLineColor } from './distributionZoneRisk'
-import { resolveRiskCssVar } from './riskCssVars'
 
 export const COUNTRIES_PM_TILES_PUBLIC_PATH = '/pmtiles/data_countries.pmtiles'
 export const DISTRIBUTION_ZONES_PM_TILES_PUBLIC_PATH = '/pmtiles/data_distribution_zones.pmtiles'
@@ -17,9 +16,7 @@ export const MAP_DISTRIBUTION_ZONES_MIN_ZOOM = 4.5
 export const WORLD_COUNTRIES_GEOJSON_URL =
 	'https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson'
 
-export function createBaseMapStyle(
-	resolveRiskColor: (cssVarName: string) => string = resolveRiskCssVar
-): StyleSpecification {
+export function createBaseMapStyle(): StyleSpecification {
 	return {
 		version: 8,
 		sources: {
@@ -60,8 +57,9 @@ export function createBaseMapStyle(
 				source: 'countries-vector',
 				'source-layer': COUNTRIES_SOURCE_LAYER,
 				paint: {
-					'fill-color': buildMapFeatureFillColor(resolveRiskColor),
-					'fill-opacity': 0.88
+					'fill-color': buildMapFeatureFillColor(),
+					// Full opacity when zoomed out; faded once distribution zones appear
+					'fill-opacity': ['step', ['zoom'], 0.88, MAP_DISTRIBUTION_ZONES_MIN_ZOOM, 0.25]
 				}
 			},
 			{
@@ -70,8 +68,9 @@ export function createBaseMapStyle(
 				source: 'countries-vector',
 				'source-layer': COUNTRIES_SOURCE_LAYER,
 				paint: {
-					'line-color': buildMapFeatureLineColor(resolveRiskColor),
-					'line-width': 0.8
+					'line-color': buildMapFeatureLineColor(),
+					'line-width': 0.8,
+					'line-opacity': ['step', ['zoom'], 1, MAP_DISTRIBUTION_ZONES_MIN_ZOOM, 0.3]
 				}
 			},
 			{
@@ -81,7 +80,7 @@ export function createBaseMapStyle(
 				'source-layer': DISTRIBUTION_ZONES_SOURCE_LAYER,
 				minzoom: MAP_DISTRIBUTION_ZONES_MIN_ZOOM,
 				paint: {
-					'fill-color': buildMapFeatureFillColor(resolveRiskColor),
+					'fill-color': buildMapFeatureFillColor(),
 					'fill-opacity': 0.88
 				}
 			},
@@ -92,7 +91,7 @@ export function createBaseMapStyle(
 				'source-layer': DISTRIBUTION_ZONES_SOURCE_LAYER,
 				minzoom: MAP_DISTRIBUTION_ZONES_MIN_ZOOM,
 				paint: {
-					'line-color': buildMapFeatureLineColor(resolveRiskColor),
+					'line-color': buildMapFeatureLineColor(),
 					'line-width': 0.8
 				}
 			}
