@@ -7,8 +7,9 @@ const scenarios = [
 			<div className='text-navy-800 space-y-3 text-sm'>
 				<p>Good news! Your water distribution zone meets the regulatory standards for PVC and VCM levels.</p>
 				<p>
-					Even though your water is safe, staying informed is important. Water quality can change over time due to aging
-					infrastructure.
+					Even though your water is safe, staying informed is important. VCM levels can vary significantly from one
+					household to another, and additional testing may reveal contamination, particularly if your network includes
+					pre-1980 PVC materials.
 				</p>
 				<p>
 					You can contribute to our monitoring efforts by{' '}
@@ -23,69 +24,76 @@ const scenarios = [
 	{
 		value: 'yellow-orange',
 		badge: '🟡🟠',
-		title: 'Your water shows signs of concern',
+		title: 'Your water supply may be at risk of contamination',
 		content: (
 			<div className='text-navy-800 space-y-3 text-sm'>
 				<div className='rounded-md border border-yellow-200 bg-yellow-50 p-3'>
-					<p className='font-medium text-yellow-800'>⚠️ Caution: elevated levels detected</p>
+					<p className='font-medium text-yellow-800'>⚠️ Action required from your water supplier</p>
 				</div>
 				<p>
-					Your distribution zone has shown elevated levels of PVC or VCM. While not yet exceeding legal limits, this
-					warrants attention.
+					Your distribution zone has shown presence of pre-1980 PVC pipes and absence of monitoring. This warrants
+					attention and monitoring for vinyl chloride monomer (VCM) should be put in place.
 				</p>
-				<ol className='list-decimal space-y-2 pl-5'>
+				<ul className='list-disc space-y-2 pl-5'>
 					<li>
-						<strong>Contact your water provider</strong> — Request detailed analysis results for your zone.
-						<ul className='text-navy-600 mt-1 list-disc space-y-1 pl-5'>
-							<li>Ask for the latest water quality report</li>
-							<li>Request information about pipe materials in your area</li>
-							<li>Ask about planned infrastructure upgrades</li>
-						</ul>
+						<strong>Contact your water provider</strong> — Request detailed analysis results for your zone and
+						inquire about any planned monitoring or testing measures.
 					</li>
 					<li>
-						<strong>Contact your mayor</strong> — The municipality is responsible for water distribution. Write to
-						request transparency and action.
+						<strong>Contact your mayor</strong> — In some cases, the municipality is responsible for water
+						distribution. Write to request transparency and action.
 					</li>
 					<li>
-						<strong>Stay informed</strong> — Follow updates and consider installing a water filter as a precaution.
+						<strong>Stay informed</strong> — Keep up to date with developments, and consider sharing relevant
+						information with other residents who may be affected.
 					</li>
-				</ol>
+				</ul>
 			</div>
 		)
 	},
 	{
 		value: 'red',
 		badge: '🔴',
-		title: 'Your water exceeds safety limits',
+		title: 'Your water presents risks for your health',
 		content: (
 			<div className='text-navy-800 space-y-3 text-sm'>
 				<div className='rounded-md border border-red-200 bg-red-50 p-3'>
-					<p className='font-medium text-red-800'>🚨 Alert: non-compliant levels detected</p>
+					<p className='font-medium text-red-800'>🚨 Alert: VCM exceedances have been detected</p>
 				</div>
 				<p>
-					Your distribution zone has exceeded regulatory limits for PVC and/or VCM. Immediate action is recommended.
+					Your distribution zone has reported levels of PVC-related compounds and/or VCM that may exceed regulatory
+					limits. Immediate attention is required.
 				</p>
-				<ol className='list-decimal space-y-2 pl-5'>
+				<ul className='list-disc space-y-2 pl-5'>
 					<li>
-						<strong>Contact your water provider immediately</strong> — Demand a detailed explanation and timeline for
-						remediation.
+						<strong>Contact your water provider without delay</strong> — Request a detailed explanation of the
+						situation and a clear timeline for corrective actions.
 						<ul className='text-navy-600 mt-1 list-disc space-y-1 pl-5'>
-							<li>Request emergency water quality testing</li>
-							<li>Ask for alternative water supply options</li>
-							<li>Demand a written response within 15 days</li>
+							<li>Ask for the latest available water quality data.</li>
+							<li>
+								Request the implementation of appropriate remediation measures, such as pipe flushing or
+								replacement.
+							</li>
+							<li>
+								If the most recent contamination findings are over a year old, ask whether corrective measures
+								have been implemented and whether recent follow-up analyses confirm that the situation is now
+								under control.
+							</li>
 						</ul>
 					</li>
 					<li>
-						<strong>Write to your mayor</strong> — Use our letter template to formally request action.
+						<strong>Contact your mayor</strong> — Use the official letter template to formally request
+						transparency and prompt action from local authorities.
 					</li>
 					<li>
-						<strong>Contact your Member of Parliament</strong> — Escalate the issue to ensure national attention.
+						<strong>Contact your Member of Parliament</strong> — Escalate the issue to ensure it receives
+						national-level attention.
 					</li>
 					<li>
-						<strong>Protect yourself</strong> — Consider using bottled water for drinking and cooking until the
-						situation is resolved.
+						<strong>Take precautionary measures</strong> — Until the situation is clarified, use bottled water
+						for drinking.
 					</li>
-				</ol>
+				</ul>
 			</div>
 		)
 	}
