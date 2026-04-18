@@ -3,7 +3,7 @@ import { fetchCountryDataForCountry } from './fetchCountryData'
 import { getTableIdByName } from './fetchMetaTables'
 import { FetchResponseRecords, instance } from './instance'
 
-const COUNTRY_DETAIL_FIELDS = 'Name,Code,Geometry,Actors,Image'
+const COUNTRY_DETAIL_FIELDS = 'Name,Code,Geometry,Image'
 
 export interface CountryWithData {
 	country: CountryDetailRecord
@@ -41,6 +41,8 @@ export async function fetchCountryByCode(code: string, locale = 'en'): Promise<C
 			return null
 		}
 
+		// Note: fetchCountryDataForCountry self-handles its errors (returns []),
+		// so the surrounding try/catch here only guards the Country lookup.
 		const data = await fetchCountryDataForCountry(country.id, locale)
 
 		return { country, data }

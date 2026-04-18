@@ -1,12 +1,14 @@
 import type { CountryDataRecord } from '@/types/apiTypes'
+import { fallbackLanguage } from '@/i18n/i18next.config'
 import { getTableIdByName } from './fetchMetaTables'
 import { FetchResponseRecords, instance } from './instance'
 
-const COUNTRY_DATA_FIELDS = 'Id,Type,Order,Title,Content'
+const COUNTRY_DATA_FIELDS = 'Type,Order,Title,Content'
 
 /**
  * Fetch all CountryData rows for a given Country_id and locale (Language).
- * Only returns rows for the requested locale — no fallback.
+ * If the requested locale returns no rows and isn't the fallback language,
+ * retries once with the fallback language (Decision #4 in the plan).
  */
 export async function fetchCountryDataForCountry(countryId: number, locale: string): Promise<CountryDataRecord[]> {
 	try {
@@ -16,7 +18,13 @@ export async function fetchCountryDataForCountry(countryId: number, locale: stri
 			return []
 		}
 
-		return await fetchRows(tableId, countryId, locale)
+		const rows = await fetchRows(tableId, countryId, locale)
+
+		if (rows.length === 0 && locale !== fallbackLanguage) {
+			return await fetchRows(tableId, countryId, fallbackLanguage)
+		}
+
+		return rows
 	} catch (error) {
 		console.error('Error fetching CountryData:', error)
 		return []

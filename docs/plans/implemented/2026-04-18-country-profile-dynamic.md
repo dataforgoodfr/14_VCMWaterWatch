@@ -97,3 +97,9 @@ None needed — stat labels come straight from NocoDB `Title`.
 3. `fetchCountries` (list) untouched.
 4. Unsupported locale → fall back to `en` if fetched CountryData list is empty.
 5. Accordion stays collapsed by default.
+
+## Post-implementation amendments
+
+- **COUNTRY_DETAIL_FIELDS change**: plan said keep `Name, Code, Geometry, Actors, Url`. Actual shipped set is `Name, Code, Geometry, Image` — `Url` was replaced by `Image` (NocoDB attachment, resolved via `signedUrl`) to support the illustration in the detail card, and `Actors` was dropped because it is no longer referenced by `CountryProfileDetail` (stats now come from `CountryData`). `CountryDetailFields` type updated accordingly.
+- **Locale fallback (Decision #4)**: initially shipped with no fallback; corrected in follow-up so `fetchCountryDataForCountry` retries once with `fallbackLanguage` when the requested locale returns zero rows.
+- **API route locale allowlist** now sourced from `i18n.locales` / `fallbackLanguage` instead of a hardcoded set.

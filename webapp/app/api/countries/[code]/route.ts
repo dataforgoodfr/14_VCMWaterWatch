@@ -1,14 +1,17 @@
 import { NextResponse } from 'next/server'
 
+import { fallbackLanguage, i18n } from '@/i18n/i18next.config'
 import { fetchCountryByCode } from '@/lib/fetchCountryByCode'
+
+const ALLOWED_LOCALES = new Set<string>(i18n.locales)
 
 export async function GET(request: Request, { params }: { params: Promise<{ code: string }> }) {
 	const { code } = await params
 	const decoded = decodeURIComponent(code)
 
 	const { searchParams } = new URL(request.url)
-	const ALLOWED_LOCALES = new Set(['en', 'fr', 'de'])
-	const locale = ALLOWED_LOCALES.has(searchParams.get('locale') ?? '') ? searchParams.get('locale')! : 'en'
+	const requested = searchParams.get('locale') ?? ''
+	const locale = ALLOWED_LOCALES.has(requested) ? requested : fallbackLanguage
 
 	const result = await fetchCountryByCode(decoded, locale)
 

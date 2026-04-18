@@ -223,7 +223,6 @@ export interface CountryDetailFields {
 	Name: string
 	Code: string
 	Geometry: string
-	Actors?: unknown
 	Image?: NocoAttachment[]
 }
 export type CountryDetailRecord = Record<CountryDetailFields>
@@ -231,7 +230,6 @@ export type CountryDetailRecord = Record<CountryDetailFields>
 export type CountryDataType = 'stat' | 'legislation' | 'missing_data'
 
 export interface CountryDataFields {
-	Id: number
 	Type: CountryDataType
 	Order: number
 	Title: string | null

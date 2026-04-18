@@ -2,7 +2,7 @@ import type { ComponentType } from 'react'
 
 import Image from 'next/image'
 
-import { FlaskConical, MapPin, Percent, TrainTrack, TriangleAlert } from 'lucide-react'
+import { FlaskConical, HelpCircle, MapPin, Percent, TrainTrack, TriangleAlert } from 'lucide-react'
 
 import { InfoCard } from '@/components/InfoCard'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
@@ -103,11 +103,20 @@ export function CountryProfileDetail({ country, data, loading, error }: CountryP
 						<div className='flex w-full min-w-0 flex-1 flex-col items-start justify-center md:w-auto'>
 							<div className='grid w-full grid-cols-1 gap-4 md:grid-cols-2'>
 								{stats.map(row => {
-									const Icon = STAT_ICONS[row.fields.Order] ?? TrainTrack
-									const title = row.fields.Title ?? ''
-									const value = row.fields.Content?.trim() ?? '—'
+									const Icon = STAT_ICONS[row.fields.Order]
 
-									return <StatCard key={row.id} icon={Icon} title={title} value={value} />
+									if (!Icon && process.env.NODE_ENV !== 'production') {
+										console.warn(`CountryData stat row has unexpected Order=${row.fields.Order} (id=${row.id})`)
+									}
+
+									const title = row.fields.Title
+									const value = row.fields.Content
+
+									if (!title || !value) {
+										return null
+									}
+
+									return <StatCard key={row.id} icon={Icon ?? HelpCircle} title={title} value={value} />
 								})}
 							</div>
 						</div>

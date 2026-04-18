@@ -25,7 +25,6 @@ function makeRow(overrides: Partial<CountryDataRecord['fields']> = {}): CountryD
 	return {
 		id,
 		fields: {
-			Id: id,
 			Type: 'stat',
 			Order: 1,
 			Title: 'Network affected',
@@ -70,20 +69,24 @@ describe('fetchCountryDataForCountry', () => {
 		expect(decodeURIComponent(callUrl ?? '')).toContain('[{"direction":"asc","field":"Order"}]')
 	})
 
-	it('returns empty array when locale has no rows (no fallback)', async () => {
+	it('falls back to en when requested locale has no rows', async () => {
+		const frRows: CountryDataRecord[] = []
+		const enRows = [makeRow({ Order: 1 })]
+
 		mockGetTableIdByName.mockResolvedValue('table-abc')
-		mockGet.mockResolvedValue({ status: 200, data: { records: [] } })
+		mockGet
+			.mockResolvedValueOnce({ status: 200, data: { records: frRows } })
+			.mockResolvedValueOnce({ status: 200, data: { records: enRows } })
 
 		const result = await fetchCountryDataForCountry(7, 'fr')
 
-		expect(result).toEqual([])
-		expect(mockGet).toHaveBeenCalledTimes(1)
-		const callUrl = mockGet.mock.calls[0]?.[0]
-
-		expect(callUrl).toContain('Language%2Ceq%2Cfr')
+		expect(result).toEqual(enRows)
+		expect(mockGet).toHaveBeenCalledTimes(2)
+		expect(mockGet.mock.calls[0]?.[0]).toContain('Language%2Ceq%2Cfr')
+		expect(mockGet.mock.calls[1]?.[0]).toContain('Language%2Ceq%2Cen')
 	})
 
-	it('does not make a second call when locale is already en and returns empty', async () => {
+	it('does not retry when locale is already en and returns empty', async () => {
 		mockGetTableIdByName.mockResolvedValue('table-abc')
 		mockGet.mockResolvedValue({ status: 200, data: { records: [] } })
 
