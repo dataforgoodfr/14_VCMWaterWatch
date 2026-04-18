@@ -8,7 +8,14 @@ export async function fetchDistributionZoneDetail(id: number): Promise<Distribut
 			throw new Error(`Failed to fetch distribution zone detail: ${response.statusText}`)
 		}
 
-		return (await response.json()) as DistributionZoneDetailRecord
+		const data = (await response.json()) as DistributionZoneDetailRecord
+
+		if (!data?.fields || typeof data.fields !== 'object') {
+			console.error('Invalid distribution zone detail response: missing fields')
+			return null
+		}
+
+		return data
 	} catch (error) {
 		console.error('Error fetching distribution zone detail:', error)
 		return null
