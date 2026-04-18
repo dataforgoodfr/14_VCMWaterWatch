@@ -58,7 +58,8 @@ export function createBaseMapStyle(): StyleSpecification {
 				'source-layer': COUNTRIES_SOURCE_LAYER,
 				paint: {
 					'fill-color': buildMapFeatureFillColor(),
-					'fill-opacity': 0.88
+					// Full opacity when zoomed out; faded once distribution zones appear
+					'fill-opacity': ['step', ['zoom'], 0.88, MAP_DISTRIBUTION_ZONES_MIN_ZOOM, 0.25]
 				}
 			},
 			{
@@ -68,7 +69,8 @@ export function createBaseMapStyle(): StyleSpecification {
 				'source-layer': COUNTRIES_SOURCE_LAYER,
 				paint: {
 					'line-color': buildMapFeatureLineColor(),
-					'line-width': 0.8
+					'line-width': 0.8,
+					'line-opacity': ['step', ['zoom'], 1, MAP_DISTRIBUTION_ZONES_MIN_ZOOM, 0.3]
 				}
 			},
 			{
