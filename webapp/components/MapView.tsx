@@ -16,11 +16,13 @@ import { formatAnalysisDate, type RecentAnalysis } from '@/lib/fetchAnalysesForD
 import useLocale from '@/hooks/useLocale'
 import { ROUTES } from '@/routes/routes'
 import { distributionZoneTierFilter, type MapRiskTier } from '@/lib/map/distributionZoneRisk'
-import { createBaseMapStyle, MAP_DISTRIBUTION_ZONES_MIN_ZOOM } from '@/lib/map/mapStyle'
+import { createBaseMapStyle, COUNTRIES_FILL_LAYER_ID, MAP_DISTRIBUTION_ZONES_MIN_ZOOM } from '@/lib/map/mapStyle'
 import {
+	pvcCountryTooltipBadgeFromTileProperty,
 	pvcTooltipBadgeFromTileProperty,
 	rawTooltipPvcFromFeatureProperties,
 	rawTooltipVcmFromFeatureProperties,
+	vcmCountryTooltipBadgeFromTileProperty,
 	vcmTooltipBadgeFromTileProperty
 } from '@/lib/map/mapTooltipPvcBadge'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
@@ -52,14 +54,18 @@ function emptyMapMoveSubscriptionCleanup() {
 	/* not subscribed */
 }
 
-interface ZoneCardState {
+interface MapCardState {
+	kind: 'zone' | 'country'
 	lng: number
 	lat: number
 	name: string
 	tooltipPvcRaw: string | null
 	tooltipVcmRaw: string | null
-	zoneId: number | null
+	zoneId: number | null // only meaningful when kind === 'zone'
 }
+
+/** @deprecated use MapCardState — kept as alias to minimise churn */
+type ZoneCardState = MapCardState
 
 function parseDistributionZoneIdFromProperties(props: Record<string, unknown>): number | null {
 	const v = props.noco_id ?? props.id ?? props.Id
@@ -219,38 +225,61 @@ export function MapView() {
 
 	const onMapClick = useCallback(
 		(e: MapLayerMouseEvent) => {
-			const feature = e.features?.find(f => f.layer?.id === DISTRIBUTION_ZONE_PICK_LAYER_ID)
+			// 1. Check for a distribution zone feature first
+			const zoneFeature = e.features?.find(f => f.layer?.id === DISTRIBUTION_ZONE_PICK_LAYER_ID)
 
-			if (!feature?.properties) {
-				closeZoneCard()
+			if (zoneFeature?.properties) {
+				const props = zoneFeature.properties as Record<string, unknown>
+				const name = displayZoneName(props.name)
+				const { lng, lat } = e.lngLat
+				const tooltipPvcRaw = rawTooltipPvcFromFeatureProperties(props)
+				const tooltipVcmRaw = rawTooltipVcmFromFeatureProperties(props)
+				const zoneId = parseDistributionZoneIdFromFeature(zoneFeature)
+
+				console.log('[MapView] click zone', {
+					featureId: zoneFeature.id,
+					zoneId,
+					props
+				})
+
+				setZoneDetailPvcComment(undefined)
+				setZoneDetailAnalyses([])
+				setZoneDetailLoading(true)
+				setZoneCard({ kind: 'zone', lng, lat, name, tooltipPvcRaw, tooltipVcmRaw, zoneId })
 				return
 			}
 
-			const props = feature.properties as Record<string, unknown>
-			const name = displayZoneName(props.name)
-			const { lng, lat } = e.lngLat
-			const tooltipPvcRaw = rawTooltipPvcFromFeatureProperties(props)
-			const tooltipVcmRaw = rawTooltipVcmFromFeatureProperties(props)
-			const zoneId = parseDistributionZoneIdFromFeature(feature)
+			// 2. Fall back to a country feature
+			const countryFeature = e.features?.find(f => f.layer?.id === COUNTRIES_FILL_LAYER_ID)
 
-			console.log('[MapView] click zone', {
-				featureId: feature.id,
-				zoneId,
-				props
-			})
+			if (countryFeature?.properties) {
+				const props = countryFeature.properties as Record<string, unknown>
+				const name = displayZoneName(props.name)
+				const { lng, lat } = e.lngLat
+				const tooltipPvcRaw = rawTooltipPvcFromFeatureProperties(props)
+				const tooltipVcmRaw = rawTooltipVcmFromFeatureProperties(props)
 
-			setZoneDetailPvcComment(undefined)
-			setZoneDetailAnalyses([])
-			setZoneDetailLoading(true)
-			setZoneCard({ lng, lat, name, tooltipPvcRaw, tooltipVcmRaw, zoneId })
+				console.log('[MapView] click country', { props })
+
+				setZoneDetailPvcComment(undefined)
+				setZoneDetailAnalyses([])
+				setZoneDetailLoading(false)
+				setZoneCard({ kind: 'country', lng, lat, name, tooltipPvcRaw, tooltipVcmRaw, zoneId: null })
+				return
+			}
+
+			// 3. Nothing hit — close
+			closeZoneCard()
 		},
 		[closeZoneCard]
 	)
 
 	const onMapMouseMove = useCallback((e: MapLayerMouseEvent) => {
-		const overZone = Boolean(e.features?.some(f => f.layer?.id === DISTRIBUTION_ZONE_PICK_LAYER_ID))
+		const overInteractive = Boolean(
+			e.features?.some(f => f.layer?.id === DISTRIBUTION_ZONE_PICK_LAYER_ID || f.layer?.id === COUNTRIES_FILL_LAYER_ID)
+		)
 
-		setMapCursor(overZone ? 'pointer' : '')
+		setMapCursor(overInteractive ? 'pointer' : '')
 	}, [])
 
 	const onMapMove = useCallback((e: ViewStateChangeEvent) => {
@@ -315,7 +344,7 @@ export function MapView() {
 	}, [zoneCard, closeZoneCard])
 
 	useEffect(() => {
-		if (!zoneCard?.zoneId) {
+		if (!zoneCard?.zoneId || zoneCard.kind !== 'zone') {
 			return
 		}
 
@@ -356,11 +385,19 @@ export function MapView() {
 		})()
 
 		return () => ac.abort()
-	}, [zoneCard?.zoneId])
+	}, [zoneCard?.zoneId, zoneCard?.kind])
 
-	const zoneCardPvcBadge = zoneCard ? pvcTooltipBadgeFromTileProperty(zoneCard.tooltipPvcRaw) : null
+	const zoneCardPvcBadge = zoneCard
+		? zoneCard.kind === 'country'
+			? pvcCountryTooltipBadgeFromTileProperty(zoneCard.tooltipPvcRaw)
+			: pvcTooltipBadgeFromTileProperty(zoneCard.tooltipPvcRaw)
+		: null
 
-	const zoneCardVcmBadge = zoneCard ? vcmTooltipBadgeFromTileProperty(zoneCard.tooltipVcmRaw) : null
+	const zoneCardVcmBadge = zoneCard
+		? zoneCard.kind === 'country'
+			? vcmCountryTooltipBadgeFromTileProperty(zoneCard.tooltipVcmRaw)
+			: vcmTooltipBadgeFromTileProperty(zoneCard.tooltipVcmRaw)
+		: null
 
 	const zoneCardStyle = useMemo(() => {
 		if (!zoneCardScreen) {
@@ -399,7 +436,7 @@ export function MapView() {
 						latitude: MAP_INTRO_VIEW_STATE.latitude,
 						zoom: MAP_INTRO_VIEW_STATE.zoom
 					}}
-					interactiveLayerIds={[DISTRIBUTION_ZONE_PICK_LAYER_ID]}
+					interactiveLayerIds={[DISTRIBUTION_ZONE_PICK_LAYER_ID, COUNTRIES_FILL_LAYER_ID]}
 					mapStyle={mapStyle}
 					style={{ width: '100%', height: '100%' }}
 					onClick={onMapClick}
@@ -434,33 +471,37 @@ export function MapView() {
 											</span>
 										) : null}
 									</div>
-									{zoneDetailPvcComment ? <p className='text-navy-600 text-xs'>{zoneDetailPvcComment}</p> : null}
-									{zoneDetailLoading ? (
-										<div className='flex flex-col gap-1.5 pt-1'>
-											<div className='bg-navy-100 h-3 w-1/3 animate-pulse rounded' />
-											<div className='bg-navy-100 h-2.5 w-3/4 animate-pulse rounded' />
-											<div className='bg-navy-100 h-2.5 w-2/3 animate-pulse rounded' />
-										</div>
-									) : zoneDetailAnalyses.length > 0 ? (
-										<div className='pt-1'>
-											<p className='text-navy-800 text-xs font-semibold'>Top 3 VCM Results</p>
-											<ul className='text-navy-600 mt-1 list-inside list-disc text-xs'>
-												{zoneDetailAnalyses.map((a, i) => (
-													<li key={i}>
-														{formatAnalysisDate(a.date)}
-														{a.vcmMeasure != null ? ` - ${a.vcmMeasure} µg/L` : ''}
-													</li>
-												))}
-											</ul>
-										</div>
-									) : null}
-									{zoneCard.zoneId != null ? (
-										<Link
-											href={`/${locale}${ROUTES.ACT}?zone=${zoneCard.zoneId}`}
-											className='bg-navy-800 hover:bg-navy-700 mt-1 inline-flex items-center justify-center rounded-lg px-4 py-2 text-xs font-medium text-white transition-colors'
-										>
-											Take action !
-										</Link>
+									{zoneCard.kind === 'zone' ? (
+										<>
+											{zoneDetailPvcComment ? <p className='text-navy-600 text-xs'>{zoneDetailPvcComment}</p> : null}
+											{zoneDetailLoading ? (
+												<div className='flex flex-col gap-1.5 pt-1'>
+													<div className='bg-navy-100 h-3 w-1/3 animate-pulse rounded' />
+													<div className='bg-navy-100 h-2.5 w-3/4 animate-pulse rounded' />
+													<div className='bg-navy-100 h-2.5 w-2/3 animate-pulse rounded' />
+												</div>
+											) : zoneDetailAnalyses.length > 0 ? (
+												<div className='pt-1'>
+													<p className='text-navy-800 text-xs font-semibold'>Top 3 VCM Results</p>
+													<ul className='text-navy-600 mt-1 list-inside list-disc text-xs'>
+														{zoneDetailAnalyses.map((a, i) => (
+															<li key={i}>
+																{formatAnalysisDate(a.date)}
+																{a.vcmMeasure != null ? ` - ${a.vcmMeasure} µg/L` : ''}
+															</li>
+														))}
+													</ul>
+												</div>
+											) : null}
+											{zoneCard.zoneId != null ? (
+												<Link
+													href={`/${locale}${ROUTES.ACT}?zone=${zoneCard.zoneId}`}
+													className='bg-navy-800 hover:bg-navy-700 mt-1 inline-flex items-center justify-center rounded-lg px-4 py-2 text-xs font-medium text-white transition-colors'
+												>
+													Take action !
+												</Link>
+											) : null}
+										</>
 									) : null}
 								</CardContent>
 							</Card>
