@@ -21,10 +21,10 @@ function codeToFlagEmoji(code: string): string {
 
 interface CountryCarouselProps {
 	countries: CountryListRecord[]
-	locale?: string
+	locale: string
 }
 
-export function CountryCarousel({ countries, locale = 'en' }: CountryCarouselProps) {
+export function CountryCarousel({ countries, locale }: CountryCarouselProps) {
 	const [selectedCode, setSelectedCode] = React.useState<string | null>(null)
 	const [countryDetail, setCountryDetail] = React.useState<CountryDetailRecord | null>(null)
 	const [countryData, setCountryData] = React.useState<CountryDataRecord[]>([])

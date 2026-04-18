@@ -19,6 +19,7 @@ const nextConfig: NextConfig = {
 		remotePatterns: [
 			{ hostname: 'cdn.shadcnstudio.com' },
 			{ hostname: 'noco-uploads.s3.fr-par.scw.cloud' },
+			{ hostname: 'vcm-watch.s3.fr-par.scw.cloud' },
 			{ hostname: 'placehold.co', protocol: 'https' }
 		]
 	}

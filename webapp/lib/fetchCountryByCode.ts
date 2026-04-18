@@ -3,7 +3,7 @@ import { fetchCountryDataForCountry } from './fetchCountryData'
 import { getTableIdByName } from './fetchMetaTables'
 import { FetchResponseRecords, instance } from './instance'
 
-const COUNTRY_DETAIL_FIELDS = 'Name,Code,Geometry,Actors,Url'
+const COUNTRY_DETAIL_FIELDS = 'Name,Code,Geometry,Actors,Image'
 
 export interface CountryWithData {
 	country: CountryDetailRecord

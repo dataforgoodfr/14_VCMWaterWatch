@@ -204,12 +204,27 @@ export interface CountryListFields {
 }
 export type CountryListRecord = Record<CountryListFields>
 
+export interface NocoAttachment {
+	signedPath?: string
+	path?: string
+	title?: string
+	mimetype?: string
+	size?: number
+	width?: number
+	height?: number
+	thumbnails?: {
+		tiny?: { signedPath?: string }
+		small?: { signedPath?: string }
+		card_cover?: { signedPath?: string }
+	}
+}
+
 export interface CountryDetailFields {
 	Name: string
 	Code: string
 	Geometry: string
 	Actors?: unknown
-	Url?: string
+	Image?: NocoAttachment[]
 }
 export type CountryDetailRecord = Record<CountryDetailFields>
 
