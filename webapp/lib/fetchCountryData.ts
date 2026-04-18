@@ -32,11 +32,12 @@ export async function fetchCountryDataForCountry(countryId: number, locale: stri
 
 async function fetchRows(tableId: string, countryId: number, language: string): Promise<CountryDataRecord[]> {
 	const where = `(Country_id,eq,${countryId})~and(Language,eq,${language})`
+	const sort = JSON.stringify([{ direction: 'asc', field: 'Order' }])
 
 	const response = await instance.get<FetchResponseRecords<CountryDataRecord>>(
-		`/data/${process.env.NOCODB_BASE_ID}/${tableId}/records?where=${encodeURIComponent(where)}`,
+		`/data/${process.env.NOCODB_BASE_ID}/${tableId}/records?where=${encodeURIComponent(where)}&sort=${encodeURIComponent(sort)}`,
 		{
-			params: { fields: COUNTRY_DATA_FIELDS, sort: 'Order', pageSize: 100 },
+			params: { fields: COUNTRY_DATA_FIELDS, pageSize: 100 },
 			timeout: 20000
 		}
 	)

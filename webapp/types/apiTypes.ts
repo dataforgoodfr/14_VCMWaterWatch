@@ -205,17 +205,17 @@ export interface CountryListFields {
 export type CountryListRecord = Record<CountryListFields>
 
 export interface NocoAttachment {
-	signedPath?: string
-	path?: string
+	url?: string
+	signedUrl?: string
 	title?: string
 	mimetype?: string
 	size?: number
 	width?: number
 	height?: number
 	thumbnails?: {
-		tiny?: { signedPath?: string }
-		small?: { signedPath?: string }
-		card_cover?: { signedPath?: string }
+		tiny?: { signedUrl?: string }
+		small?: { signedUrl?: string }
+		card_cover?: { signedUrl?: string }
 	}
 }
 

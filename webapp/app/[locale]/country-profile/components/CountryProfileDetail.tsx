@@ -73,7 +73,7 @@ export function CountryProfileDetail({ country, data, loading, error }: CountryP
 	const attachment = f.Image?.[0]
 
 	const imageSrc =
-		attachment?.signedPath ?? attachment?.thumbnails?.card_cover?.signedPath ?? 'https://placehold.co/310x240.png'
+		attachment?.signedUrl ?? attachment?.thumbnails?.card_cover?.signedUrl ?? 'https://placehold.co/310x240.png'
 
 	// Partition CountryData by type (already ordered by Order from server)
 	const stats = data.filter(r => r.fields.Type === 'stat')

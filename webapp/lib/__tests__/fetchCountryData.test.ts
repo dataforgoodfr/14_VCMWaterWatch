@@ -65,6 +65,9 @@ describe('fetchCountryDataForCountry', () => {
 
 		expect(callUrl).toContain('Country_id%2Ceq%2C7')
 		expect(callUrl).toContain('Language%2Ceq%2Cen')
+		// sort must be a JSON array (v3 API requirement), ascending on Order
+		expect(callUrl).toMatch(/sort=.*Order/i)
+		expect(decodeURIComponent(callUrl ?? '')).toContain('[{"direction":"asc","field":"Order"}]')
 	})
 
 	it('falls back to en when locale returns no rows', async () => {
