@@ -13,11 +13,9 @@ import type { GeocodePlace } from '@/lib/geocode/photon'
 import { distributionZoneTierFilter, type MapRiskTier } from '@/lib/map/distributionZoneRisk'
 import { createBaseMapStyle, MAP_DISTRIBUTION_ZONES_MIN_ZOOM } from '@/lib/map/mapStyle'
 import {
-	mapTooltipPvcFromNocoLink,
 	pvcTooltipBadgeFromTileProperty,
 	rawTooltipPvcFromFeatureProperties,
 	rawTooltipVcmFromFeatureProperties,
-	tilePropertyString,
 	vcmTooltipBadgeFromTileProperty
 } from '@/lib/map/mapTooltipPvcBadge'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
@@ -325,7 +323,7 @@ export function MapView() {
 			setZoneDetailLoading(true)
 
 			try {
-				const res = await fetch(`/api/distributionzone/${id}`, { signal: ac.signal })
+				const res = await fetch(`/api/distributionzone/${id}/tooltip`, { signal: ac.signal })
 
 				if (!res.ok) {
 					if (!ac.signal.aborted) {
@@ -338,18 +336,16 @@ export function MapView() {
 					return
 				}
 
-				const body = (await res.json()) as { fields?: Record<string, unknown> }
-				const f = body.fields
+				const body = (await res.json()) as {
+					pvcLevel: string | null
+					vcmLevel: string | null
+					pvcLevelComment: string | null
+				}
 
-				if (!ac.signal.aborted && f) {
-					const pvcRaw =
-						'MapTooltipPvcLevel' in f
-							? tilePropertyString(f.MapTooltipPvcLevel)
-							: mapTooltipPvcFromNocoLink(f['Map - Tooltip'])
-
-					setZoneDetailTooltipPvc(pvcRaw)
-					setZoneDetailTooltipVcm(tilePropertyString(f['VCM Level']))
-					setZoneDetailPvcComment(tilePropertyString(f.MapTooltipPvcComment))
+				if (!ac.signal.aborted) {
+					setZoneDetailTooltipPvc(body.pvcLevel)
+					setZoneDetailTooltipVcm(body.vcmLevel)
+					setZoneDetailPvcComment(body.pvcLevelComment)
 					setZoneDetailLoading(false)
 				}
 			} catch {
