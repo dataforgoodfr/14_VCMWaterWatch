@@ -370,12 +370,8 @@ export function MapView() {
 			return null
 		}
 
-		if (zoneCard.zoneId != null) {
-			if (zoneDetailTooltipPvc !== undefined) {
-				return zoneDetailTooltipPvc
-			}
-
-			return zoneCard.tooltipPvcRaw
+		if (zoneCard.zoneId != null && zoneDetailTooltipPvc) {
+			return zoneDetailTooltipPvc
 		}
 
 		return zoneCard.tooltipPvcRaw
@@ -388,7 +384,7 @@ export function MapView() {
 			return null
 		}
 
-		if (zoneCard.zoneId != null && zoneDetailTooltipVcm !== undefined) {
+		if (zoneCard.zoneId != null && zoneDetailTooltipVcm) {
 			return zoneDetailTooltipVcm
 		}
 
