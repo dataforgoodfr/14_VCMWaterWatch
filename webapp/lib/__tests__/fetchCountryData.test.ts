@@ -17,11 +17,15 @@ const mockGetTableIdByName = vi.mocked(getTableIdByName)
 // eslint-disable-next-line @typescript-eslint/unbound-method
 const mockGet = vi.mocked(instance.get)
 
+let nextId = 1
+
 function makeRow(overrides: Partial<CountryDataRecord['fields']> = {}): CountryDataRecord {
+	const id = nextId++
+
 	return {
-		id: 1,
+		id,
 		fields: {
-			Id: 1,
+			Id: id,
 			Type: 'stat',
 			Order: 1,
 			Title: 'Network affected',
@@ -34,6 +38,7 @@ function makeRow(overrides: Partial<CountryDataRecord['fields']> = {}): CountryD
 describe('fetchCountryDataForCountry', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
+		nextId = 1
 		process.env.NOCODB_BASE_ID = 'base123'
 	})
 
