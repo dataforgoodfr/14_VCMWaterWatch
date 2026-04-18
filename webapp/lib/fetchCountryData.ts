@@ -36,7 +36,7 @@ async function fetchRows(tableId: string, countryId: number, language: string): 
 	const response = await instance.get<FetchResponseRecords<CountryDataRecord>>(
 		`/data/${process.env.NOCODB_BASE_ID}/${tableId}/records?where=${encodeURIComponent(where)}`,
 		{
-			params: { fields: COUNTRY_DATA_FIELDS, sort: 'Order' },
+			params: { fields: COUNTRY_DATA_FIELDS, sort: 'Order', pageSize: 100 },
 			timeout: 20000
 		}
 	)
