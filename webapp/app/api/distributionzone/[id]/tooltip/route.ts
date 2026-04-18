@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { getTableIdByName } from '@/lib/fetchMetaTables'
+import { fetchRecentAnalyses } from '@/lib/fetchAnalysesForDistributionZone'
 import { instance } from '@/lib/instance'
 import { HTTP_STATUS } from '@/types/httpTypes'
 
@@ -24,16 +25,20 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 			return NextResponse.json({ error: 'Table not found' }, { status: HTTP_STATUS.InternalServerError.code })
 		}
 
-		const res = await instance.get(`/data/${process.env.NOCODB_BASE_ID}/${tableId}/records/${id}`, {
-			timeout: 10000,
-			params: { fields: 'PVC Level Comment' }
-		})
+		const [zoneRes, recentAnalyses] = await Promise.all([
+			instance.get(`/data/${process.env.NOCODB_BASE_ID}/${tableId}/records/${id}`, {
+				timeout: 10000,
+				params: { fields: 'PVC Level Comment' }
+			}),
+			fetchRecentAnalyses(zoneId)
+		])
 
-		const data = res.data as { fields?: Record<string, unknown> }
+		const data = zoneRes.data as { fields?: Record<string, unknown> }
 		const f = data?.fields
 
 		return NextResponse.json({
-			pvcLevelComment: f?.['PVC Level Comment'] ?? null
+			pvcLevelComment: f?.['PVC Level Comment'] ?? null,
+			recentAnalyses
 		})
 	} catch (error) {
 		console.error('Error in GET /api/distributionzone/[id]/tooltip:', error)
