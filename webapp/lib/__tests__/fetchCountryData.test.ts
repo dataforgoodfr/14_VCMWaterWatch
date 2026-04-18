@@ -70,19 +70,17 @@ describe('fetchCountryDataForCountry', () => {
 		expect(decodeURIComponent(callUrl ?? '')).toContain('[{"direction":"asc","field":"Order"}]')
 	})
 
-	it('falls back to en when locale returns no rows', async () => {
-		const enRows = [makeRow()]
-
+	it('returns empty array when locale has no rows (no fallback)', async () => {
 		mockGetTableIdByName.mockResolvedValue('table-abc')
-		// First call (fr) returns empty, second call (en) returns rows
-		mockGet
-			.mockResolvedValueOnce({ status: 200, data: { records: [] } })
-			.mockResolvedValueOnce({ status: 200, data: { records: enRows } })
+		mockGet.mockResolvedValue({ status: 200, data: { records: [] } })
 
 		const result = await fetchCountryDataForCountry(7, 'fr')
 
-		expect(result).toEqual(enRows)
-		expect(mockGet).toHaveBeenCalledTimes(2)
+		expect(result).toEqual([])
+		expect(mockGet).toHaveBeenCalledTimes(1)
+		const callUrl = mockGet.mock.calls[0]?.[0]
+
+		expect(callUrl).toContain('Language%2Ceq%2Cfr')
 	})
 
 	it('does not make a second call when locale is already en and returns empty', async () => {

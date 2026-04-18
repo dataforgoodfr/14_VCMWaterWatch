@@ -6,7 +6,7 @@ const COUNTRY_DATA_FIELDS = 'Id,Type,Order,Title,Content'
 
 /**
  * Fetch all CountryData rows for a given Country_id and locale (Language).
- * Falls back to 'en' if no rows are found for the requested locale.
+ * Only returns rows for the requested locale — no fallback.
  */
 export async function fetchCountryDataForCountry(countryId: number, locale: string): Promise<CountryDataRecord[]> {
 	try {
@@ -16,14 +16,7 @@ export async function fetchCountryDataForCountry(countryId: number, locale: stri
 			return []
 		}
 
-		const rows = await fetchRows(tableId, countryId, locale)
-
-		// Fall back to 'en' if the requested locale returned nothing
-		if (rows.length === 0 && locale !== 'en') {
-			return fetchRows(tableId, countryId, 'en')
-		}
-
-		return rows
+		return await fetchRows(tableId, countryId, locale)
 	} catch (error) {
 		console.error('Error fetching CountryData:', error)
 		return []
