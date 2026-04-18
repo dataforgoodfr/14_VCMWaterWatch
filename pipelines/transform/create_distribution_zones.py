@@ -33,14 +33,24 @@ def create_distribution_zones_flow(data_directory: Path):
     """
     conn = staging_db.get_connection(data_directory)
     try:
-        # Read all WaterCompany tables from raw
-        water_companies = conn.sql(
-            "SELECT * FROM raw.WaterCompany_de_wasserportal"
+        # Discover all WaterCompany_* tables in raw schema dynamically
+        raw_tables = conn.sql(
+            "SELECT table_name FROM information_schema.tables "
+            "WHERE table_schema = 'raw' AND table_name LIKE 'WaterCompany_%'"
         ).fetchall()
-        columns = [desc[0] for desc in conn.description()]
-        water_companies = [dict(zip(columns, row)) for row in water_companies]
+        table_names = [row[0] for row in raw_tables]
 
-        distribution_zones = create_distribution_zones_task(water_companies)
+        if not table_names:
+            distribution_zones = []
+        else:
+            union_query = " UNION ALL ".join(
+                f'SELECT * FROM raw."{t}"' for t in table_names
+            )
+            water_companies = conn.sql(union_query).fetchall()
+            columns = [desc[0] for desc in conn.description()]
+            water_companies = [dict(zip(columns, row)) for row in water_companies]
+
+            distribution_zones = create_distribution_zones_task(water_companies)
         staging_db.write_table(
             conn,
             "DistributionZone_from_water_companies",
