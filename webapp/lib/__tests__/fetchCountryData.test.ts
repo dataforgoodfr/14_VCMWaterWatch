@@ -100,4 +100,13 @@ describe('fetchCountryDataForCountry', () => {
 
 		expect(result).toEqual([])
 	})
+
+	it('returns empty array when server responds with non-200 status', async () => {
+		mockGetTableIdByName.mockResolvedValue('table-abc')
+		mockGet.mockResolvedValue({ status: 500, statusText: 'Internal Server Error' })
+
+		const result = await fetchCountryDataForCountry(7, 'en')
+
+		expect(result).toEqual([])
+	})
 })
