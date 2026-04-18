@@ -343,6 +343,19 @@ export function MapView() {
 
 	const zoneCardVcmBadge = zoneCard ? vcmTooltipBadgeFromTileProperty(zoneCard.tooltipVcmRaw) : null
 
+	const zoneCardStyle = useMemo(() => {
+		if (!zoneCardScreen) {
+			return undefined
+		}
+
+		const pad = 16
+		const vw = typeof window !== 'undefined' ? window.innerWidth : 800
+		const halfCard = Math.min(26 * 16, vw - 2 * pad) / 2
+		const clampedX = Math.max(pad + halfCard, Math.min(zoneCardScreen.x, vw - pad - halfCard))
+
+		return { left: clampedX, top: zoneCardScreen.y, marginTop: -8 }
+	}, [zoneCardScreen])
+
 	return (
 		<div className='relative h-screen w-full'>
 			<div className='absolute top-4 left-4 z-10 flex w-[min(36rem,calc(100%-2rem))] flex-col gap-3'>
@@ -379,7 +392,7 @@ export function MapView() {
 					<div className='pointer-events-none absolute inset-0 z-20'>
 						<div
 							className='pointer-events-auto absolute max-w-[min(26rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-full'
-							style={{ left: zoneCardScreen.x, top: zoneCardScreen.y, marginTop: -8 }}
+							style={zoneCardStyle}
 						>
 							<Card className='border-navy-100 gap-0 bg-white py-0 shadow-md'>
 								<CardContent className='flex flex-col gap-2 px-4 py-3'>
