@@ -101,7 +101,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 		}
 
 		const [zoneResponse, municipalityNames] = await Promise.all([
-			instance.get(`/data/${process.env.NOCODB_BASE_ID}/${tableId}/records/${id}`, { timeout: 20000 }),
+			instance.get(`/data/${process.env.NOCODB_BASE_ID}/${tableId}/records/${id}`, {
+				timeout: 20000,
+				params: { fields: 'Name,Code,PVC Level,VCM Level,Map Color,Country,ActorName,ActorEmail,Map - Tooltip' }
+			}),
 			fetchMunicipalityNamesForDistributionZone(zoneId)
 		])
 
