@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest'
 
-import { vcmTooltipBadgeFromTileProperty, rawTooltipVcmFromFeatureProperties } from '../mapTooltipPvcBadge'
+import {
+	rawTooltipPvcFromFeatureProperties,
+	rawTooltipVcmFromFeatureProperties,
+	vcmTooltipBadgeFromTileProperty
+} from '../mapTooltipPvcBadge'
 
 describe('vcmTooltipBadgeFromTileProperty', () => {
 	it('returns red badge for "> 0.5 mcg/L"', () => {
@@ -39,6 +43,16 @@ describe('vcmTooltipBadgeFromTileProperty', () => {
 		expect(vcmTooltipBadgeFromTileProperty(null)).toBeNull()
 		expect(vcmTooltipBadgeFromTileProperty('')).toBeNull()
 		expect(vcmTooltipBadgeFromTileProperty('bogus')).toBeNull()
+	})
+})
+
+describe('rawTooltipPvcFromFeatureProperties', () => {
+	it('reads pvc_level from tile properties', () => {
+		expect(rawTooltipPvcFromFeatureProperties({ pvc_level: 'No PVC' })).toBe('No PVC')
+	})
+
+	it('returns null when missing', () => {
+		expect(rawTooltipPvcFromFeatureProperties({})).toBeNull()
 	})
 })
 

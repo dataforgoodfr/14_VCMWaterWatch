@@ -22,7 +22,7 @@ export function tilePropertyString(value: unknown): string | null {
 }
 
 export function rawTooltipPvcFromFeatureProperties(props: Record<string, unknown>): string | null {
-	return tilePropertyString(props.tooltip_pvc_level)
+	return tilePropertyString(props.pvc_level)
 }
 
 export function mapTooltipPvcFromNocoLink(link: unknown): string | null {
