@@ -14,7 +14,7 @@ export default function ActionGuide() {
 				<h4 className='text-navy-900 text-sm font-semibold'>💡 Important reminder</h4>
 				<p className='text-navy-800 mt-2 text-sm'>
 					You are paying for a water distribution service. Access to safe, clean drinking water is a legal obligation
-					for your water provider and municipality. You have every right to demand transparency and action.
+					for your water provider and for the state. You have every right to demand transparency and action.
 				</p>
 			</div>
 		</div>
