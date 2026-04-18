@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { riskTierConfig, type MapRiskTier } from '../colorCode'
+import { colorCodeConfig, riskTierConfig, type MapRiskTier } from '../colorCode'
 
 describe('riskTierConfig', () => {
 	const EXPECTED_TIERS: MapRiskTier[] = ['confirme', 'probable', 'absent', 'inconnu']
@@ -15,19 +15,23 @@ describe('riskTierConfig', () => {
 		expect(c.border).toMatch(/^#[0-9a-fA-F]{6}$/)
 	})
 
-	it('confirme derives from red', () => {
-		expect(riskTierConfig.confirme.border).toBe('#dc2626')
+	it('confirme derives from colorCodeConfig.red', () => {
+		expect(riskTierConfig.confirme.bg).toBe(colorCodeConfig.red.bg)
+		expect(riskTierConfig.confirme.border).toBe(colorCodeConfig.red.border)
 	})
 
-	it('probable derives from orange', () => {
-		expect(riskTierConfig.probable.border).toBe('#ea580c')
+	it('probable derives from colorCodeConfig.orange', () => {
+		expect(riskTierConfig.probable.bg).toBe(colorCodeConfig.orange.bg)
+		expect(riskTierConfig.probable.border).toBe(colorCodeConfig.orange.border)
 	})
 
-	it('absent derives from green', () => {
-		expect(riskTierConfig.absent.border).toBe('#16a34a')
+	it('absent derives from colorCodeConfig.green', () => {
+		expect(riskTierConfig.absent.bg).toBe(colorCodeConfig.green.bg)
+		expect(riskTierConfig.absent.border).toBe(colorCodeConfig.green.border)
 	})
 
-	it('inconnu derives from gray', () => {
-		expect(riskTierConfig.inconnu.border).toBe('#64748b')
+	it('inconnu derives from colorCodeConfig.gray', () => {
+		expect(riskTierConfig.inconnu.bg).toBe(colorCodeConfig.gray.bg)
+		expect(riskTierConfig.inconnu.border).toBe(colorCodeConfig.gray.border)
 	})
 })
