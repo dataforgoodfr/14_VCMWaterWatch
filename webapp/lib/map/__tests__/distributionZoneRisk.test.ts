@@ -34,10 +34,9 @@ describe('distributionZoneTierFilter', () => {
 	})
 
 	it('probable matches orange and yellow (multi-value any)', () => {
-		const f = distributionZoneTierFilter('probable')
+		const f = distributionZoneTierFilter('probable') as unknown[]
 		expect(f[0]).toBe('any')
-		const inner = f as unknown[]
-		const matchedValues = inner.slice(1).map((clause: unknown) => (clause as unknown[])[2])
+		const matchedValues = f.slice(1).map((clause: unknown) => (clause as unknown[])[2])
 		expect(matchedValues).toContain('orange')
 		expect(matchedValues).toContain('yellow')
 	})
@@ -48,10 +47,9 @@ describe('distributionZoneTierFilter', () => {
 	})
 
 	it('inconnu matches gray, grey, and empty string', () => {
-		const f = distributionZoneTierFilter('inconnu')
+		const f = distributionZoneTierFilter('inconnu') as unknown[]
 		expect(f[0]).toBe('any')
-		const inner = f as unknown[]
-		const matchedValues = inner.slice(1).map((clause: unknown) => (clause as unknown[])[2])
+		const matchedValues = f.slice(1).map((clause: unknown) => (clause as unknown[])[2])
 		expect(matchedValues).toContain('gray')
 		expect(matchedValues).toContain('grey')
 		expect(matchedValues).toContain('')
