@@ -223,30 +223,51 @@ export function MapView() {
 
 	const onMapClick = useCallback(
 		(e: MapLayerMouseEvent) => {
-			const feature = e.features?.find(f => f.layer?.id === DISTRIBUTION_ZONE_PICK_LAYER_ID)
+			// 1. Check for a distribution zone feature first
+			const zoneFeature = e.features?.find(f => f.layer?.id === DISTRIBUTION_ZONE_PICK_LAYER_ID)
 
-			if (!feature?.properties) {
-				closeZoneCard()
+			if (zoneFeature?.properties) {
+				const props = zoneFeature.properties as Record<string, unknown>
+				const name = displayZoneName(props.name)
+				const { lng, lat } = e.lngLat
+				const tooltipPvcRaw = rawTooltipPvcFromFeatureProperties(props)
+				const tooltipVcmRaw = rawTooltipVcmFromFeatureProperties(props)
+				const zoneId = parseDistributionZoneIdFromFeature(zoneFeature)
+
+				console.log('[MapView] click zone', {
+					featureId: zoneFeature.id,
+					zoneId,
+					props
+				})
+
+				setZoneDetailPvcComment(undefined)
+				setZoneDetailAnalyses([])
+				setZoneDetailLoading(true)
+				setZoneCard({ kind: 'zone', lng, lat, name, tooltipPvcRaw, tooltipVcmRaw, zoneId })
 				return
 			}
 
-			const props = feature.properties as Record<string, unknown>
-			const name = displayZoneName(props.name)
-			const { lng, lat } = e.lngLat
-			const tooltipPvcRaw = rawTooltipPvcFromFeatureProperties(props)
-			const tooltipVcmRaw = rawTooltipVcmFromFeatureProperties(props)
-			const zoneId = parseDistributionZoneIdFromFeature(feature)
+			// 2. Fall back to a country feature
+			const countryFeature = e.features?.find(f => f.layer?.id === COUNTRIES_FILL_LAYER_ID)
 
-			console.log('[MapView] click zone', {
-				featureId: feature.id,
-				zoneId,
-				props
-			})
+			if (countryFeature?.properties) {
+				const props = countryFeature.properties as Record<string, unknown>
+				const name = displayZoneName(props.name)
+				const { lng, lat } = e.lngLat
+				const tooltipPvcRaw = rawTooltipPvcFromFeatureProperties(props)
+				const tooltipVcmRaw = rawTooltipVcmFromFeatureProperties(props)
 
-			setZoneDetailPvcComment(undefined)
-			setZoneDetailAnalyses([])
-			setZoneDetailLoading(true)
-			setZoneCard({ lng, lat, name, tooltipPvcRaw, tooltipVcmRaw, zoneId })
+				console.log('[MapView] click country', { props })
+
+				setZoneDetailPvcComment(undefined)
+				setZoneDetailAnalyses([])
+				setZoneDetailLoading(false)
+				setZoneCard({ kind: 'country', lng, lat, name, tooltipPvcRaw, tooltipVcmRaw, zoneId: null })
+				return
+			}
+
+			// 3. Nothing hit — close
+			closeZoneCard()
 		},
 		[closeZoneCard]
 	)
@@ -323,7 +344,7 @@ export function MapView() {
 	}, [zoneCard, closeZoneCard])
 
 	useEffect(() => {
-		if (!zoneCard?.zoneId) {
+		if (!zoneCard?.zoneId || zoneCard.kind !== 'zone') {
 			return
 		}
 
