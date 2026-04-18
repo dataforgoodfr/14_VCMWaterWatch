@@ -8,6 +8,9 @@
  - tasks will manipulate the data directly in NocoDB
  - export workflows will take data from NocoDB, process it, and generate data files in data/export
 
+Use `just pipelines transform-all` to run all transform steps in the correct dependency order
+(municipality GeoJSON → country dissolve → distribution zones).
+
 ## Python Environment
 
 Install python dependencies:
@@ -48,7 +51,7 @@ To start a workflow for an import task, use the `just` command at the root of th
 There are 4 categories:
 
  - extract: download raw data and process it into the staging directory
- - transform: additional processing of staging data
+ - transform: additional processing of staging data (use `just pipelines transform-all` for correct order)
  - load: load staging data into NocoDB
  - tasks: additional processing on data within the database
 

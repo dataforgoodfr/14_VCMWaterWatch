@@ -1,10 +1,18 @@
 Workflows that process data from `data/raw` into `data/staging`.
 
+Use `just pipelines transform-all` to run all transform steps in the correct dependency order.
+
 # geojson (import_all_geojson)
 
-Transforms raw GeoJSON files into NDJSON zone records ready for loading. Imports Country data first, then Municipality data (filtered to configured European countries). Property mapping per level is defined in `config.py`.
+Transforms raw GeoJSON files into staging zone records ready for loading. Imports Municipality data filtered to configured European countries. Property mapping per level is defined in `config.py`.
 
-Output: `data/staging/Country.ndjson`, `data/staging/Municipality.ndjson`.
+Output: `staging.Municipality` table.
+
+# dissolve_countries
+
+Dissolves municipality geometries by country code to produce country polygons. This ensures country borders exactly match zone borders built from the same municipality geometries. Requires `staging.Municipality` (from geojson) and `raw.Country` (from extract_countries).
+
+Output: `staging.Country` table.
 
 # create_distribution_zones
 
