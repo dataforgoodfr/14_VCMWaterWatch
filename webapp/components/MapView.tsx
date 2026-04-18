@@ -16,7 +16,9 @@ import {
 	mapTooltipPvcFromNocoLink,
 	pvcTooltipBadgeFromTileProperty,
 	rawTooltipPvcFromFeatureProperties,
-	tilePropertyString
+	rawTooltipVcmFromFeatureProperties,
+	tilePropertyString,
+	vcmTooltipBadgeFromTileProperty
 } from '@/lib/map/mapTooltipPvcBadge'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 
@@ -52,6 +54,7 @@ interface ZoneCardState {
 	lat: number
 	name: string
 	tooltipPvcRaw: string | null
+	tooltipVcmRaw: string | null
 	zoneId: number | null
 }
 
@@ -116,6 +119,9 @@ export function MapView() {
 	const [riskFilter, setRiskFilter] = useState<MapRiskTier | null>(null)
 	const [zoneCard, setZoneCard] = useState<ZoneCardState | null>(null)
 	const [zoneDetailTooltipPvc, setZoneDetailTooltipPvc] = useState<string | null | undefined>(undefined)
+	const [zoneDetailTooltipVcm, setZoneDetailTooltipVcm] = useState<string | null | undefined>(undefined)
+	const [zoneDetailPvcComment, setZoneDetailPvcComment] = useState<string | null | undefined>(undefined)
+	const [zoneDetailLoading, setZoneDetailLoading] = useState(false)
 	const [mapCursor, setMapCursor] = useState('')
 	const [mapZoom, setMapZoom] = useState<number>(MAP_INTRO_VIEW_STATE.zoom)
 
@@ -203,6 +209,9 @@ export function MapView() {
 
 	const closeZoneCard = useCallback(() => {
 		setZoneDetailTooltipPvc(undefined)
+		setZoneDetailTooltipVcm(undefined)
+		setZoneDetailPvcComment(undefined)
+		setZoneDetailLoading(false)
 		setZoneCard(null)
 	}, [])
 
@@ -219,6 +228,7 @@ export function MapView() {
 			const name = displayZoneName(props.name)
 			const { lng, lat } = e.lngLat
 			const tooltipPvcRaw = rawTooltipPvcFromFeatureProperties(props)
+			const tooltipVcmRaw = rawTooltipVcmFromFeatureProperties(props)
 			const zoneId = parseDistributionZoneIdFromFeature(feature)
 
 			console.log('[MapView] click zone', {
@@ -228,7 +238,10 @@ export function MapView() {
 			})
 
 			setZoneDetailTooltipPvc(undefined)
-			setZoneCard({ lng, lat, name, tooltipPvcRaw, zoneId })
+			setZoneDetailTooltipVcm(undefined)
+			setZoneDetailPvcComment(undefined)
+			setZoneDetailLoading(false)
+			setZoneCard({ lng, lat, name, tooltipPvcRaw, tooltipVcmRaw, zoneId })
 		},
 		[closeZoneCard]
 	)
@@ -309,12 +322,17 @@ export function MapView() {
 		const ac = new AbortController()
 
 		void (async () => {
+			setZoneDetailLoading(true)
+
 			try {
 				const res = await fetch(`/api/distributionzone/${id}`, { signal: ac.signal })
 
 				if (!res.ok) {
 					if (!ac.signal.aborted) {
 						setZoneDetailTooltipPvc(null)
+						setZoneDetailTooltipVcm(null)
+						setZoneDetailPvcComment(null)
+						setZoneDetailLoading(false)
 					}
 
 					return
@@ -323,17 +341,23 @@ export function MapView() {
 				const body = (await res.json()) as { fields?: Record<string, unknown> }
 				const f = body.fields
 
-				const raw =
-					f !== undefined && f !== null && 'MapTooltipPvcLevel' in f
-						? tilePropertyString(f.MapTooltipPvcLevel)
-						: mapTooltipPvcFromNocoLink(f?.['Map - Tooltip'])
+				if (!ac.signal.aborted && f) {
+					const pvcRaw =
+						'MapTooltipPvcLevel' in f
+							? tilePropertyString(f.MapTooltipPvcLevel)
+							: mapTooltipPvcFromNocoLink(f['Map - Tooltip'])
 
-				if (!ac.signal.aborted) {
-					setZoneDetailTooltipPvc(raw)
+					setZoneDetailTooltipPvc(pvcRaw)
+					setZoneDetailTooltipVcm(tilePropertyString(f['VCM Level']))
+					setZoneDetailPvcComment(tilePropertyString(f.MapTooltipPvcComment))
+					setZoneDetailLoading(false)
 				}
 			} catch {
 				if (!ac.signal.aborted) {
 					setZoneDetailTooltipPvc(null)
+					setZoneDetailTooltipVcm(null)
+					setZoneDetailPvcComment(null)
+					setZoneDetailLoading(false)
 				}
 			}
 		})()
@@ -358,6 +382,20 @@ export function MapView() {
 	}, [zoneCard, zoneDetailTooltipPvc])
 
 	const zoneCardPvcBadge = zoneCard ? pvcTooltipBadgeFromTileProperty(tooltipPvcRawForBadge) : null
+
+	const tooltipVcmRawForBadge = useMemo(() => {
+		if (!zoneCard) {
+			return null
+		}
+
+		if (zoneCard.zoneId != null && zoneDetailTooltipVcm !== undefined) {
+			return zoneDetailTooltipVcm
+		}
+
+		return zoneCard.tooltipVcmRaw
+	}, [zoneCard, zoneDetailTooltipVcm])
+
+	const zoneCardVcmBadge = zoneCard ? vcmTooltipBadgeFromTileProperty(tooltipVcmRawForBadge) : null
 
 	return (
 		<div className='relative h-screen w-full'>
@@ -400,13 +438,28 @@ export function MapView() {
 							<Card className='border-navy-100 gap-0 bg-white py-0 shadow-md'>
 								<CardContent className='flex flex-col gap-2 px-4 py-3'>
 									<p className='text-navy-800 text-sm font-medium'>{zoneCard.name}</p>
-									{zoneCardPvcBadge ? (
-										<span
-											className='inline-flex w-fit rounded-3xl border px-3 py-1.5 text-left text-xs font-medium'
-											style={zoneCardPvcBadge.style}
-										>
-											{zoneCardPvcBadge.label}
-										</span>
+									<div className='flex flex-wrap gap-2'>
+										{zoneCardPvcBadge ? (
+											<span
+												className='inline-flex rounded-3xl border px-3 py-1.5 text-left text-xs font-medium'
+												style={zoneCardPvcBadge.style}
+											>
+												{zoneCardPvcBadge.label}
+											</span>
+										) : null}
+										{zoneCardVcmBadge ? (
+											<span
+												className='inline-flex rounded-3xl border px-3 py-1.5 text-left text-xs font-medium'
+												style={zoneCardVcmBadge.style}
+											>
+												{zoneCardVcmBadge.label}
+											</span>
+										) : null}
+									</div>
+									{zoneDetailLoading ? (
+										<div className='bg-navy-100 h-3 w-3/4 animate-pulse rounded' />
+									) : zoneDetailPvcComment ? (
+										<p className='text-navy-600 text-xs'>{zoneDetailPvcComment}</p>
 									) : null}
 								</CardContent>
 							</Card>
