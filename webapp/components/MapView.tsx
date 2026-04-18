@@ -16,7 +16,7 @@ import { formatAnalysisDate, type RecentAnalysis } from '@/lib/fetchAnalysesForD
 import useLocale from '@/hooks/useLocale'
 import { ROUTES } from '@/routes/routes'
 import { distributionZoneTierFilter, type MapRiskTier } from '@/lib/map/distributionZoneRisk'
-import { createBaseMapStyle, MAP_DISTRIBUTION_ZONES_MIN_ZOOM } from '@/lib/map/mapStyle'
+import { createBaseMapStyle, COUNTRIES_FILL_LAYER_ID, MAP_DISTRIBUTION_ZONES_MIN_ZOOM } from '@/lib/map/mapStyle'
 import {
 	pvcTooltipBadgeFromTileProperty,
 	rawTooltipPvcFromFeatureProperties,
@@ -248,9 +248,13 @@ export function MapView() {
 	)
 
 	const onMapMouseMove = useCallback((e: MapLayerMouseEvent) => {
-		const overZone = Boolean(e.features?.some(f => f.layer?.id === DISTRIBUTION_ZONE_PICK_LAYER_ID))
+		const overInteractive = Boolean(
+			e.features?.some(
+				f => f.layer?.id === DISTRIBUTION_ZONE_PICK_LAYER_ID || f.layer?.id === COUNTRIES_FILL_LAYER_ID
+			)
+		)
 
-		setMapCursor(overZone ? 'pointer' : '')
+		setMapCursor(overInteractive ? 'pointer' : '')
 	}, [])
 
 	const onMapMove = useCallback((e: ViewStateChangeEvent) => {
@@ -399,7 +403,7 @@ export function MapView() {
 						latitude: MAP_INTRO_VIEW_STATE.latitude,
 						zoom: MAP_INTRO_VIEW_STATE.zoom
 					}}
-					interactiveLayerIds={[DISTRIBUTION_ZONE_PICK_LAYER_ID]}
+					interactiveLayerIds={[DISTRIBUTION_ZONE_PICK_LAYER_ID, COUNTRIES_FILL_LAYER_ID]}
 					mapStyle={mapStyle}
 					style={{ width: '100%', height: '100%' }}
 					onClick={onMapClick}
