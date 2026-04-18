@@ -2,68 +2,9 @@ import type { ExpressionSpecification, FilterSpecification } from 'maplibre-gl'
 
 export type MapRiskTier = 'confirme' | 'probable' | 'absent' | 'inconnu'
 
-const vcmStr: ExpressionSpecification = ['to-string', ['coalesce', ['get', 'vcm_level'], '']]
-const pvcStr: ExpressionSpecification = ['to-string', ['coalesce', ['get', 'pvc_level'], '']]
-
-export const DISTRIBUTION_ZONE_TIER_EXPR: ExpressionSpecification = [
-	'case',
-	['all', ['==', vcmStr, ''], ['==', pvcStr, '']],
-	'inconnu',
-	[
-		'any',
-		['==', ['get', 'vcm_level'], 'Non conforme'],
-		['==', ['get', 'vcm_level'], 'Non-conforme'],
-		['==', ['get', 'pvc_level'], 'Non conforme'],
-		['==', ['get', 'pvc_level'], 'Non-conforme']
-	],
-	'confirme',
-	[
-		'any',
-		['==', ['get', 'vcm_level'], 'Vigilance renforcée'],
-		['==', ['get', 'pvc_level'], 'Vigilance renforcée'],
-		['==', ['get', 'vcm_level'], 'Vigilance'],
-		['==', ['get', 'pvc_level'], 'Vigilance']
-	],
-	'probable',
-	'absent'
-]
-
-export function buildDistributionZoneFillColor(resolve: (cssVarName: string) => string): ExpressionSpecification {
-	const inconnu = resolve('--risk-inconnu-bg')
-
-	return [
-		'match',
-		DISTRIBUTION_ZONE_TIER_EXPR,
-		'confirme',
-		resolve('--risk-confirme-bg'),
-		'probable',
-		resolve('--risk-probable-bg'),
-		'absent',
-		resolve('--risk-absent-bg'),
-		'inconnu',
-		inconnu,
-		inconnu
-	]
-}
-
-export function buildDistributionZoneLineColor(resolve: (cssVarName: string) => string): ExpressionSpecification {
-	const inconnu = resolve('--risk-inconnu-border')
-
-	return [
-		'match',
-		DISTRIBUTION_ZONE_TIER_EXPR,
-		'confirme',
-		resolve('--risk-confirme-border'),
-		'probable',
-		resolve('--risk-probable-border'),
-		'absent',
-		resolve('--risk-absent-border'),
-		'inconnu',
-		inconnu,
-		inconnu
-	]
-}
-
+// `map_color` is a NocoDB single-select column (values: red, orange, yellow, green, gray).
+// Normalise to lowercase so match expressions below are case-insensitive.
+// Coalesces to '' when absent so missing values fall to the inconnu default.
 const MAP_COLOR_KEY: ExpressionSpecification = ['downcase', ['to-string', ['coalesce', ['get', 'map_color'], '']]]
 
 const MAP_COLOR_ORANGE_BG = '#fed7aa'
@@ -73,7 +14,7 @@ const MAP_COLOR_YELLOW_BG = '#fef08a'
 const MAP_COLOR_YELLOW_BORDER = '#a16207'
 
 export function buildMapFeatureFillColor(resolve: (cssVarName: string) => string): ExpressionSpecification {
-	const tierFallback = buildDistributionZoneFillColor(resolve)
+	const inconnu = resolve('--risk-inconnu-bg')
 
 	return [
 		'match',
@@ -87,15 +28,15 @@ export function buildMapFeatureFillColor(resolve: (cssVarName: string) => string
 		'green',
 		resolve('--risk-absent-bg'),
 		'gray',
-		resolve('--risk-inconnu-bg'),
+		inconnu,
 		'grey',
-		resolve('--risk-inconnu-bg'),
-		tierFallback
+		inconnu,
+		inconnu // absent / null map_color → inconnu
 	]
 }
 
 export function buildMapFeatureLineColor(resolve: (cssVarName: string) => string): ExpressionSpecification {
-	const tierFallback = buildDistributionZoneLineColor(resolve)
+	const inconnu = resolve('--risk-inconnu-border')
 
 	return [
 		'match',
@@ -109,13 +50,27 @@ export function buildMapFeatureLineColor(resolve: (cssVarName: string) => string
 		'green',
 		resolve('--risk-absent-border'),
 		'gray',
-		resolve('--risk-inconnu-border'),
+		inconnu,
 		'grey',
-		resolve('--risk-inconnu-border'),
-		tierFallback
+		inconnu,
+		inconnu // absent / null map_color → inconnu
 	]
 }
 
+// Map tier filter buttons to map_color values:
+//   confirme → red
+//   probable → orange or yellow (both represent vigilance states)
+//   absent   → green
+//   inconnu  → gray / grey / no map_color set
 export function distributionZoneTierFilter(tier: MapRiskTier): FilterSpecification {
-	return ['==', DISTRIBUTION_ZONE_TIER_EXPR, tier]
+	switch (tier) {
+		case 'confirme':
+			return ['==', MAP_COLOR_KEY, 'red']
+		case 'probable':
+			return ['any', ['==', MAP_COLOR_KEY, 'orange'], ['==', MAP_COLOR_KEY, 'yellow']]
+		case 'absent':
+			return ['==', MAP_COLOR_KEY, 'green']
+		case 'inconnu':
+			return ['any', ['==', MAP_COLOR_KEY, 'gray'], ['==', MAP_COLOR_KEY, 'grey'], ['==', MAP_COLOR_KEY, '']]
+	}
 }

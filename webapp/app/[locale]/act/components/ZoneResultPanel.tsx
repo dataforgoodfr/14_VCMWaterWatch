@@ -1,7 +1,7 @@
 'use client'
 
 import { DistributionZoneDetailRecord } from '@/types/apiTypes'
-import { deriveColorCode, colorCodeConfig } from '@/lib/colorCode'
+import { colorCodeFromMapColor, colorCodeConfig } from '@/lib/colorCode'
 
 interface ZoneResultPanelProps {
 	zone: DistributionZoneDetailRecord | null
@@ -28,8 +28,8 @@ export default function ZoneResultPanel({ zone, loading }: ZoneResultPanelProps)
 	}
 
 	const { fields } = zone
-	const colorCode = deriveColorCode(fields['VCM Level'], fields['PVC Level'])
-	const config = colorCodeConfig[colorCode]
+	const colorCode = colorCodeFromMapColor(fields['Map Color'])
+	const config = colorCode ? colorCodeConfig[colorCode] : null
 
 	return (
 		<div className='border-navy-800 bg-navy-50 mt-6 rounded-r-2xl border-l-4 p-6 shadow-sm'>
@@ -38,11 +38,13 @@ export default function ZoneResultPanel({ zone, loading }: ZoneResultPanelProps)
 					<h3 className='text-navy-800 text-lg font-semibold'>{fields.Name}</h3>
 					{fields.Country && <p className='text-navy-600 text-sm'>{fields.Country.fields.Name}</p>}
 				</div>
-				<span
-					className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${config.bg} text-white`}
-				>
-					{config.label}
-				</span>
+				{config && (
+					<span
+						className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${config.bg} text-white`}
+					>
+						{config.label}
+					</span>
+				)}
 			</div>
 
 			<div className='border-navy-200 mt-4 border-t pt-4'>
