@@ -7,6 +7,10 @@ _default:
   @echo ""
   @echo "Run 'just <recipe>' to execute a task."
 
+# Write country metadata into raw database.
+extract-countries:
+  uv run python -m pipelines.extract.extract_countries ${DATA_DIR}
+
 # Download municipalities data and process it into GeoJSON.
 extract-municipalities:
   uv run python -m pipelines.extract.download_municipalities
@@ -28,11 +32,24 @@ extract-uk-ofwat:
 transform-geojson:
   uv run python -m pipelines.transform.geojson ${DATA_DIR}
 
+# Dissolve municipality geometries into country polygons.
+# Must run after transform-geojson.
+transform-dissolve-countries:
+  uv run python -m pipelines.transform.dissolve_countries ${DATA_DIR}
+
 # Prepare distribution zones from water company data.
 transform-create-distribution-zones:
   uv run python -m pipelines.transform.create_distribution_zones ${DATA_DIR}
 
-# Load all zone data into NocoDB.
+# Run all transform steps in the correct order.
+# Municipality GeoJSON must be imported before country dissolve.
+transform-all:
+  @just pipelines transform-geojson
+  @just pipelines transform-dissolve-countries
+  @just pipelines transform-create-distribution-zones
+
+# Load all zone data (from Staging) into NocoDB.
+# Run AFTER transform tasks!
 load-zones-country:
   uv run python -m pipelines.load.load_zones Country ${DATA_DIR}
 

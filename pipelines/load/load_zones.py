@@ -194,10 +194,18 @@ def update_population_task(records: list[dict], table_name: str) -> None:
 
     Only runs if any record carries a Population value (not all zone types have one).
     """
+    import math
+
+    def _valid_population(v) -> bool:
+        try:
+            return not math.isnan(v)
+        except (TypeError, ValueError):
+            return False
+
     to_update = [
         {"Id": r["Id"], "Population": r["Population"]}
         for r in records
-        if r.get("Id") and r.get("Population") is not None
+        if r.get("Id") and _valid_population(r.get("Population"))
     ]
     if not to_update:
         return
@@ -275,7 +283,7 @@ def load_zones_flow(level: str, data_directory: Path) -> None:
     records = lookup_parent_task(records, level_config)
 
     # Update geometry for existing records
-    # update_geometry_task(existing_records, level_config.table_name)
+    update_geometry_task(existing_records, level_config.table_name)
 
     # Update population for existing records (no-op if zone type has no Population)
     update_population_task(existing_records, level_config.table_name)

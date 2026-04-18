@@ -18,12 +18,6 @@ class LevelConfig:
 
 # Configuration map for each level
 LEVEL_CONFIGS: Dict[str, LevelConfig] = {
-    "Country": LevelConfig(
-        file_suffix="countries",
-        parent_level=None,
-        title_property="name",
-        code_property="ISO3166-1-Alpha-2",
-    ),
     "Region": LevelConfig(
         file_suffix="regions",
         parent_level="Country",
