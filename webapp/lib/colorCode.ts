@@ -46,3 +46,22 @@ export const colorCodeConfig: Record<
 	green:  { label: 'Compliant',            solid: '#22c55e', bg: '#dcfce7', border: '#16a34a' },
 	gray:   { label: 'Unknown',              solid: '#9ca3af', bg: '#f1f5f9', border: '#64748b' },
 }
+
+/** Canonical type for the four risk tiers shown on the map */
+export type MapRiskTier = 'confirme' | 'probable' | 'absent' | 'inconnu'
+
+export const riskTierConfig: Record<
+	MapRiskTier,
+	{
+		label: string
+		/** Light hex — map polygon fills, filter-button backgrounds */
+		bg: string
+		/** Dark hex — map strokes, filter-button borders */
+		border: string
+	}
+> = {
+	confirme: { label: 'Confirmed', bg: colorCodeConfig.red.bg,    border: colorCodeConfig.red.border },
+	probable: { label: 'Probable',  bg: colorCodeConfig.orange.bg,  border: colorCodeConfig.orange.border },
+	absent:   { label: 'Absent',    bg: colorCodeConfig.green.bg,   border: colorCodeConfig.green.border },
+	inconnu:  { label: 'Unknown',   bg: colorCodeConfig.gray.bg,    border: colorCodeConfig.gray.border },
+}
