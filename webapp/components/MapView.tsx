@@ -348,7 +348,7 @@ export function MapView() {
 			<div className='absolute top-4 left-4 z-10 flex w-[min(36rem,calc(100%-2rem))] flex-col gap-3'>
 				<SearchBar onSelectPlace={onSelectPlace} />
 				{zonesLayerVisible ? (
-					<Card className='border-navy-100 gap-0 bg-white py-0 shadow-none'>
+					<Card className='border-navy-100 hidden gap-0 bg-white py-0 shadow-none md:block'>
 						<CardContent className='px-4 py-4'>
 							<div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
 								<CardTitle className='text-navy-800 shrink-0 font-sans text-[14px] font-normal'>Risks</CardTitle>
