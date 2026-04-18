@@ -386,7 +386,7 @@ export function MapView() {
 				{zoneCard && zoneCardScreen ? (
 					<div className='pointer-events-none absolute inset-0 z-20'>
 						<div
-							className='pointer-events-auto absolute max-w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-full'
+							className='pointer-events-auto absolute max-w-[min(26rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-full'
 							style={{ left: zoneCardScreen.x, top: zoneCardScreen.y, marginTop: -8 }}
 						>
 							<Card className='border-navy-100 gap-0 bg-white py-0 shadow-md'>
