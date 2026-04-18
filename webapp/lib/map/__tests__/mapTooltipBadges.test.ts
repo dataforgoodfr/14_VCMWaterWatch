@@ -1,9 +1,11 @@
 import { describe, it, expect } from 'vitest'
 
 import {
+	pvcCountryTooltipBadgeFromTileProperty,
 	pvcTooltipBadgeFromTileProperty,
 	rawTooltipPvcFromFeatureProperties,
 	rawTooltipVcmFromFeatureProperties,
+	vcmCountryTooltipBadgeFromTileProperty,
 	vcmTooltipBadgeFromTileProperty
 } from '../mapTooltipPvcBadge'
 
@@ -84,5 +86,61 @@ describe('rawTooltipVcmFromFeatureProperties', () => {
 
 	it('returns null when missing', () => {
 		expect(rawTooltipVcmFromFeatureProperties({})).toBeNull()
+	})
+})
+
+describe('pvcCountryTooltipBadgeFromTileProperty', () => {
+	it('returns red badge for "known_length"', () => {
+		const badge = pvcCountryTooltipBadgeFromTileProperty('known_length')
+
+		expect(badge).not.toBeNull()
+		expect(badge!.label).toBe('PVC network length known')
+		expect(badge!.style.borderColor).toBe('#dc2626')
+	})
+
+	it('returns gray badge for "unknown_length"', () => {
+		const badge = pvcCountryTooltipBadgeFromTileProperty('unknown_length')
+
+		expect(badge).not.toBeNull()
+		expect(badge!.label).toBe('PVC network length unknown')
+		expect(badge!.style.borderColor).toBe('#64748b')
+	})
+
+	it('returns null for null/empty/zone-style values', () => {
+		expect(pvcCountryTooltipBadgeFromTileProperty(null)).toBeNull()
+		expect(pvcCountryTooltipBadgeFromTileProperty('')).toBeNull()
+		expect(pvcCountryTooltipBadgeFromTileProperty('No PVC')).toBeNull()
+	})
+})
+
+describe('vcmCountryTooltipBadgeFromTileProperty', () => {
+	it('returns gray badge for "unknown"', () => {
+		const badge = vcmCountryTooltipBadgeFromTileProperty('unknown')
+
+		expect(badge).not.toBeNull()
+		expect(badge!.label).toBe('No VCM data')
+		expect(badge!.style.borderColor).toBe('#64748b')
+	})
+
+	it('returns orange badge for "confirmed_localized_contamination"', () => {
+		const badge = vcmCountryTooltipBadgeFromTileProperty('confirmed_localized_contamination')
+
+		expect(badge).not.toBeNull()
+		expect(badge!.label).toBe('Localized VCM contamination')
+		expect(badge!.style.borderColor).toBe('#ea580c')
+	})
+
+	it('returns red badge for "confirmed_widespread_contamination"', () => {
+		const badge = vcmCountryTooltipBadgeFromTileProperty('confirmed_widespread_contamination')
+
+		expect(badge).not.toBeNull()
+		expect(badge!.label).toBe('Widespread VCM contamination')
+		expect(badge!.style.borderColor).toBe('#dc2626')
+	})
+
+	it('returns null for null/empty/zone-style values', () => {
+		expect(vcmCountryTooltipBadgeFromTileProperty(null)).toBeNull()
+		expect(vcmCountryTooltipBadgeFromTileProperty('')).toBeNull()
+		expect(vcmCountryTooltipBadgeFromTileProperty('> 0.5 mcg/L')).toBeNull()
 	})
 })

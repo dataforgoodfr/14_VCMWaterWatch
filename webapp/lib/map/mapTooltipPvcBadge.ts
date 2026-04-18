@@ -140,6 +140,69 @@ export function vcmTooltipBadgeFromTileProperty(raw: unknown): PvcTooltipBadge |
 	return { label: cfg.label, style: cfg.style }
 }
 
+// --- Country-level badge configs ---
+//
+// Country PMTiles use a different enum vocabulary than DistributionZone for
+// `pvc_level` / `vcm_level`, aggregated from the Country table in NocoDB.
+
+const COUNTRY_PVC_TOOLTIP_BADGES = buildCaseInsensitiveMap({
+	known_length: {
+		label: 'PVC network length known',
+		style: tierStyle('confirme')
+	},
+	unknown_length: {
+		label: 'PVC network length unknown',
+		style: tierStyle('inconnu')
+	}
+})
+
+const COUNTRY_VCM_TOOLTIP_BADGES = buildCaseInsensitiveMap({
+	unknown: {
+		label: 'No VCM data',
+		style: tierStyle('inconnu')
+	},
+	confirmed_localized_contamination: {
+		label: 'Localized VCM contamination',
+		style: tierStyle('probable')
+	},
+	confirmed_widespread_contamination: {
+		label: 'Widespread VCM contamination',
+		style: tierStyle('confirme')
+	}
+})
+
+export function pvcCountryTooltipBadgeFromTileProperty(raw: unknown): PvcTooltipBadge | null {
+	const key = tilePropertyString(raw)
+
+	if (key === null) {
+		return null
+	}
+
+	const cfg = COUNTRY_PVC_TOOLTIP_BADGES.get(key.toLowerCase())
+
+	if (!cfg) {
+		return null
+	}
+
+	return { label: cfg.label, style: cfg.style }
+}
+
+export function vcmCountryTooltipBadgeFromTileProperty(raw: unknown): PvcTooltipBadge | null {
+	const key = tilePropertyString(raw)
+
+	if (key === null) {
+		return null
+	}
+
+	const cfg = COUNTRY_VCM_TOOLTIP_BADGES.get(key.toLowerCase())
+
+	if (!cfg) {
+		return null
+	}
+
+	return { label: cfg.label, style: cfg.style }
+}
+
 export function rawTooltipVcmFromFeatureProperties(props: Record<string, unknown>): string | null {
 	return tilePropertyString(props.vcm_level)
 }

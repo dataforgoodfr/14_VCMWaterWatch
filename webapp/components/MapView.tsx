@@ -18,9 +18,11 @@ import { ROUTES } from '@/routes/routes'
 import { distributionZoneTierFilter, type MapRiskTier } from '@/lib/map/distributionZoneRisk'
 import { createBaseMapStyle, COUNTRIES_FILL_LAYER_ID, MAP_DISTRIBUTION_ZONES_MIN_ZOOM } from '@/lib/map/mapStyle'
 import {
+	pvcCountryTooltipBadgeFromTileProperty,
 	pvcTooltipBadgeFromTileProperty,
 	rawTooltipPvcFromFeatureProperties,
 	rawTooltipVcmFromFeatureProperties,
+	vcmCountryTooltipBadgeFromTileProperty,
 	vcmTooltipBadgeFromTileProperty
 } from '@/lib/map/mapTooltipPvcBadge'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
@@ -385,9 +387,17 @@ export function MapView() {
 		return () => ac.abort()
 	}, [zoneCard?.zoneId, zoneCard?.kind])
 
-	const zoneCardPvcBadge = zoneCard ? pvcTooltipBadgeFromTileProperty(zoneCard.tooltipPvcRaw) : null
+	const zoneCardPvcBadge = zoneCard
+		? zoneCard.kind === 'country'
+			? pvcCountryTooltipBadgeFromTileProperty(zoneCard.tooltipPvcRaw)
+			: pvcTooltipBadgeFromTileProperty(zoneCard.tooltipPvcRaw)
+		: null
 
-	const zoneCardVcmBadge = zoneCard ? vcmTooltipBadgeFromTileProperty(zoneCard.tooltipVcmRaw) : null
+	const zoneCardVcmBadge = zoneCard
+		? zoneCard.kind === 'country'
+			? vcmCountryTooltipBadgeFromTileProperty(zoneCard.tooltipVcmRaw)
+			: vcmTooltipBadgeFromTileProperty(zoneCard.tooltipVcmRaw)
+		: null
 
 	const zoneCardStyle = useMemo(() => {
 		if (!zoneCardScreen) {
