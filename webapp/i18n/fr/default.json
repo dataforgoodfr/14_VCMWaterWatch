@@ -1,6 +1,17 @@
 {
-  "blog-list": "Articles du blog",
-  "blog-resources": "Ressources",
-  "blog-get-info": "Obtenez des informations sur la pollution de l'eau VCM, les actualités, les articles, et plus encore.",
-  "blog-read-more": "Lire la suite"
+	"blog-list": "Articles du blog",
+	"blog-resources": "Ressources",
+	"blog-get-info": "Obtenez des informations sur la pollution de l'eau VCM, les actualités, les articles, et plus encore.",
+	"blog-read-more": "Lire la suite",
+	"about-title": "À propos du projet",
+	"about-subtitle": "Valeurs, équipe et avancées - pour faire confiance et relayer.",
+	"about-description-p1": "VCM Watch est une plateforme d'information sur la présence de chlorure de vinyle monomère (CVM), un gaz cancérigène, dans les réseaux d'eau potable européens. Le CVM migre depuis les canalisations en PVC installées avant 1980 dans l'eau du robinet. En France, des analyses systématiques introduites en 2012 ont révélé des dépassements des limites réglementaires européennes dans plus de 5 000 communes. Cependant, très peu de données sont disponibles au niveau européen, car les analyses ne sont pas actuellement obligatoires, même si un seuil maximal de 0,5 µg/L a été établi par l'Union européenne en 1998.",
+	"about-description-p2": "Pour combler cette lacune, VCM Watch compile toutes les informations disponibles sur les infrastructures d'eau potentiellement contaminées afin de produire une carte des risques à l'échelle européenne. Les données sont collectées auprès des autorités nationales des pays concernés, ou directement auprès des fournisseurs d'eau. Elles peuvent également être soumises par les utilisateurs. Les archives historiques des fabricants de PVC ont également été utilisées pour identifier les risques au niveau national.",
+	"about-description-p3": "L'objectif est d'identifier les zones où une surveillance renforcée est nécessaire et de rendre ces informations accessibles aux citoyens et aux décideurs publics, tout en initiant une collecte de données à grande échelle pour compléter la carte des risques proposée. Le projet est porté par la Chaire de la Terre à l'Université d'Angers, qui a révélé l'ampleur de la contamination au CVM en France en rendant publiques des analyses réalisées par les autorités sanitaires qui n'avaient jamais été divulguées. La plateforme a été développée par des bénévoles de l'association Data for Good, qui ont structuré la base de données, conçu la carte et construit le site. Elle a également été enrichie par une enquête menée conjointement avec le réseau European Investigative Collaborations de journalistes. Enfin, elle a bénéficié des contributions de nombreux citoyens bénévoles qui ont partagé des analyses réalisées localement et identifié des rapports pertinents pour aider à construire la base de données.",
+	"about-team-title": "L'équipe",
+	"about-team-product": "Team Product",
+	"about-team-legal": "Team Legal",
+	"about-join-title": "Vous voulez rejoindre VCM Watch ?",
+	"about-join-description": "Bénévoles, chercheurs, journalistes - contribuez à la transparence de l'eau en Europe.",
+	"about-join-cta": "Nous contacter"
 }
