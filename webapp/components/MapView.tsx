@@ -11,12 +11,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 
 import type { GeocodePlace } from '@/lib/geocode/photon'
 import { distributionZoneTierFilter, type MapRiskTier } from '@/lib/map/distributionZoneRisk'
-import {
-	COUNTRIES_FILL_LAYER_ID,
-	COUNTRIES_OUTLINE_LAYER_ID,
-	createBaseMapStyle,
-	MAP_DISTRIBUTION_ZONES_MIN_ZOOM
-} from '@/lib/map/mapStyle'
+import { createBaseMapStyle, MAP_DISTRIBUTION_ZONES_MIN_ZOOM } from '@/lib/map/mapStyle'
 import {
 	mapTooltipPvcFromNocoLink,
 	pvcTooltipBadgeFromTileProperty,
@@ -44,9 +39,7 @@ const MAP_NORWAY_SPAIN_BOUNDS: [[number, number], [number, number]] = [
 
 const DISTRIBUTION_ZONES_LAYER_IDS = ['distribution-zones-fill', 'distribution-zones-outline'] as const
 
-const COUNTRY_LAYER_IDS = [COUNTRIES_FILL_LAYER_ID, COUNTRIES_OUTLINE_LAYER_ID] as const
-
-const RISK_FILTER_LAYER_IDS = [...COUNTRY_LAYER_IDS, ...DISTRIBUTION_ZONES_LAYER_IDS] as const
+const RISK_FILTER_LAYER_IDS = [...DISTRIBUTION_ZONES_LAYER_IDS] as const
 
 const DISTRIBUTION_ZONE_PICK_LAYER_ID = DISTRIBUTION_ZONES_LAYER_IDS[0]
 
