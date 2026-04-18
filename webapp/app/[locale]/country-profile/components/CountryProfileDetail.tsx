@@ -71,16 +71,12 @@ export function CountryProfileDetail({ country, data, loading, error }: CountryP
 	const f = country.fields
 	const imageSrc = f.Url ?? 'https://placehold.co/310x240.png'
 
-	// Partition CountryData by type, sorted by Order
-	const stats = data.filter(r => r.fields.Type === 'stat').sort((a, b) => a.fields.Order - b.fields.Order)
+	// Partition CountryData by type (already ordered by Order from server)
+	const stats = data.filter(r => r.fields.Type === 'stat')
 
-	const legislationItems = data
-		.filter(r => r.fields.Type === 'legislation')
-		.sort((a, b) => a.fields.Order - b.fields.Order)
+	const legislationItems = data.filter(r => r.fields.Type === 'legislation')
 
-	const missingDataItems = data
-		.filter(r => r.fields.Type === 'missing_data')
-		.sort((a, b) => a.fields.Order - b.fields.Order)
+	const missingDataItems = data.filter(r => r.fields.Type === 'missing_data')
 
 	return (
 		<section className='mt-10 mb-8 flex flex-col gap-8' aria-live='polite'>
