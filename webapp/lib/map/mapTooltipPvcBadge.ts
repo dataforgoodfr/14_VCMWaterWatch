@@ -59,6 +59,10 @@ function tierStyle(tier: keyof typeof riskTierConfig): React.CSSProperties {
 	return { borderColor: t.border, backgroundColor: t.bg, color: t.border }
 }
 
+/** Style for the "No response or data unavailable" badge (no riskTier equivalent) */
+const UNAVAILABLE_BG = '#475569'    // slate-600
+const UNAVAILABLE_FG = '#ffffff'
+
 const PVC_TOOLTIP_BADGES: Record<string, Pick<PvcTooltipBadge, 'label' | 'style'>> = {
 	'No PVC': {
 		label: 'No PVC recorded',
@@ -74,8 +78,7 @@ const PVC_TOOLTIP_BADGES: Record<string, Pick<PvcTooltipBadge, 'label' | 'style'
 	},
 	'No response or data unavailable': {
 		label: 'No response or data unavailable',
-		// slate-600 ≈ #475569
-		style: { borderColor: '#475569', backgroundColor: '#475569', color: '#ffffff' },
+		style: { borderColor: UNAVAILABLE_BG, backgroundColor: UNAVAILABLE_BG, color: UNAVAILABLE_FG },
 	},
 	Unknown: {
 		label: 'Unknown PVC presence',
