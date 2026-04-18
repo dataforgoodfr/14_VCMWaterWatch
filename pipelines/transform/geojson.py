@@ -1,5 +1,5 @@
 """
-Prefect workflow for transforming GeoJSON data into the zone objects (Country + Municipality)
+Prefect workflow for transforming GeoJSON data into Municipality zone objects
 """
 
 import json
@@ -107,9 +107,6 @@ def import_all_geojson_flow(data_directory: Path) -> None:
 
     conn = staging_db.get_connection(data_directory)
     try:
-        logger.info("Starting Country import...")
-        import_geojson_flow(level="Country", source_dir=source_dir, conn=conn)
-
         logger.info("Starting Municipality import...")
         import_geojson_flow(level="Municipality", source_dir=source_dir, conn=conn)
 
