@@ -31,6 +31,7 @@ export type TableTitle =
 	| 'PageField'
 	| 'Translation'
 	| 'Country'
+	| 'CountryData'
 	| 'DistributionZone'
 	| 'Map - Tooltip'
 	| 'Municipality'
@@ -207,11 +208,18 @@ export interface CountryDetailFields {
 	Name: string
 	Code: string
 	Geometry: string
-	'PVC Level': string | null
-	'VCM Level': string | null
-	'Distribution Zones'?: unknown
-	Municipalities?: unknown
 	Actors?: unknown
 	Url?: string
 }
 export type CountryDetailRecord = Record<CountryDetailFields>
+
+export type CountryDataType = 'stat' | 'legislation' | 'missing_data'
+
+export interface CountryDataFields {
+	Id: number
+	Type: CountryDataType
+	Order: number
+	Title: string | null
+	Content: string | null
+}
+export type CountryDataRecord = Record<CountryDataFields>
