@@ -64,7 +64,19 @@ function tierStyle(tier: keyof typeof riskTierConfig): React.CSSProperties {
 const UNAVAILABLE_BG = '#475569' // slate-600
 const UNAVAILABLE_FG = '#ffffff'
 
-const PVC_TOOLTIP_BADGES: Record<string, Pick<PvcTooltipBadge, 'label' | 'style'>> = {
+function buildCaseInsensitiveMap(
+	entries: Record<string, Pick<PvcTooltipBadge, 'label' | 'style'>>
+): Map<string, Pick<PvcTooltipBadge, 'label' | 'style'>> {
+	const map = new Map<string, Pick<PvcTooltipBadge, 'label' | 'style'>>()
+
+	for (const [k, v] of Object.entries(entries)) {
+		map.set(k.toLowerCase(), v)
+	}
+
+	return map
+}
+
+const PVC_TOOLTIP_BADGES = buildCaseInsensitiveMap({
 	'No PVC': {
 		label: 'No PVC recorded',
 		style: tierStyle('absent')
@@ -73,7 +85,7 @@ const PVC_TOOLTIP_BADGES: Record<string, Pick<PvcTooltipBadge, 'label' | 'style'
 		label: 'PVC present, details unknown',
 		style: tierStyle('probable')
 	},
-	'PVC, pre-1980': {
+	'PVC, Pre-1980': {
 		label: 'PVC present, pre-1980',
 		style: tierStyle('confirme')
 	},
@@ -85,11 +97,11 @@ const PVC_TOOLTIP_BADGES: Record<string, Pick<PvcTooltipBadge, 'label' | 'style'
 		label: 'Unknown PVC presence',
 		style: tierStyle('inconnu')
 	}
-}
+})
 
 // --- VCM badge config ---
 
-const VCM_TOOLTIP_BADGES: Record<string, Pick<PvcTooltipBadge, 'label' | 'style'>> = {
+const VCM_TOOLTIP_BADGES = buildCaseInsensitiveMap({
 	'> 0.5 mcg/L': {
 		label: 'VCM level > 0.5 mcg/L',
 		style: tierStyle('confirme')
@@ -110,7 +122,7 @@ const VCM_TOOLTIP_BADGES: Record<string, Pick<PvcTooltipBadge, 'label' | 'style'
 		label: 'VCM level unknown',
 		style: tierStyle('inconnu')
 	}
-}
+})
 
 export function vcmTooltipBadgeFromTileProperty(raw: unknown): PvcTooltipBadge | null {
 	const key = tilePropertyString(raw)
@@ -119,7 +131,7 @@ export function vcmTooltipBadgeFromTileProperty(raw: unknown): PvcTooltipBadge |
 		return null
 	}
 
-	const cfg = VCM_TOOLTIP_BADGES[key]
+	const cfg = VCM_TOOLTIP_BADGES.get(key.toLowerCase())
 
 	if (!cfg) {
 		return null
@@ -139,7 +151,7 @@ export function pvcTooltipBadgeFromTileProperty(raw: unknown): PvcTooltipBadge |
 		return null
 	}
 
-	const cfg = PVC_TOOLTIP_BADGES[key]
+	const cfg = PVC_TOOLTIP_BADGES.get(key.toLowerCase())
 
 	if (!cfg) {
 		return null

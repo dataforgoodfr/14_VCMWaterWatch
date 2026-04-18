@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
 import {
+	pvcTooltipBadgeFromTileProperty,
 	rawTooltipPvcFromFeatureProperties,
 	rawTooltipVcmFromFeatureProperties,
 	vcmTooltipBadgeFromTileProperty
@@ -43,6 +44,26 @@ describe('vcmTooltipBadgeFromTileProperty', () => {
 		expect(vcmTooltipBadgeFromTileProperty(null)).toBeNull()
 		expect(vcmTooltipBadgeFromTileProperty('')).toBeNull()
 		expect(vcmTooltipBadgeFromTileProperty('bogus')).toBeNull()
+	})
+})
+
+describe('pvcTooltipBadgeFromTileProperty', () => {
+	it('matches case-insensitively', () => {
+		const badge = pvcTooltipBadgeFromTileProperty('PVC, Pre-1980')
+
+		expect(badge).not.toBeNull()
+		expect(badge!.label).toBe('PVC present, pre-1980')
+	})
+
+	it('matches lowercase variant', () => {
+		const badge = pvcTooltipBadgeFromTileProperty('pvc, pre-1980')
+
+		expect(badge).not.toBeNull()
+		expect(badge!.label).toBe('PVC present, pre-1980')
+	})
+
+	it('returns null for unrecognized', () => {
+		expect(pvcTooltipBadgeFromTileProperty('bogus')).toBeNull()
 	})
 })
 
