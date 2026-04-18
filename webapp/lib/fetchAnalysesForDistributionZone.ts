@@ -45,17 +45,11 @@ export async function fetchRecentAnalyses(distributionZoneId: number): Promise<R
 			return []
 		}
 
+		const sort = JSON.stringify([{ direction: 'desc', field: 'Date' }])
+
 		const response = await instance.get<FetchResponseRecords<NocoRecord<AnalysisFields>>>(
-			`/data/${process.env.NOCODB_BASE_ID}/${tableId}/records`,
-			{
-				timeout: 15000,
-				params: {
-					where: `(DistributionZone,eq,${distributionZoneId})`,
-					sort: '-Date',
-					pageSize: 3,
-					fields: 'Date,CVMMeasure'
-				}
-			}
+			`/data/${process.env.NOCODB_BASE_ID}/${tableId}/records?where=(DistributionZone,eq,${distributionZoneId})&sort=${sort}&fields=Date,CVMMeasure&pageSize=3`,
+			{ timeout: 15000 }
 		)
 
 		if (response.status !== 200 || !response.data.records?.length) {
