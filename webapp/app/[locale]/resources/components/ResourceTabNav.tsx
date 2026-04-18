@@ -13,7 +13,7 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]['id']
 
-export function ResourceTabNav() {
+export default function ResourceTabNav() {
 	const [activeTab, setActiveTab] = useState<TabId>('resources')
 
 	useEffect(() => {
@@ -53,13 +53,14 @@ export function ResourceTabNav() {
 	}, [])
 
 	return (
-		<nav className='border-navy-200 bg-navy-50/80 sticky top-0 z-10 border-b backdrop-blur-sm'>
+		<nav className='border-navy-200 bg-navy-50/80 sticky top-[84px] z-10 border-b backdrop-blur-sm'>
 			<div className='flex gap-1 px-1 py-1'>
 				{TABS.map(tab => (
 					<Link
 						key={tab.id}
 						href={`#${tab.id}`}
 						onClick={() => setActiveTab(tab.id)}
+						aria-current={activeTab === tab.id ? 'true' : undefined}
 						className={cn(
 							'font-[lexend] rounded-lg px-5 py-2 text-sm font-medium transition-colors',
 							activeTab === tab.id

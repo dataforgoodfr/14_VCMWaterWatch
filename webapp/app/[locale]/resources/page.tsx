@@ -1,8 +1,8 @@
 import { SectionSeparator } from '@/components/SectionSeparator'
 
-import { MethodologySection } from './components/MethodologySection'
-import { ResourcesSection } from './components/ResourcesSection'
-import { ResourceTabNav } from './components/ResourceTabNav'
+import MethodologySection from './components/MethodologySection'
+import ResourcesSection from './components/ResourcesSection'
+import ResourceTabNav from './components/ResourceTabNav'
 
 export default function ResourcesPage() {
 	return (
@@ -21,7 +21,7 @@ export default function ResourcesPage() {
 			</div>
 
 			{/* Sections */}
-			<div className='mt-10 space-y-16'>
+			<div className='mt-12 space-y-16'>
 				{/* Resources section */}
 				<section id='resources'>
 					<ResourcesSection />

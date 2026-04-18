@@ -4,7 +4,7 @@ import { ArrowUpRight } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 
-import { ResourceCard, type ResourceCardProps } from './ResourceCard'
+import ResourceCard, { type ResourceCardProps } from './ResourceCard'
 
 const MOCK_RESOURCES: ResourceCardProps[] = [
 	{
@@ -57,7 +57,8 @@ const MOCK_RESOURCES: ResourceCardProps[] = [
 	}
 ]
 
-export function ResourcesSection() {
+// TODO: i18n — MOCK_RESOURCES is hardcoded in English; extract for translation when i18n is added
+export default function ResourcesSection() {
 	return (
 		<div>
 			{/* Section header */}
@@ -71,8 +72,8 @@ export function ResourcesSection() {
 
 			{/* 3-column grid */}
 			<div className='grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3'>
-				{MOCK_RESOURCES.map((resource, i) => (
-					<ResourceCard key={i} {...resource} />
+				{MOCK_RESOURCES.map(resource => (
+					<ResourceCard key={resource.title} {...resource} />
 				))}
 			</div>
 
@@ -84,7 +85,7 @@ export function ResourcesSection() {
 						Help the community grow by submitting a guide, report, or any relevant material.
 					</p>
 				</div>
-				<Button asChild variant='outlinePrimary' size='xl' className='shrink-0 border-white text-white hover:text-navy-900'>
+				<Button asChild variant='outlinePrimary' size='xl' className='shrink-0 border-white text-white hover:bg-white hover:text-navy-900'>
 					<Link href='/act#involved' className='text-[15px]'>
 						Contact us
 						<ArrowUpRight className='transition-transform group-hover:translate-x-1 group-hover:-translate-y-1' />

@@ -35,7 +35,9 @@ const TYPE_CONFIG: Record<ResourceType, { label: string; className: string }> = 
 	}
 }
 
-export function ResourceCard({ type, title, description, actionLabel, actionUrl }: ResourceCardProps) {
+// TODO: when real URLs are used, add an `external` boolean prop (or detect via URL) to apply
+// target="_blank" rel="noopener noreferrer" on external links.
+export default function ResourceCard({ type, title, description, actionLabel, actionUrl }: ResourceCardProps) {
 	const config = TYPE_CONFIG[type]
 
 	return (

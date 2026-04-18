@@ -59,7 +59,8 @@ const CVM_TABLE_ROWS = [
 	}
 ]
 
-export function MethodologySection() {
+// TODO: i18n — INFO_CARDS and CVM_TABLE_ROWS are hardcoded in English; extract for translation when i18n is added
+export default function MethodologySection() {
 	return (
 		<div>
 			{/* Section header */}
@@ -92,14 +93,14 @@ export function MethodologySection() {
 			{/* CVM Reference Table */}
 			<div className='mb-10'>
 				<h3 className='text-navy-800 mb-4 font-[lexend] text-lg font-semibold'>CVM Risk Level Reference Table</h3>
-				<div className='border-navy-200 overflow-hidden rounded-xl border'>
+				<div className='border-navy-200 overflow-x-auto rounded-xl border'>
 					<table className='w-full text-sm'>
 						<thead>
 							<tr className='bg-navy-800 text-left text-white'>
-								<th className='px-4 py-3 font-semibold'>Risk level</th>
-								<th className='px-4 py-3 font-semibold'>VCM concentration</th>
-								<th className='px-4 py-3 font-semibold'>Pipe age</th>
-								<th className='px-4 py-3 font-semibold'>Infrastructure type</th>
+								<th scope='col' className='px-4 py-3 font-semibold'>Risk level</th>
+								<th scope='col' className='px-4 py-3 font-semibold'>VCM concentration</th>
+								<th scope='col' className='px-4 py-3 font-semibold'>Pipe age</th>
+								<th scope='col' className='px-4 py-3 font-semibold'>Infrastructure type</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -137,7 +138,7 @@ export function MethodologySection() {
 						asChild
 						variant='outlinePrimary'
 						size='xl'
-						className='shrink-0 border-white text-white hover:text-navy-900'
+						className='shrink-0 border-white text-white hover:bg-white hover:text-navy-900'
 					>
 						<Link href='/act#involved' className='text-[15px]'>
 							Get in touch
