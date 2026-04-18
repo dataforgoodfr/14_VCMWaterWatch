@@ -23,24 +23,18 @@ Créer une plateforme collaborative et scientifique pour cartographier et analys
 ### Installation
 
 ```bash
-just setup
+docker-compose up
 ```
 
-This will install:
+This will start:
 
- - Python dependencies, using `uv`
- - pre-commit hooks, using `pre-commit`
- - a docker instance with a local copy of NocoDB
+ - A postgres container
+ - A nocodb container
  - a default configuration in .env, pointing to the local instance
 
-Then, it will start the local nocodb instance (see [nocodb](docs/nocodb.md)).
-You can access it at `http://localhost:8500` - use username "dev@vcm-watch.eu", ask tech leads for password.
+You will need to restore a postgres dump - ask tech lead for one, and the corresponding NocoDB password. 
 
-To reset the environment:
-
-```bash
-just reset
-```
+You can access NocoDB at `http://localhost:8500`.
 
 ### Windows installation
 
@@ -69,8 +63,8 @@ Then press Ctrl+O to write out, Enter to save, and Ctrl+X to exit. This will ind
 
 ## Deployment
 
-Pushes to the main branch will be deployed automatically using [Coolify](https://coolify.services.d4g.fr/).
-The service is accessible at [vcmwaterwatch.services.d4g.fr](https://vcmwaterwatch.services.d4g.fr).
+Pushes to the main branch will be deployed automatically using [Coolify](https://coolify.vcm-watch.eu/).
+The service is accessible at [vcm-watch.eu](https://vcm-watch.eu).
 
 ## Pipeline Worker
 
