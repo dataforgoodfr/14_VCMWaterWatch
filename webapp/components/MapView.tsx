@@ -52,14 +52,18 @@ function emptyMapMoveSubscriptionCleanup() {
 	/* not subscribed */
 }
 
-interface ZoneCardState {
+interface MapCardState {
+	kind: 'zone' | 'country'
 	lng: number
 	lat: number
 	name: string
 	tooltipPvcRaw: string | null
 	tooltipVcmRaw: string | null
-	zoneId: number | null
+	zoneId: number | null // only meaningful when kind === 'zone'
 }
+
+/** @deprecated use MapCardState — kept as alias to minimise churn */
+type ZoneCardState = MapCardState
 
 function parseDistributionZoneIdFromProperties(props: Record<string, unknown>): number | null {
 	const v = props.noco_id ?? props.id ?? props.Id
