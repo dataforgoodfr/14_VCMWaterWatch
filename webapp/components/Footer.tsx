@@ -32,7 +32,7 @@ export const Footer = ({
 		title: 'VCM Water Watch',
 		url: ROUTES.HOME
 	},
-	description = 'water-watch@contact.com',
+	description = 'contact@vcm-watch.eu',
 	menuItems = [
 		{
 			links: [
@@ -66,7 +66,9 @@ export const Footer = ({
 									/>
 								</Link>
 							</div>
-							<p className='mt-4 font-bold'>{description}</p>
+							<a href={`mailto:${description}`} className='hover:text-aqua-200 mt-4 block font-bold'>
+								{description}
+							</a>
 						</div>
 						{menuItems.map((section, sectionIdx) => (
 							<div key={sectionIdx}>

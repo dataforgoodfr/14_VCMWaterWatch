@@ -1,6 +1,17 @@
 {
-  "blog-list": "Blog list",
-  "blog-resources": "Resources",
-  "blog-get-info": "Get info about VCM water pollution, news, articles, and more.",
-  "blog-read-more": "Read More"
+	"blog-list": "Blog list",
+	"blog-resources": "Resources",
+	"blog-get-info": "Get info about VCM water pollution, news, articles, and more.",
+	"blog-read-more": "Read More",
+	"about-title": "About the project",
+	"about-subtitle": "Values, team, and progress — to build trust and inform.",
+	"about-description-p1": "VCM Watch is an information platform about the presence of vinyl chloride monomer (VCM), a carcinogenic gas, in European drinking water networks. VCM migrates from PVC pipes installed before 1980 into tap water. In France, systematic testing introduced in 2012 has revealed exceedances of the European regulatory limits in more than 5,000 municipalities. However, very little data is available at the European level, as testing is not currently mandatory, even though a maximum threshold of 0.5 µg/L was established by the European Union in 1998.",
+	"about-description-p2": "To address this gap, VCM Watch compiles all available information on potentially contaminated water infrastructure in order to produce a Europe-wide risk map. The data is collected from national authorities in the countries concerned, or directly from water suppliers. It can also be submitted by users. Historical archives from PVC manufacturers have also been used to identify risks at the national level.",
+	"about-description-p3": "The goal is to identify areas where enhanced monitoring is needed and to make this information available to both citizens and public decision-makers, while also initiating a large-scale data collection effort to further complete the proposed risk map. The project is led by the Earth Chair at the University of Angers, which revealed the extent of VCM contamination in France by making public analyses conducted by health authorities that had never previously been disclosed. The platform was developed by volunteers from the Data for Good association, who structured the database, designed the map, and built the website. It was also enriched by an investigation carried out jointly with the European Investigative Collaborations network of journalists. Finally, it benefited from contributions by many volunteer citizens who shared locally conducted analyses and identified relevant reports to help build the database.",
+	"about-team-title": "The Team",
+	"about-team-product": "Product Team",
+	"about-team-legal": "Legal Team",
+	"about-join-title": "Want to join VCM Watch?",
+	"about-join-description": "Volunteers, researchers, journalists — contribute to water transparency in Europe.",
+	"about-join-cta": "Contact us"
 }
