@@ -116,7 +116,6 @@ export function MapView() {
 	const [mapLoaded, setMapLoaded] = useState(false)
 	const [riskFilter, setRiskFilter] = useState<MapRiskTier | null>(null)
 	const [zoneCard, setZoneCard] = useState<ZoneCardState | null>(null)
-	const [zoneDetailTooltipPvc, setZoneDetailTooltipPvc] = useState<string | null | undefined>(undefined)
 	const [zoneDetailTooltipVcm, setZoneDetailTooltipVcm] = useState<string | null | undefined>(undefined)
 	const [zoneDetailPvcComment, setZoneDetailPvcComment] = useState<string | null | undefined>(undefined)
 	const [zoneDetailLoading, setZoneDetailLoading] = useState(false)
@@ -206,7 +205,6 @@ export function MapView() {
 	}, [])
 
 	const closeZoneCard = useCallback(() => {
-		setZoneDetailTooltipPvc(undefined)
 		setZoneDetailTooltipVcm(undefined)
 		setZoneDetailPvcComment(undefined)
 		setZoneDetailLoading(false)
@@ -235,7 +233,6 @@ export function MapView() {
 				props
 			})
 
-			setZoneDetailTooltipPvc(undefined)
 			setZoneDetailTooltipVcm(undefined)
 			setZoneDetailPvcComment(undefined)
 			setZoneDetailLoading(false)
@@ -327,7 +324,6 @@ export function MapView() {
 
 				if (!res.ok) {
 					if (!ac.signal.aborted) {
-						setZoneDetailTooltipPvc(null)
 						setZoneDetailTooltipVcm(null)
 						setZoneDetailPvcComment(null)
 						setZoneDetailLoading(false)
@@ -337,20 +333,17 @@ export function MapView() {
 				}
 
 				const body = (await res.json()) as {
-					pvcLevel: string | null
 					vcmLevel: string | null
 					pvcLevelComment: string | null
 				}
 
 				if (!ac.signal.aborted) {
-					setZoneDetailTooltipPvc(body.pvcLevel)
 					setZoneDetailTooltipVcm(body.vcmLevel)
 					setZoneDetailPvcComment(body.pvcLevelComment)
 					setZoneDetailLoading(false)
 				}
 			} catch {
 				if (!ac.signal.aborted) {
-					setZoneDetailTooltipPvc(null)
 					setZoneDetailTooltipVcm(null)
 					setZoneDetailPvcComment(null)
 					setZoneDetailLoading(false)
@@ -361,19 +354,7 @@ export function MapView() {
 		return () => ac.abort()
 	}, [zoneCard?.zoneId])
 
-	const tooltipPvcRawForBadge = useMemo(() => {
-		if (!zoneCard) {
-			return null
-		}
-
-		if (zoneCard.zoneId != null && zoneDetailTooltipPvc) {
-			return zoneDetailTooltipPvc
-		}
-
-		return zoneCard.tooltipPvcRaw
-	}, [zoneCard, zoneDetailTooltipPvc])
-
-	const zoneCardPvcBadge = zoneCard ? pvcTooltipBadgeFromTileProperty(tooltipPvcRawForBadge) : null
+	const zoneCardPvcBadge = zoneCard ? pvcTooltipBadgeFromTileProperty(zoneCard.tooltipPvcRaw) : null
 
 	const tooltipVcmRawForBadge = useMemo(() => {
 		if (!zoneCard) {

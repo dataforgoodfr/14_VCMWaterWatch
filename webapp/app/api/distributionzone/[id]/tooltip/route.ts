@@ -26,14 +26,13 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
 		const res = await instance.get(`/data/${process.env.NOCODB_BASE_ID}/${tableId}/records/${id}`, {
 			timeout: 10000,
-			params: { fields: 'PVC Level,VCM Level,PVC Level Comment' }
+			params: { fields: 'VCM Level,PVC Level Comment' }
 		})
 
 		const data = res.data as { fields?: Record<string, unknown> }
 		const f = data?.fields
 
 		return NextResponse.json({
-			pvcLevel: f?.['PVC Level'] ?? null,
 			vcmLevel: f?.['VCM Level'] ?? null,
 			pvcLevelComment: f?.['PVC Level Comment'] ?? null
 		})
