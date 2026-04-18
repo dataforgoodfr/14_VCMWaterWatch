@@ -13,10 +13,10 @@ import type { GeocodePlace } from '@/lib/geocode/photon'
 import { distributionZoneTierFilter, type MapRiskTier } from '@/lib/map/distributionZoneRisk'
 import { createBaseMapStyle, MAP_DISTRIBUTION_ZONES_MIN_ZOOM } from '@/lib/map/mapStyle'
 import {
-	mapTooltipPvcFromNocoLink,
 	pvcTooltipBadgeFromTileProperty,
 	rawTooltipPvcFromFeatureProperties,
-	tilePropertyString
+	rawTooltipVcmFromFeatureProperties,
+	vcmTooltipBadgeFromTileProperty
 } from '@/lib/map/mapTooltipPvcBadge'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 
@@ -52,6 +52,7 @@ interface ZoneCardState {
 	lat: number
 	name: string
 	tooltipPvcRaw: string | null
+	tooltipVcmRaw: string | null
 	zoneId: number | null
 }
 
@@ -115,7 +116,7 @@ export function MapView() {
 	const [mapLoaded, setMapLoaded] = useState(false)
 	const [riskFilter, setRiskFilter] = useState<MapRiskTier | null>(null)
 	const [zoneCard, setZoneCard] = useState<ZoneCardState | null>(null)
-	const [zoneDetailTooltipPvc, setZoneDetailTooltipPvc] = useState<string | null | undefined>(undefined)
+	const [zoneDetailPvcComment, setZoneDetailPvcComment] = useState<string | null | undefined>(undefined)
 	const [mapCursor, setMapCursor] = useState('')
 	const [mapZoom, setMapZoom] = useState<number>(MAP_INTRO_VIEW_STATE.zoom)
 
@@ -202,7 +203,7 @@ export function MapView() {
 	}, [])
 
 	const closeZoneCard = useCallback(() => {
-		setZoneDetailTooltipPvc(undefined)
+		setZoneDetailPvcComment(undefined)
 		setZoneCard(null)
 	}, [])
 
@@ -219,6 +220,7 @@ export function MapView() {
 			const name = displayZoneName(props.name)
 			const { lng, lat } = e.lngLat
 			const tooltipPvcRaw = rawTooltipPvcFromFeatureProperties(props)
+			const tooltipVcmRaw = rawTooltipVcmFromFeatureProperties(props)
 			const zoneId = parseDistributionZoneIdFromFeature(feature)
 
 			console.log('[MapView] click zone', {
@@ -227,8 +229,8 @@ export function MapView() {
 				props
 			})
 
-			setZoneDetailTooltipPvc(undefined)
-			setZoneCard({ lng, lat, name, tooltipPvcRaw, zoneId })
+			setZoneDetailPvcComment(undefined)
+			setZoneCard({ lng, lat, name, tooltipPvcRaw, tooltipVcmRaw, zoneId })
 		},
 		[closeZoneCard]
 	)
@@ -310,30 +312,26 @@ export function MapView() {
 
 		void (async () => {
 			try {
-				const res = await fetch(`/api/distributionzone/${id}`, { signal: ac.signal })
+				const res = await fetch(`/api/distributionzone/${id}/tooltip`, { signal: ac.signal })
 
 				if (!res.ok) {
 					if (!ac.signal.aborted) {
-						setZoneDetailTooltipPvc(null)
+						setZoneDetailPvcComment(null)
 					}
 
 					return
 				}
 
-				const body = (await res.json()) as { fields?: Record<string, unknown> }
-				const f = body.fields
-
-				const raw =
-					f !== undefined && f !== null && 'MapTooltipPvcLevel' in f
-						? tilePropertyString(f.MapTooltipPvcLevel)
-						: mapTooltipPvcFromNocoLink(f?.['Map - Tooltip'])
+				const body = (await res.json()) as {
+					pvcLevelComment: string | null
+				}
 
 				if (!ac.signal.aborted) {
-					setZoneDetailTooltipPvc(raw)
+					setZoneDetailPvcComment(body.pvcLevelComment)
 				}
 			} catch {
 				if (!ac.signal.aborted) {
-					setZoneDetailTooltipPvc(null)
+					setZoneDetailPvcComment(null)
 				}
 			}
 		})()
@@ -341,30 +339,29 @@ export function MapView() {
 		return () => ac.abort()
 	}, [zoneCard?.zoneId])
 
-	const tooltipPvcRawForBadge = useMemo(() => {
-		if (!zoneCard) {
-			return null
+	const zoneCardPvcBadge = zoneCard ? pvcTooltipBadgeFromTileProperty(zoneCard.tooltipPvcRaw) : null
+
+	const zoneCardVcmBadge = zoneCard ? vcmTooltipBadgeFromTileProperty(zoneCard.tooltipVcmRaw) : null
+
+	const zoneCardStyle = useMemo(() => {
+		if (!zoneCardScreen) {
+			return undefined
 		}
 
-		if (zoneCard.zoneId != null) {
-			if (zoneDetailTooltipPvc !== undefined) {
-				return zoneDetailTooltipPvc
-			}
+		const pad = 16
+		const vw = typeof window !== 'undefined' ? window.innerWidth : 800
+		const halfCard = Math.min(26 * 16, vw - 2 * pad) / 2
+		const clampedX = Math.max(pad + halfCard, Math.min(zoneCardScreen.x, vw - pad - halfCard))
 
-			return zoneCard.tooltipPvcRaw
-		}
-
-		return zoneCard.tooltipPvcRaw
-	}, [zoneCard, zoneDetailTooltipPvc])
-
-	const zoneCardPvcBadge = zoneCard ? pvcTooltipBadgeFromTileProperty(tooltipPvcRawForBadge) : null
+		return { left: clampedX, top: zoneCardScreen.y, marginTop: -8 }
+	}, [zoneCardScreen])
 
 	return (
 		<div className='relative h-screen w-full'>
 			<div className='absolute top-4 left-4 z-10 flex w-[min(36rem,calc(100%-2rem))] flex-col gap-3'>
 				<SearchBar onSelectPlace={onSelectPlace} />
 				{zonesLayerVisible ? (
-					<Card className='border-navy-100 gap-0 bg-white py-0 shadow-none'>
+					<Card className='border-navy-100 hidden gap-0 bg-white py-0 shadow-none md:block'>
 						<CardContent className='px-4 py-4'>
 							<div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
 								<CardTitle className='text-navy-800 shrink-0 font-sans text-[14px] font-normal'>Risks</CardTitle>
@@ -394,20 +391,31 @@ export function MapView() {
 				{zoneCard && zoneCardScreen ? (
 					<div className='pointer-events-none absolute inset-0 z-20'>
 						<div
-							className='pointer-events-auto absolute max-w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-full'
-							style={{ left: zoneCardScreen.x, top: zoneCardScreen.y, marginTop: -8 }}
+							className='pointer-events-auto absolute max-w-[min(26rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-full'
+							style={zoneCardStyle}
 						>
 							<Card className='border-navy-100 gap-0 bg-white py-0 shadow-md'>
 								<CardContent className='flex flex-col gap-2 px-4 py-3'>
 									<p className='text-navy-800 text-sm font-medium'>{zoneCard.name}</p>
-									{zoneCardPvcBadge ? (
-										<span
-											className='inline-flex w-fit rounded-3xl border px-3 py-1.5 text-left text-xs font-medium'
-											style={zoneCardPvcBadge.style}
-										>
-											{zoneCardPvcBadge.label}
-										</span>
-									) : null}
+									<div className='flex flex-wrap gap-2'>
+										{zoneCardPvcBadge ? (
+											<span
+												className='inline-flex rounded-3xl border px-3 py-1.5 text-left text-xs font-medium'
+												style={zoneCardPvcBadge.style}
+											>
+												{zoneCardPvcBadge.label}
+											</span>
+										) : null}
+										{zoneCardVcmBadge ? (
+											<span
+												className='inline-flex rounded-3xl border px-3 py-1.5 text-left text-xs font-medium'
+												style={zoneCardVcmBadge.style}
+											>
+												{zoneCardVcmBadge.label}
+											</span>
+										) : null}
+									</div>
+									{zoneDetailPvcComment ? <p className='text-navy-600 text-xs'>{zoneDetailPvcComment}</p> : null}
 								</CardContent>
 							</Card>
 						</div>

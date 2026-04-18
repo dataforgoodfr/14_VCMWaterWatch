@@ -169,6 +169,8 @@ export interface DistributionZoneDetailFields {
 	'Map - Tooltip'?: unknown
 	/** Resolved server-side: PVC Level for map tooltip badge */
 	MapTooltipPvcLevel?: string | null
+	/** Resolved server-side: PVC Level Comment from Map - Tooltip */
+	MapTooltipPvcComment?: string | null
 }
 export type DistributionZoneDetailRecord = Record<DistributionZoneDetailFields>
 
