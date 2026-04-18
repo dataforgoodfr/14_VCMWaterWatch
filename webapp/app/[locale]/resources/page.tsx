@@ -23,14 +23,14 @@ export default function ResourcesPage() {
 			{/* Sections */}
 			<div className='mt-12 space-y-16'>
 				{/* Resources section */}
-				<section id='resources'>
+				<section id='resources' className='scroll-mt-[148px]'>
 					<ResourcesSection />
 				</section>
 
 				<hr className='border-navy-200' />
 
 				{/* Methodology section */}
-				<section id='methodology'>
+				<section id='methodology' className='scroll-mt-[148px]'>
 					<MethodologySection />
 				</section>
 			</div>

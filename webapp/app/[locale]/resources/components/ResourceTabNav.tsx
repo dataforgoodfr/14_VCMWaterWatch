@@ -53,7 +53,7 @@ export default function ResourceTabNav() {
 	}, [])
 
 	return (
-		<nav className='border-navy-200 bg-navy-50/80 sticky top-[84px] z-10 border-b backdrop-blur-sm'>
+		<nav className='border-navy-200 bg-navy-50/80 sticky top-[64px] lg:top-[84px] z-10 border-b backdrop-blur-sm'>
 			<div className='flex gap-1 px-1 py-1'>
 				{TABS.map(tab => (
 					<Link
