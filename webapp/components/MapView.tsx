@@ -23,7 +23,6 @@ import {
 	rawTooltipPvcFromFeatureProperties,
 	tilePropertyString
 } from '@/lib/map/mapTooltipPvcBadge'
-import { cn } from '@/lib/utils'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 
 import { MapRiskFilters } from './MapRiskFilters'
@@ -410,10 +409,8 @@ export function MapView() {
 									<p className='text-navy-800 text-sm font-medium'>{zoneCard.name}</p>
 									{zoneCardPvcBadge ? (
 										<span
-											className={cn(
-												'inline-flex w-fit rounded-3xl px-3 py-1.5 text-left text-xs font-medium',
-												zoneCardPvcBadge.className
-											)}
+											className='inline-flex w-fit rounded-3xl border px-3 py-1.5 text-left text-xs font-medium'
+											style={zoneCardPvcBadge.style}
 										>
 											{zoneCardPvcBadge.label}
 										</span>
