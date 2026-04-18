@@ -1,61 +1,79 @@
 import Link from 'next/link'
 
-import { ArrowUpRight, BookOpen, Database, FlaskConical, Users } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 
+// Each card uses a simple styled span (circle + text character) instead of a lucide icon.
+// This matches the design mockup which shows minimal circle icons.
 const INFO_CARDS = [
 	{
-		icon: FlaskConical,
-		title: 'Data collection methodology',
-		body: 'Water quality data is gathered from official national databases, citizen-submitted reports, and partner research institutions. All entries are timestamped and linked to a source reference.'
+		iconChar: 'ℹ',
+		iconBg: 'bg-blue-100',
+		iconColor: 'text-blue-700',
+		title: 'Data Sources',
+		body: 'Data comes from three sources: (1) official reports from national health authorities, (2) citizen contributions verified by our team, (3) peer-reviewed scientific publications.'
 	},
 	{
-		icon: Database,
-		title: 'Risk level classification',
-		body: 'Contamination risk is scored using the CVM Reference Table below, combining measured VCM concentration, pipe age, and infrastructure type to produce a four-tier risk level.'
+		iconChar: '✓',
+		iconBg: 'bg-green-100',
+		iconColor: 'text-green-700',
+		title: 'Verification Process',
+		body: 'Each citizen contribution goes through validation: verification of the source document, cross-referencing with official data, and validation by at least one member of the scientific team.'
 	},
 	{
-		icon: BookOpen,
-		title: 'Scientific references',
-		body: 'Our thresholds and health guidance align with the WHO Guidelines for Drinking-water Quality and EU Directive 2020/2184 on water intended for human consumption.'
+		iconChar: '?',
+		iconBg: 'bg-amber-100',
+		iconColor: 'text-amber-700',
+		title: 'Interpreting Thresholds',
+		body: 'CVM concentrations are expressed in µg/L. The European directive sets a threshold of 0.5 µg/L. Some countries apply stricter standards. See the table below.'
 	},
 	{
-		icon: Users,
-		title: 'Community contributions',
-		body: 'Citizen-submitted data is reviewed by volunteer water specialists before it is published. Unverified contributions are flagged with a "pending review" status on the map.'
+		iconChar: '!',
+		iconBg: 'bg-red-100',
+		iconColor: 'text-red-700',
+		title: 'Limitations & Precautions',
+		body: 'Map data does not replace official analysis. When in doubt, contact your local health authority. VCM Watch is a citizen awareness tool.'
 	}
 ]
 
-// CVM Reference Table rows: [level, concentration, pipe age, infrastructure type]
+// CVM Concentration Reference Table — columns match design:
+// Concentration (µg/L) | Level | Interpretation | Recommended Action
 const CVM_TABLE_ROWS = [
 	{
-		level: 'Low',
-		levelColor: 'bg-green-100 text-green-800',
-		concentration: '< 0.5 µg/L',
-		pipeAge: '< 20 years',
-		infrastructure: 'Modern PVC or non-PVC'
+		concentration: '< 0.1',
+		level: 'Compliant (strict)',
+		dotColor: 'bg-green-500',
+		interpretation: 'Below detection threshold',
+		action: 'No action required'
 	},
 	{
-		level: 'Moderate',
-		levelColor: 'bg-yellow-100 text-yellow-800',
-		concentration: '0.5 – 2 µg/L',
-		pipeAge: '20 – 35 years',
-		infrastructure: 'Older PVC, maintained'
+		concentration: '0.1 – 0.5',
+		level: 'Compliant',
+		dotColor: 'bg-green-400',
+		interpretation: 'EU Directive 2020/2184 met',
+		action: 'Routine monitoring'
 	},
 	{
-		level: 'High',
-		levelColor: 'bg-orange-100 text-orange-800',
-		concentration: '2 – 5 µg/L',
-		pipeAge: '35 – 50 years',
-		infrastructure: 'Ageing PVC 70s/80s network'
+		concentration: '0.5 – 1.0',
+		level: 'Vigilance',
+		dotColor: 'bg-orange-400',
+		interpretation: 'Above EU threshold',
+		action: 'Report to health authority'
 	},
 	{
-		level: 'Critical',
-		levelColor: 'bg-red-100 text-red-800',
-		concentration: '> 5 µg/L',
-		pipeAge: '> 50 years',
-		infrastructure: 'Pre-1975 PVC, degraded'
+		concentration: '> 1.0',
+		level: 'Alert',
+		dotColor: 'bg-red-500',
+		interpretation: 'Significant exceedance',
+		action: 'Contact ARS urgently'
+	},
+	{
+		concentration: 'Not measured',
+		level: 'Unknown',
+		dotColor: 'bg-gray-400',
+		interpretation: 'Data unavailable',
+		action: 'Request local analysis'
 	}
 ]
 
@@ -67,60 +85,59 @@ export default function MethodologySection() {
 			<div className='mb-8'>
 				<h2 className='text-navy-800 font-[lexend] text-2xl font-semibold'>Methodology</h2>
 				<p className='text-navy-600 mt-2 max-w-2xl text-base'>
-					How we collect, validate, and classify VCM contamination data — and how you can contribute.
+					How to interpret the data and who to contact to act correctly.
 				</p>
 			</div>
 
 			{/* 2×2 info cards */}
 			<div className='mb-10 grid grid-cols-1 gap-5 sm:grid-cols-2'>
-				{INFO_CARDS.map(card => {
-					const Icon = card.icon
-
-					return (
-						<div key={card.title} className='border-navy-200 bg-navy-50 rounded-xl border p-5'>
-							<div className='mb-3 flex items-center gap-3'>
-								<div className='bg-navy-800 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white'>
-									<Icon className='h-5 w-5' />
-								</div>
-								<h3 className='text-navy-800 font-[lexend] text-base font-semibold'>{card.title}</h3>
-							</div>
-							<p className='text-navy-600 text-sm leading-relaxed'>{card.body}</p>
+				{INFO_CARDS.map(card => (
+					<div key={card.title} className='border-navy-200 bg-navy-50 rounded-xl border p-5'>
+						<div className='mb-3 flex items-center gap-3'>
+							<span
+								className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base font-bold ${card.iconBg} ${card.iconColor}`}
+							>
+								{card.iconChar}
+							</span>
+							<h3 className='text-navy-800 font-[lexend] text-base font-semibold'>{card.title}</h3>
 						</div>
-					)
-				})}
+						<p className='text-navy-600 text-sm leading-relaxed'>{card.body}</p>
+					</div>
+				))}
 			</div>
 
-			{/* CVM Reference Table */}
+			{/* CVM Concentration Reference Table */}
 			<div className='mb-10'>
-				<h3 className='text-navy-800 mb-4 font-[lexend] text-lg font-semibold'>CVM Risk Level Reference Table</h3>
+				<h3 className='text-navy-800 mb-4 font-[lexend] text-lg font-semibold'>CVM Concentration Reference Table</h3>
 				<div className='border-navy-200 overflow-x-auto rounded-xl border'>
 					<table className='w-full text-sm'>
 						<thead>
 							<tr className='bg-navy-800 text-left text-white'>
-								<th scope='col' className='px-4 py-3 font-semibold'>Risk level</th>
-								<th scope='col' className='px-4 py-3 font-semibold'>VCM concentration</th>
-								<th scope='col' className='px-4 py-3 font-semibold'>Pipe age</th>
-								<th scope='col' className='px-4 py-3 font-semibold'>Infrastructure type</th>
+								<th scope='col' className='px-4 py-3 font-semibold'>Concentration (µg/L)</th>
+								<th scope='col' className='px-4 py-3 font-semibold'>Level</th>
+								<th scope='col' className='px-4 py-3 font-semibold'>Interpretation</th>
+								<th scope='col' className='px-4 py-3 font-semibold'>Recommended Action</th>
 							</tr>
 						</thead>
 						<tbody>
 							{CVM_TABLE_ROWS.map((row, i) => (
 								<tr key={row.level} className={i % 2 === 0 ? 'bg-white' : 'bg-navy-50'}>
+									<td className='text-navy-700 px-4 py-3 font-mono text-xs'>{row.concentration}</td>
 									<td className='px-4 py-3'>
-										<span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${row.levelColor}`}>
-											{row.level}
+										<span className='flex items-center gap-1.5'>
+											<span className={`inline-block h-2.5 w-2.5 rounded-full ${row.dotColor}`} />
+											<span className='text-navy-700'>{row.level}</span>
 										</span>
 									</td>
-									<td className='text-navy-700 px-4 py-3 font-mono text-xs'>{row.concentration}</td>
-									<td className='text-navy-700 px-4 py-3'>{row.pipeAge}</td>
-									<td className='text-navy-700 px-4 py-3'>{row.infrastructure}</td>
+									<td className='text-navy-700 px-4 py-3'>{row.interpretation}</td>
+									<td className='text-navy-700 px-4 py-3'>{row.action}</td>
 								</tr>
 							))}
 						</tbody>
 					</table>
 				</div>
 				<p className='text-navy-500 mt-2 text-xs'>
-					* Thresholds are indicative and based on WHO/EU guidance. Site-specific factors may alter the final classification.
+					* Thresholds based on WHO guidelines and EU Directive 2020/2184. Site-specific factors may affect the final classification.
 				</p>
 			</div>
 
