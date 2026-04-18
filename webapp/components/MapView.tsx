@@ -116,7 +116,6 @@ export function MapView() {
 	const [mapLoaded, setMapLoaded] = useState(false)
 	const [riskFilter, setRiskFilter] = useState<MapRiskTier | null>(null)
 	const [zoneCard, setZoneCard] = useState<ZoneCardState | null>(null)
-	const [zoneDetailTooltipVcm, setZoneDetailTooltipVcm] = useState<string | null | undefined>(undefined)
 	const [zoneDetailPvcComment, setZoneDetailPvcComment] = useState<string | null | undefined>(undefined)
 	const [zoneDetailLoading, setZoneDetailLoading] = useState(false)
 	const [mapCursor, setMapCursor] = useState('')
@@ -205,7 +204,6 @@ export function MapView() {
 	}, [])
 
 	const closeZoneCard = useCallback(() => {
-		setZoneDetailTooltipVcm(undefined)
 		setZoneDetailPvcComment(undefined)
 		setZoneDetailLoading(false)
 		setZoneCard(null)
@@ -233,7 +231,6 @@ export function MapView() {
 				props
 			})
 
-			setZoneDetailTooltipVcm(undefined)
 			setZoneDetailPvcComment(undefined)
 			setZoneDetailLoading(false)
 			setZoneCard({ lng, lat, name, tooltipPvcRaw, tooltipVcmRaw, zoneId })
@@ -324,7 +321,6 @@ export function MapView() {
 
 				if (!res.ok) {
 					if (!ac.signal.aborted) {
-						setZoneDetailTooltipVcm(null)
 						setZoneDetailPvcComment(null)
 						setZoneDetailLoading(false)
 					}
@@ -333,18 +329,15 @@ export function MapView() {
 				}
 
 				const body = (await res.json()) as {
-					vcmLevel: string | null
 					pvcLevelComment: string | null
 				}
 
 				if (!ac.signal.aborted) {
-					setZoneDetailTooltipVcm(body.vcmLevel)
 					setZoneDetailPvcComment(body.pvcLevelComment)
 					setZoneDetailLoading(false)
 				}
 			} catch {
 				if (!ac.signal.aborted) {
-					setZoneDetailTooltipVcm(null)
 					setZoneDetailPvcComment(null)
 					setZoneDetailLoading(false)
 				}
@@ -356,19 +349,7 @@ export function MapView() {
 
 	const zoneCardPvcBadge = zoneCard ? pvcTooltipBadgeFromTileProperty(zoneCard.tooltipPvcRaw) : null
 
-	const tooltipVcmRawForBadge = useMemo(() => {
-		if (!zoneCard) {
-			return null
-		}
-
-		if (zoneCard.zoneId != null && zoneDetailTooltipVcm) {
-			return zoneDetailTooltipVcm
-		}
-
-		return zoneCard.tooltipVcmRaw
-	}, [zoneCard, zoneDetailTooltipVcm])
-
-	const zoneCardVcmBadge = zoneCard ? vcmTooltipBadgeFromTileProperty(tooltipVcmRawForBadge) : null
+	const zoneCardVcmBadge = zoneCard ? vcmTooltipBadgeFromTileProperty(zoneCard.tooltipVcmRaw) : null
 
 	return (
 		<div className='relative h-screen w-full'>
