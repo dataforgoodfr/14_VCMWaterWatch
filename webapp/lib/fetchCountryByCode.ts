@@ -24,8 +24,10 @@ export async function fetchCountryByCode(code: string, locale = 'en'): Promise<C
 			return null
 		}
 
+		const where = `(Code,eq,${trimmed})`
+
 		const response = await instance.get<FetchResponseRecords<CountryDetailRecord>>(
-			`/data/${process.env.NOCODB_BASE_ID}/${countryTableId}/records?where=(Code,eq,${trimmed})`,
+			`/data/${process.env.NOCODB_BASE_ID}/${countryTableId}/records?where=${encodeURIComponent(where)}`,
 			{ params: { fields: COUNTRY_DETAIL_FIELDS }, timeout: 20000 }
 		)
 
