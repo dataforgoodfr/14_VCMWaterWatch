@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 
+import Link from 'next/link'
+
 import maplibregl from 'maplibre-gl'
 import type { MapLayerMouseEvent, MapLibreEvent } from 'maplibre-gl'
 import { Protocol } from 'pmtiles'
@@ -10,6 +12,9 @@ import type { MapRef, ViewStateChangeEvent } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
 import type { GeocodePlace } from '@/lib/geocode/photon'
+import { formatAnalysisDate, type RecentAnalysis } from '@/lib/fetchAnalysesForDistributionZone'
+import useLocale from '@/hooks/useLocale'
+import { ROUTES } from '@/routes/routes'
 import { distributionZoneTierFilter, type MapRiskTier } from '@/lib/map/distributionZoneRisk'
 import { createBaseMapStyle, MAP_DISTRIBUTION_ZONES_MIN_ZOOM } from '@/lib/map/mapStyle'
 import {
@@ -112,11 +117,14 @@ function displayZoneName(value: unknown): string {
 }
 
 export function MapView() {
+	const locale = useLocale()
 	const mapRef = useRef<MapRef>(null)
 	const [mapLoaded, setMapLoaded] = useState(false)
 	const [riskFilter, setRiskFilter] = useState<MapRiskTier | null>(null)
 	const [zoneCard, setZoneCard] = useState<ZoneCardState | null>(null)
 	const [zoneDetailPvcComment, setZoneDetailPvcComment] = useState<string | null | undefined>(undefined)
+	const [zoneDetailAnalyses, setZoneDetailAnalyses] = useState<RecentAnalysis[]>([])
+	const [zoneDetailLoading, setZoneDetailLoading] = useState(false)
 	const [mapCursor, setMapCursor] = useState('')
 	const [mapZoom, setMapZoom] = useState<number>(MAP_INTRO_VIEW_STATE.zoom)
 
@@ -204,6 +212,8 @@ export function MapView() {
 
 	const closeZoneCard = useCallback(() => {
 		setZoneDetailPvcComment(undefined)
+		setZoneDetailAnalyses([])
+		setZoneDetailLoading(false)
 		setZoneCard(null)
 	}, [])
 
@@ -230,6 +240,8 @@ export function MapView() {
 			})
 
 			setZoneDetailPvcComment(undefined)
+			setZoneDetailAnalyses([])
+			setZoneDetailLoading(true)
 			setZoneCard({ lng, lat, name, tooltipPvcRaw, tooltipVcmRaw, zoneId })
 		},
 		[closeZoneCard]
@@ -317,6 +329,8 @@ export function MapView() {
 				if (!res.ok) {
 					if (!ac.signal.aborted) {
 						setZoneDetailPvcComment(null)
+						setZoneDetailAnalyses([])
+						setZoneDetailLoading(false)
 					}
 
 					return
@@ -324,14 +338,19 @@ export function MapView() {
 
 				const body = (await res.json()) as {
 					pvcLevelComment: string | null
+					recentAnalyses: RecentAnalysis[]
 				}
 
 				if (!ac.signal.aborted) {
 					setZoneDetailPvcComment(body.pvcLevelComment)
+					setZoneDetailAnalyses(body.recentAnalyses ?? [])
+					setZoneDetailLoading(false)
 				}
 			} catch {
 				if (!ac.signal.aborted) {
 					setZoneDetailPvcComment(null)
+					setZoneDetailAnalyses([])
+					setZoneDetailLoading(false)
 				}
 			}
 		})()
@@ -416,6 +435,33 @@ export function MapView() {
 										) : null}
 									</div>
 									{zoneDetailPvcComment ? <p className='text-navy-600 text-xs'>{zoneDetailPvcComment}</p> : null}
+									{zoneDetailLoading ? (
+										<div className='flex flex-col gap-1.5 pt-1'>
+											<div className='bg-navy-100 h-3 w-1/3 animate-pulse rounded' />
+											<div className='bg-navy-100 h-2.5 w-3/4 animate-pulse rounded' />
+											<div className='bg-navy-100 h-2.5 w-2/3 animate-pulse rounded' />
+										</div>
+									) : zoneDetailAnalyses.length > 0 ? (
+										<div className='pt-1'>
+											<p className='text-navy-800 text-xs font-semibold'>Top 3 VCM Results</p>
+											<ul className='text-navy-600 mt-1 list-inside list-disc text-xs'>
+												{zoneDetailAnalyses.map((a, i) => (
+													<li key={i}>
+														{formatAnalysisDate(a.date)}
+														{a.vcmMeasure != null ? ` - ${a.vcmMeasure} µg/L` : ''}
+													</li>
+												))}
+											</ul>
+										</div>
+									) : null}
+									{zoneCard.zoneId != null ? (
+										<Link
+											href={`/${locale}${ROUTES.ACT}?zone=${zoneCard.zoneId}`}
+											className='bg-navy-800 hover:bg-navy-700 mt-1 inline-flex items-center justify-center rounded-lg px-4 py-2 text-xs font-medium text-white transition-colors'
+										>
+											Take action !
+										</Link>
+									) : null}
 								</CardContent>
 							</Card>
 						</div>
