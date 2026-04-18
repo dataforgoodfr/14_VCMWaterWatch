@@ -1,6 +1,10 @@
+import type React from 'react'
+
+import { riskTierConfig } from '@/lib/colorCode'
+
 export interface PvcTooltipBadge {
 	label: string
-	className: string
+	style: React.CSSProperties
 }
 
 export function tilePropertyString(value: unknown): string | null {
@@ -50,30 +54,33 @@ export function mapTooltipPvcFromNocoLink(link: unknown): string | null {
 	return tilePropertyString(inner['PVC Level'])
 }
 
-const PVC_TOOLTIP_BADGES: Record<string, Pick<PvcTooltipBadge, 'label' | 'className'>> = {
+function tierStyle(tier: keyof typeof riskTierConfig): React.CSSProperties {
+	const t = riskTierConfig[tier]
+	return { borderColor: t.border, backgroundColor: t.bg, color: t.border }
+}
+
+const PVC_TOOLTIP_BADGES: Record<string, Pick<PvcTooltipBadge, 'label' | 'style'>> = {
 	'No PVC': {
 		label: 'No PVC recorded',
-		className: 'border-1 border-[var(--risk-absent-border)] bg-[var(--risk-absent-bg)] text-[var(--risk-absent-border)]'
+		style: tierStyle('absent'),
 	},
 	'PVC, Unknown date': {
 		label: 'PVC present, details unknown',
-		className:
-			'border-1 border-[var(--risk-probable-border)] bg-[var(--risk-probable-bg)] text-[var(--risk-probable-border)]'
+		style: tierStyle('probable'),
 	},
 	'PVC, pre-1980': {
 		label: 'PVC present, pre-1980',
-		className:
-			'border-1 border-[var(--risk-confirme-border)] bg-[var(--risk-confirme-bg)] text-[var(--risk-confirme-border)]'
+		style: tierStyle('confirme'),
 	},
 	'No response or data unavailable': {
 		label: 'No response or data unavailable',
-		className: 'border border-slate-600/90 bg-slate-600/90 text-white'
+		// slate-600 ≈ #475569
+		style: { borderColor: '#475569', backgroundColor: '#475569', color: '#ffffff' },
 	},
 	Unknown: {
 		label: 'Unknown PVC presence',
-		className:
-			'border-1 border-[var(--risk-inconnu-border)] bg-[var(--risk-inconnu-bg)] text-[var(--risk-inconnu-border)]'
-	}
+		style: tierStyle('inconnu'),
+	},
 }
 
 export function pvcTooltipBadgeFromTileProperty(raw: unknown): PvcTooltipBadge | null {
@@ -89,5 +96,5 @@ export function pvcTooltipBadgeFromTileProperty(raw: unknown): PvcTooltipBadge |
 		return null
 	}
 
-	return { label: cfg.label, className: cfg.className }
+	return { label: cfg.label, style: cfg.style }
 }
