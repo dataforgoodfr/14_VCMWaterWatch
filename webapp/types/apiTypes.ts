@@ -31,6 +31,7 @@ export type TableTitle =
 	| 'PageField'
 	| 'Translation'
 	| 'Country'
+	| 'CountryData'
 	| 'DistributionZone'
 	| 'Map - Tooltip'
 	| 'Municipality'
@@ -203,15 +204,35 @@ export interface CountryListFields {
 }
 export type CountryListRecord = Record<CountryListFields>
 
+export interface NocoAttachment {
+	url?: string
+	signedUrl?: string
+	title?: string
+	mimetype?: string
+	size?: number
+	width?: number
+	height?: number
+	thumbnails?: {
+		tiny?: { signedUrl?: string }
+		small?: { signedUrl?: string }
+		card_cover?: { signedUrl?: string }
+	}
+}
+
 export interface CountryDetailFields {
 	Name: string
 	Code: string
 	Geometry: string
-	'PVC Level': string | null
-	'VCM Level': string | null
-	'Distribution Zones'?: unknown
-	Municipalities?: unknown
-	Actors?: unknown
-	Url?: string
+	Image?: NocoAttachment[]
 }
 export type CountryDetailRecord = Record<CountryDetailFields>
+
+export type CountryDataType = 'stat' | 'legislation' | 'missing_data'
+
+export interface CountryDataFields {
+	Type: CountryDataType
+	Order: number
+	Title: string | null
+	Content: string | null
+}
+export type CountryDataRecord = Record<CountryDataFields>

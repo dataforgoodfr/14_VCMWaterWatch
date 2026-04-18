@@ -3,7 +3,12 @@ import type { CountryListRecord } from '@/types/apiTypes'
 
 import { CountryCarousel } from './components/CountryCarousel'
 
-export default async function CountryProfilePage() {
+interface CountryProfilePageProps {
+	params: Promise<{ locale: string }>
+}
+
+export default async function CountryProfilePage({ params }: CountryProfilePageProps) {
+	const { locale } = await params
 	const countries: CountryListRecord[] = await fetchCountries()
 
 	return (
@@ -13,7 +18,7 @@ export default async function CountryProfilePage() {
 			{countries.length === 0 ? (
 				<p className='mt-4 text-lg text-gray-600'>No countries available.</p>
 			) : (
-				<CountryCarousel countries={countries} />
+				<CountryCarousel countries={countries} locale={locale} />
 			)}
 		</main>
 	)

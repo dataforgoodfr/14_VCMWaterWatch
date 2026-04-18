@@ -1,10 +1,16 @@
-import type { CountryDetailRecord } from '@/types/apiTypes'
+import type { CountryDataRecord, CountryDetailRecord } from '@/types/apiTypes'
+import { fetchCountryDataForCountry } from './fetchCountryData'
 import { getTableIdByName } from './fetchMetaTables'
 import { FetchResponseRecords, instance } from './instance'
 
-const COUNTRY_DETAIL_FIELDS = 'Name,Code,Geometry,PVC Level,VCM Level,Distribution Zones,Municipalities,Actors'
+const COUNTRY_DETAIL_FIELDS = 'Name,Code,Geometry,Image'
 
-export async function fetchCountryByCode(code: string): Promise<CountryDetailRecord | null> {
+export interface CountryWithData {
+	country: CountryDetailRecord
+	data: CountryDataRecord[]
+}
+
+export async function fetchCountryByCode(code: string, locale = 'en'): Promise<CountryWithData | null> {
 	const trimmed = code.trim()
 
 	if (!trimmed) {
@@ -18,8 +24,10 @@ export async function fetchCountryByCode(code: string): Promise<CountryDetailRec
 			return null
 		}
 
+		const where = `(Code,eq,${trimmed})`
+
 		const response = await instance.get<FetchResponseRecords<CountryDetailRecord>>(
-			`/data/${process.env.NOCODB_BASE_ID}/${countryTableId}/records?where=(Code,eq,${trimmed})`,
+			`/data/${process.env.NOCODB_BASE_ID}/${countryTableId}/records?where=${encodeURIComponent(where)}`,
 			{ params: { fields: COUNTRY_DETAIL_FIELDS }, timeout: 20000 }
 		)
 
@@ -27,7 +35,17 @@ export async function fetchCountryByCode(code: string): Promise<CountryDetailRec
 			throw new Error(`Failed to fetch country: ${response.statusText}`)
 		}
 
-		return response.data.records[0] ?? null
+		const country = response.data.records[0] ?? null
+
+		if (!country) {
+			return null
+		}
+
+		// Note: fetchCountryDataForCountry self-handles its errors (returns []),
+		// so the surrounding try/catch here only guards the Country lookup.
+		const data = await fetchCountryDataForCountry(country.id, locale)
+
+		return { country, data }
 	} catch (error) {
 		console.error('Error fetching country by code:', error)
 		return null
