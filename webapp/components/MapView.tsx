@@ -117,7 +117,6 @@ export function MapView() {
 	const [riskFilter, setRiskFilter] = useState<MapRiskTier | null>(null)
 	const [zoneCard, setZoneCard] = useState<ZoneCardState | null>(null)
 	const [zoneDetailPvcComment, setZoneDetailPvcComment] = useState<string | null | undefined>(undefined)
-	const [zoneDetailLoading, setZoneDetailLoading] = useState(false)
 	const [mapCursor, setMapCursor] = useState('')
 	const [mapZoom, setMapZoom] = useState<number>(MAP_INTRO_VIEW_STATE.zoom)
 
@@ -205,7 +204,6 @@ export function MapView() {
 
 	const closeZoneCard = useCallback(() => {
 		setZoneDetailPvcComment(undefined)
-		setZoneDetailLoading(false)
 		setZoneCard(null)
 	}, [])
 
@@ -232,7 +230,6 @@ export function MapView() {
 			})
 
 			setZoneDetailPvcComment(undefined)
-			setZoneDetailLoading(false)
 			setZoneCard({ lng, lat, name, tooltipPvcRaw, tooltipVcmRaw, zoneId })
 		},
 		[closeZoneCard]
@@ -314,15 +311,12 @@ export function MapView() {
 		const ac = new AbortController()
 
 		void (async () => {
-			setZoneDetailLoading(true)
-
 			try {
 				const res = await fetch(`/api/distributionzone/${id}/tooltip`, { signal: ac.signal })
 
 				if (!res.ok) {
 					if (!ac.signal.aborted) {
 						setZoneDetailPvcComment(null)
-						setZoneDetailLoading(false)
 					}
 
 					return
@@ -334,12 +328,10 @@ export function MapView() {
 
 				if (!ac.signal.aborted) {
 					setZoneDetailPvcComment(body.pvcLevelComment)
-					setZoneDetailLoading(false)
 				}
 			} catch {
 				if (!ac.signal.aborted) {
 					setZoneDetailPvcComment(null)
-					setZoneDetailLoading(false)
 				}
 			}
 		})()
@@ -410,11 +402,7 @@ export function MapView() {
 											</span>
 										) : null}
 									</div>
-									{zoneDetailLoading ? (
-										<div className='bg-navy-100 h-3 w-3/4 animate-pulse rounded' />
-									) : zoneDetailPvcComment ? (
-										<p className='text-navy-600 text-xs'>{zoneDetailPvcComment}</p>
-									) : null}
+									{zoneDetailPvcComment ? <p className='text-navy-600 text-xs'>{zoneDetailPvcComment}</p> : null}
 								</CardContent>
 							</Card>
 						</div>
