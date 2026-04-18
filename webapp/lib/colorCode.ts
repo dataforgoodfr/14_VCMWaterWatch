@@ -28,6 +28,30 @@ export function colorCodeFromMapColor(mapColor: string | null | undefined): Colo
 	}
 }
 
+/**
+ * Derive a color code from VCM/PVC level values.
+ * Placeholder logic — update when thresholds are confirmed with data team.
+ */
+export function deriveColorCode(vcmLevel: string | null, pvcLevel: string | null): ColorCode {
+	// Use the worse of the two levels
+	const levels = [vcmLevel, pvcLevel].filter(Boolean)
+
+	if (levels.some(l => l === 'Non conforme' || l === 'Non-conforme')) {
+		return 'red'
+	}
+
+	if (levels.some(l => l === 'Vigilance renforcée')) {
+		return 'orange'
+	}
+
+	if (levels.some(l => l === 'Vigilance')) {
+		return 'yellow'
+	}
+
+	if (levels.length === 0) return 'gray'
+	return 'green'
+}
+
 export const colorCodeConfig: Record<
 	ColorCode,
 	{
