@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { fallbackLanguage, i18n } from '@/i18n/i18next.config'
 import { fetchCountryByCode } from '@/lib/fetchCountryByCode'
+import { getCountryImageSrc } from '@/lib/countryImage'
 
 const ALLOWED_LOCALES = new Set<string>(i18n.locales)
 
@@ -19,5 +20,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ code
 		return NextResponse.json({ country: null, data: [] }, { status: 404 })
 	}
 
-	return NextResponse.json({ country: result.country, data: result.data })
+	// Resolve the mirrored image URL server-side (fs is available in API routes)
+	// so the client component doesn't need to access the filesystem directly.
+	const mirroredImageUrl = getCountryImageSrc(decoded)
+
+	return NextResponse.json({ country: result.country, data: result.data, mirroredImageUrl })
 }

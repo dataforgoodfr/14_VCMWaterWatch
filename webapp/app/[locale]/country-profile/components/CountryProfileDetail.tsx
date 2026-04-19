@@ -7,7 +7,6 @@ import { FlaskConical, HelpCircle, MapPin, Percent, TrainTrack, TriangleAlert } 
 import { InfoCard } from '@/components/InfoCard'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Card, CardContent } from '@/components/ui/card'
-import { getCountryImageSrc } from '@/lib/countryImage'
 import type { CountryDataRecord, CountryDetailRecord } from '@/types/apiTypes'
 
 /** Icon lookup by Order (1-indexed) */
@@ -41,11 +40,12 @@ function StatCard({ icon: Icon, title, value }: StatCardProps) {
 interface CountryProfileDetailProps {
 	country: CountryDetailRecord | null
 	data: CountryDataRecord[]
+	mirroredImageUrl?: string | null
 	loading: boolean
 	error: string | null
 }
 
-export function CountryProfileDetail({ country, data, loading, error }: CountryProfileDetailProps) {
+export function CountryProfileDetail({ country, data, mirroredImageUrl, loading, error }: CountryProfileDetailProps) {
 	if (loading) {
 		return (
 			<div className='text-navy-800 mt-10 font-[lexend] text-sm' role='status'>
@@ -73,10 +73,10 @@ export function CountryProfileDetail({ country, data, loading, error }: CountryP
 
 	const attachment = f.Image?.[0]
 
-	// Prefer the mirrored stable URL from the shared volume; fall back to
-	// the NocoDB signed URL for local dev when the manifest has no entry yet.
+	// Prefer the mirrored stable URL resolved server-side (passed as prop from
+	// the API route which has fs access); fall back to the NocoDB signed URL.
 	const imageSrc =
-		getCountryImageSrc(f.Code) ??
+		mirroredImageUrl ??
 		attachment?.signedUrl ??
 		attachment?.thumbnails?.card_cover?.signedUrl ??
 		'https://placehold.co/310x240.png'

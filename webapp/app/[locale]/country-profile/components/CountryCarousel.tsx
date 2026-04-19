@@ -28,6 +28,7 @@ export function CountryCarousel({ countries, locale }: CountryCarouselProps) {
 	const [selectedCode, setSelectedCode] = React.useState<string | null>(null)
 	const [countryDetail, setCountryDetail] = React.useState<CountryDetailRecord | null>(null)
 	const [countryData, setCountryData] = React.useState<CountryDataRecord[]>([])
+	const [mirroredImageUrl, setMirroredImageUrl] = React.useState<string | null>(null)
 	const [detailLoading, setDetailLoading] = React.useState(false)
 	const [detailError, setDetailError] = React.useState<string | null>(null)
 
@@ -38,6 +39,7 @@ export function CountryCarousel({ countries, locale }: CountryCarouselProps) {
 			setDetailError(null)
 			setCountryDetail(null)
 			setCountryData([])
+			setMirroredImageUrl(null)
 
 			try {
 				const res = await fetch(`/api/countries/${encodeURIComponent(code)}?locale=${encodeURIComponent(locale)}`)
@@ -55,6 +57,7 @@ export function CountryCarousel({ countries, locale }: CountryCarouselProps) {
 				const json = (await res.json()) as {
 					country: CountryDetailRecord | null
 					data: CountryDataRecord[]
+					mirroredImageUrl?: string | null
 				}
 
 				if (!json.country) {
@@ -64,6 +67,7 @@ export function CountryCarousel({ countries, locale }: CountryCarouselProps) {
 
 				setCountryDetail(json.country)
 				setCountryData(json.data ?? [])
+				setMirroredImageUrl(json.mirroredImageUrl ?? null)
 			} catch {
 				setDetailError('Network error.')
 			} finally {
@@ -114,7 +118,13 @@ export function CountryCarousel({ countries, locale }: CountryCarouselProps) {
 				<CarouselPrevious />
 				<CarouselNext />
 			</Carousel>
-			<CountryProfileDetail country={countryDetail} data={countryData} loading={detailLoading} error={detailError} />
+			<CountryProfileDetail
+				country={countryDetail}
+				data={countryData}
+				mirroredImageUrl={mirroredImageUrl}
+				loading={detailLoading}
+				error={detailError}
+			/>
 		</>
 	)
 }
