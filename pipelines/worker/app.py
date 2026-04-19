@@ -16,6 +16,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
+from pipelines.export.export_country_images import export_country_images_flow
 from pipelines.export.export_pmtiles import export_pmtiles_flow
 from pipelines.tasks.build_search_index import build_search_index
 
@@ -29,6 +30,9 @@ app = FastAPI(title="VCM WaterWatch Pipeline Worker")
 
 # Tables whose changes should trigger a PMTiles rebuild
 PMTILES_TRIGGER_TABLES = {"Country", "DistributionZone"}
+
+# Tables whose changes should trigger a country images mirror
+COUNTRY_IMAGES_TRIGGER_TABLES = {"Country"}
 
 # Tables whose changes should trigger a search index rebuild
 SEARCH_INDEX_TRIGGER_TABLES = {"DistributionZone", "Municipality"}
@@ -44,6 +48,10 @@ _debounce_timer: threading.Timer | None = None
 # Lock and timer for search index debounce
 _search_debounce_lock = threading.Lock()
 _search_debounce_timer: threading.Timer | None = None
+
+# Lock and timer for country images debounce
+_country_images_debounce_lock = threading.Lock()
+_country_images_debounce_timer: threading.Timer | None = None
 
 # Serialize all Prefect flow runs so only one ephemeral server exists at a time
 _flow_run_lock = threading.Lock()
@@ -90,6 +98,27 @@ def _schedule_search_index():
         _search_debounce_timer.start()
 
 
+def _run_country_images_flow():
+    """Run the country images mirror flow. Called by the debounce timer."""
+    with _flow_run_lock:
+        try:
+            dest = Path(os.environ.get("COUNTRY_IMAGES_DIR", "data/export/country-images"))
+            export_country_images_flow(destination=dest)
+        except Exception:
+            logger.exception("Country images flow failed")
+
+
+def _schedule_country_images():
+    """Schedule (or reschedule) the country images flow after DEBOUNCE_SECONDS."""
+    global _country_images_debounce_timer
+    with _country_images_debounce_lock:
+        if _country_images_debounce_timer is not None:
+            _country_images_debounce_timer.cancel()
+        _country_images_debounce_timer = threading.Timer(DEBOUNCE_SECONDS, _run_country_images_flow)
+        _country_images_debounce_timer.daemon = True
+        _country_images_debounce_timer.start()
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -122,6 +151,13 @@ def nocodb_webhook(payload: dict):
         )
         _schedule_search_index()
         scheduled.append("build_search_index")
+
+    if table_name in COUNTRY_IMAGES_TRIGGER_TABLES:
+        logger.info(
+            f"Webhook received for table {table_name}, scheduling country images mirror"
+        )
+        _schedule_country_images()
+        scheduled.append("export_country_images")
 
     if scheduled:
         return JSONResponse(

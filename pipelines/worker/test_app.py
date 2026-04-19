@@ -28,6 +28,10 @@ def reset_app_state():
             if app_module._search_debounce_timer is not None:
                 app_module._search_debounce_timer.cancel()
                 app_module._search_debounce_timer = None
+        with app_module._country_images_debounce_lock:
+            if app_module._country_images_debounce_timer is not None:
+                app_module._country_images_debounce_timer.cancel()
+                app_module._country_images_debounce_timer = None
 
     _cancel_timers()
     # Wait for any in-flight flow run to finish before starting the next test
@@ -58,7 +62,8 @@ class TestHealthEndpoint:
 class TestWebhookEndpoint:
     def test_webhook_triggers_export_pmtiles(self, client):
         """A POST to /webhooks/nocodb with table=Country triggers the export flow."""
-        with patch("pipelines.worker.app.export_pmtiles_flow") as mock_flow:
+        with patch("pipelines.worker.app.export_pmtiles_flow") as mock_flow, \
+                patch("pipelines.worker.app.export_country_images_flow"):
             mock_flow.return_value = None
             response = client.post(
                 "/webhooks/nocodb",
@@ -68,6 +73,21 @@ class TestWebhookEndpoint:
         assert response.status_code == 202
         assert response.json()["status"] == "accepted"
         mock_flow.assert_called_once()
+
+    def test_webhook_triggers_country_images_on_country(self, client):
+        """A POST with table=Country also triggers the country images flow."""
+        with patch("pipelines.worker.app.export_pmtiles_flow"), \
+                patch("pipelines.worker.app.export_country_images_flow") as mock_images:
+            mock_images.return_value = None
+            response = client.post(
+                "/webhooks/nocodb",
+                json={"type": "records.after.update", "data": {"table_name": "Country"}},
+            )
+            time.sleep(0.05)
+        assert response.status_code == 202
+        pipelines = response.json()["pipelines"]
+        assert "export_country_images" in pipelines
+        mock_images.assert_called_once()
 
     def test_webhook_triggers_on_distribution_zone(self, client):
         with patch("pipelines.worker.app.export_pmtiles_flow") as mock_flow, \
@@ -108,7 +128,8 @@ class TestWebhookDebounce:
         from pipelines.worker import app as app_module
         app_module.DEBOUNCE_SECONDS = 0.3
 
-        with patch("pipelines.worker.app.export_pmtiles_flow") as mock_flow:
+        with patch("pipelines.worker.app.export_pmtiles_flow") as mock_flow, \
+                patch("pipelines.worker.app.export_country_images_flow"):
             mock_flow.return_value = None
             for _ in range(5):
                 client.post(
@@ -124,7 +145,8 @@ class TestWebhookDebounce:
         from pipelines.worker import app as app_module
         app_module.DEBOUNCE_SECONDS = 0.2
 
-        with patch("pipelines.worker.app.export_pmtiles_flow") as mock_flow:
+        with patch("pipelines.worker.app.export_pmtiles_flow") as mock_flow, \
+                patch("pipelines.worker.app.export_country_images_flow"):
             mock_flow.return_value = None
             client.post(
                 "/webhooks/nocodb",
