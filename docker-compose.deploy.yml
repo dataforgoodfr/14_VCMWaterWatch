@@ -66,11 +66,11 @@ services:
       - pmtiles-data:/public/pmtiles
       - country-images-data:/public/country-images
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 45s
     labels:
       - 'traefik.http.middlewares.mybasicauth.basicauth.users=vcm:$2y$05$U9xfGncXlz8eRkC6itgtOul/aDhTeHz.qBBXk6hss4xyBbT.cpgn6'
 
