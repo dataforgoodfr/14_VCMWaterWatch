@@ -222,7 +222,6 @@ export interface NocoAttachment {
 export interface CountryDetailFields {
 	Name: string
 	Code: string
-	Geometry: string
 }
 export type CountryDetailRecord = Record<CountryDetailFields>
 
