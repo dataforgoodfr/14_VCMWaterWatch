@@ -61,25 +61,26 @@ named volume that is mounted in two places:
 | Service | Mount path               | Purpose                              |
 |---------|--------------------------|--------------------------------------|
 | worker  | `/public/country-images` | Flow writes images + manifest here   |
-| webapp  | `/public/country-images` | Next.js serves them as static assets |
+| webapp  | `/public/country-images` | Route handler reads files from here  |
 
-The webapp reads `manifest.json` once (cached in module scope via
-`webapp/lib/countryImage.ts`) to resolve `code → /country-images/<file>`.
+The webapp service also has `COUNTRY_IMAGES_DIR=/public/country-images` set.
+The route handler at `webapp/app/country-images/[...path]/route.ts` reads
+files directly from `COUNTRY_IMAGES_DIR`, and `webapp/lib/countryImage.ts`
+reads `manifest.json` (cached in module scope) to resolve
+`code → /country-images/<file>`.
 
 ## Local development
 
-A seed `manifest.json` is committed at `webapp/public/country-images/manifest.json`
-so `pnpm dev` works without running the pipeline.  To refresh images locally:
+A seed `manifest.json` is committed at `data/export/country-images/manifest.json`
+so `pnpm dev` works without running the pipeline.  Set
+`COUNTRY_IMAGES_DIR=../data/export/country-images` in `webapp/.env.local`
+(already present in the committed file).  To refresh images locally:
 
 ```bash
 just pipelines export-country-images
 # or, with a custom destination:
 COUNTRY_IMAGES_DIR=/tmp/ci uv run python -m pipelines.export.export_country_images
 ```
-
-The `webapp/public/country-images/` directory is excluded from the Docker
-image via `.dockerignore`; in production the volume mount provides the live
-image set.
 
 ## Environment variables
 

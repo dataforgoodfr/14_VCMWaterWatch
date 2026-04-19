@@ -86,9 +86,9 @@ export-pmtiles:
   uv run python -m pipelines.export.export_pmtiles
 
 # Mirror country profile images from NocoDB to the local country-images directory.
-# Set COUNTRY_IMAGES_DIR to override the destination (default: webapp/public/country-images).
+# Set COUNTRY_IMAGES_DIR to override the destination (default: data/export/country-images).
 export-country-images:
-  COUNTRY_IMAGES_DIR=${COUNTRY_IMAGES_DIR:-webapp/public/country-images} uv run python -m pipelines.export.export_country_images
+  COUNTRY_IMAGES_DIR=${COUNTRY_IMAGES_DIR:-data/export/country-images} uv run python -m pipelines.export.export_country_images
 
 test:
   uv run python -m pytest

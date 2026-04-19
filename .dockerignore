@@ -6,6 +6,6 @@ data/
 !data/export
 docs/
 .git
-# Seed country images — in production these come from the country-images-data
-# Docker volume mounted at /public/country-images (written by the worker).
-webapp/public/country-images/
+# Country images are served via the /country-images/[...path] route handler
+# using COUNTRY_IMAGES_DIR; the data/export/country-images/ seed is not needed
+# in the Docker image.

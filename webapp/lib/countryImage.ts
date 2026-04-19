@@ -2,9 +2,9 @@
  * Server-side helper for resolving country profile image URLs.
  *
  * Images are mirrored from NocoDB to a shared Docker volume by the
- * `export_country_images` Prefect flow and served as static assets under
- * `/country-images/`.  A `manifest.json` file in the same directory maps
- * country codes to stable, hashed filenames:
+ * `export_country_images` Prefect flow and served via a dedicated Next.js
+ * route handler at `/country-images/[...path]`.  A `manifest.json` file in
+ * the same directory maps country codes to stable, hashed filenames:
  *
  *   { "FR": "FR.a1b2c3d4.jpg", "IT": "IT.9f8e7d6c.png" }
  *
@@ -13,16 +13,24 @@
  * converts a country code to a public URL path, or returns `null` if no
  * image is available.
  *
- * **Local dev**: commit a seed `webapp/public/country-images/manifest.json`
- * so `pnpm dev` works without running the pipeline.  In production, the
- * `country-images-data` Docker volume mount at `/public/country-images`
- * provides the live set written by the worker container.
+ * **Configuration:** set `COUNTRY_IMAGES_DIR` to the directory written by
+ * the export pipeline (e.g. `../data/export/country-images` locally, or
+ * `/public/country-images` in production via the `country-images-data`
+ * Docker volume). If the env var is unset, `getCountryImageSrc` returns
+ * `null` for every code (country images are optional).
+ *
+ * **Local dev:** run `just pipelines export-country-images` once, or rely on
+ * the committed seed at `data/export/country-images/`.  Set
+ * `COUNTRY_IMAGES_DIR=../data/export/country-images` in `webapp/.env.local`.
+ *
+ * **Production:** `docker-compose.deploy.yml` sets
+ * `COUNTRY_IMAGES_DIR=/public/country-images` and mounts the
+ * `country-images-data` volume there on both worker and webapp.
  */
 
 import fs from 'fs'
 import path from 'path'
 
-const MANIFEST_PATH = path.join(process.cwd(), 'public', 'country-images', 'manifest.json')
 const COUNTRY_IMAGES_PREFIX = '/country-images'
 
 type Manifest = Record<string, string>
@@ -31,17 +39,45 @@ type Manifest = Record<string, string>
 let _manifest: Manifest | null = null
 /** mtime of the manifest file when it was last successfully read. */
 let _manifestMtime = 0
+/** The resolved dir when the cache was last populated. */
+let _manifestDir = ''
+
+function getManifestPath(): string | null {
+	const dir = process.env.COUNTRY_IMAGES_DIR
+
+	if (!dir) {
+		return null
+	}
+
+	return path.join(dir, 'manifest.json')
+}
 
 /**
  * Load (and cache) the country image manifest from disk.
  * Re-reads the file whenever its mtime changes so that a new manifest
  * written by the worker container is picked up without restarting the
  * Next.js server.
- * Returns an empty object if the manifest is missing or malformed.
+ * Returns an empty object if `COUNTRY_IMAGES_DIR` is unset, the manifest
+ * is missing, or the manifest is malformed.
  */
 function loadManifest(): Manifest {
+	const manifestPath = getManifestPath()
+
+	if (!manifestPath) {
+		return {}
+	}
+
+	// Invalidate cache if the configured directory has changed (e.g. in tests).
+	const dir = path.dirname(manifestPath)
+
+	if (dir !== _manifestDir) {
+		_manifest = null
+		_manifestMtime = 0
+		_manifestDir = dir
+	}
+
 	try {
-		const stat = fs.statSync(MANIFEST_PATH, { throwIfNoEntry: false })
+		const stat = fs.statSync(manifestPath, { throwIfNoEntry: false })
 		const mtime = stat?.mtimeMs ?? 0
 
 		if (_manifest !== null && mtime === _manifestMtime) {
@@ -55,7 +91,7 @@ function loadManifest(): Manifest {
 			return _manifest
 		}
 
-		const raw = fs.readFileSync(MANIFEST_PATH, 'utf-8')
+		const raw = fs.readFileSync(manifestPath, 'utf-8')
 
 		_manifest = JSON.parse(raw) as Manifest
 		_manifestMtime = mtime
@@ -92,4 +128,5 @@ export function getCountryImageSrc(code: string | null | undefined): string | nu
 export function _resetManifestCache(): void {
 	_manifest = null
 	_manifestMtime = 0
+	_manifestDir = ''
 }
