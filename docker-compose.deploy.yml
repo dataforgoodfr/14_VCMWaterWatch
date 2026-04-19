@@ -57,14 +57,18 @@ services:
       - NOCODB_URL=${NOCODB_URL:-http://nocodb:8080}
       - NODE_ENV=production
       - PM_TILES_DIR=${PM_TILES_DIR:-/public/pmtiles}
-      - COUNTRY_IMAGES_DIR=${COUNTRY_IMAGES_DIR:-/public/country-images}
+      # Note: country images are served by Next.js' static file handler, so the
+      # volume must land inside the image's public/ directory (/app/public)
+      # rather than at /public like the pmtiles volume (which has its own route
+      # handler). No COUNTRY_IMAGES_DIR env needed for the webapp — the path is
+      # resolved relative to process.cwd() in webapp/lib/countryImage.ts.
       # Limit mem - otherwise it won't build on the Coolify VM
     depends_on:
       - nocodb
     restart: unless-stopped
     volumes:
       - pmtiles-data:/public/pmtiles
-      - country-images-data:/public/country-images
+      - country-images-data:/app/public/country-images
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/api/health"]
       interval: 10s

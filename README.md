@@ -73,7 +73,7 @@ A lightweight FastAPI service runs alongside the webapp to handle data pipeline 
 - **NocoDB webhooks** → the worker receives webhook POSTs over the Docker internal network
 - **PMTiles generation** → triggered automatically when Country or DistributionZone records change
 - **Country images mirroring** → triggered on Country changes; downloads NocoDB image attachments to a shared volume so the webapp can serve them from a stable, cache-friendly URL instead of short-lived S3 signed URLs (see `docs/architecture.md` § Country Images)
-- **Shared volumes** → `pmtiles-data` at `/public/pmtiles` and `country-images-data` at `/public/country-images`, both mounted by worker and webapp
+- **Shared volumes** → `pmtiles-data` at `/public/pmtiles` (served by a custom route handler); `country-images-data` mounted at `/public/country-images` on the worker (writer) and at `/app/public/country-images` on the webapp (so Next.js' static file handler serves them)
 - **Webhook URL** (configured in NocoDB): `http://worker:3000/webhooks/nocodb`
 
 To run the exports manually (local dev):

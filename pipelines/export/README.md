@@ -61,7 +61,7 @@ named volume that is mounted in two places:
 | Service | Mount path               | Purpose                              |
 |---------|--------------------------|--------------------------------------|
 | worker  | `/public/country-images` | Flow writes images + manifest here   |
-| webapp  | `/public/country-images` | Next.js serves them as static assets |
+| webapp  | `/app/public/country-images` | Next.js serves them as static assets (must be under `/app/public` so the built-in static handler picks them up) |
 
 The webapp reads `manifest.json` once (cached in module scope via
 `webapp/lib/countryImage.ts`) to resolve `code → /country-images/<file>`.

@@ -191,7 +191,7 @@ To fix this, country images are mirrored to a shared Docker volume and served fr
 
 **Serving:** Next.js serves the images as plain static assets under `/country-images/...`. The `/api/countries/[code]` BFF route resolves the mirrored URL server-side via `webapp/lib/countryImage.ts`, which reads `manifest.json` with mtime-based cache invalidation (no restart needed when the volume updates). The `CountryProfileDetail` client component receives the resolved URL as a prop and uses `priority` on the `<Image>`.
 
-**Volume layout (prod):** `country-images-data` named volume mounted at `/public/country-images` on both `worker` (read/write) and `webapp` (read).
+**Volume layout (prod):** `country-images-data` named volume, mounted at `/public/country-images` on `worker` (read/write) and at `/app/public/country-images` on `webapp` (read). The webapp mount point must live under `/app/public/` so that Next.js' built-in static file handler serves the images — unlike pmtiles, there is no custom route handler for country images.
 
 **Local dev:** A seed `manifest.json` + images are committed at `webapp/public/country-images/` so `pnpm dev` works without running the pipeline. The directory is excluded from the Docker image via `.dockerignore`; in production the volume mount supplies the live set. Refresh locally with `just pipelines export-country-images`.
 
@@ -236,7 +236,7 @@ All services are defined in `docker-compose.deploy.yml` and deployed via [Coolif
 
 - **Shared volumes:**
   - `pmtiles-data` — mounted into both `webapp` (read) and `worker` (read/write) at `/public/pmtiles`
-  - `country-images-data` — mounted into both `webapp` (read) and `worker` (read/write) at `/public/country-images`
+  - `country-images-data` — mounted at `/public/country-images` on the `worker` (read/write) and at `/app/public/country-images` on the `webapp` (read). The webapp path has to be under `/app/public/` so Next.js' static handler serves the files.
 - **Networking:** Coolify external network for postgres access; all services communicate over the default Docker Compose network
 - **Webhook URL** (configured in NocoDB): `http://worker:3000/webhooks/nocodb`
 - **ETL pipelines** (extract/transform/load): Run manually by developers via `just` commands — not deployed as services
