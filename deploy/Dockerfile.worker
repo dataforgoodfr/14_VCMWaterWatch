@@ -22,6 +22,9 @@ COPY pipelines/ ./pipelines/
 ENV PM_TILES_DIR=/public/pmtiles
 RUN mkdir -p /public/pmtiles
 
+ENV COUNTRY_IMAGES_DIR=/public/country-images
+RUN mkdir -p /public/country-images
+
 EXPOSE 3000
 
 CMD ["uv", "run", "uvicorn", "pipelines.worker.app:app", "--host", "0.0.0.0", "--port", "3000"]

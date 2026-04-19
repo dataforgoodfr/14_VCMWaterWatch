@@ -40,11 +40,12 @@ function StatCard({ icon: Icon, title, value }: StatCardProps) {
 interface CountryProfileDetailProps {
 	country: CountryDetailRecord | null
 	data: CountryDataRecord[]
+	mirroredImageUrl?: string | null
 	loading: boolean
 	error: string | null
 }
 
-export function CountryProfileDetail({ country, data, loading, error }: CountryProfileDetailProps) {
+export function CountryProfileDetail({ country, data, mirroredImageUrl, loading, error }: CountryProfileDetailProps) {
 	if (loading) {
 		return (
 			<div className='text-navy-800 mt-10 font-[lexend] text-sm' role='status'>
@@ -70,10 +71,12 @@ export function CountryProfileDetail({ country, data, loading, error }: CountryP
 
 	const f = country.fields
 
-	const attachment = f.Image?.[0]
-
-	const imageSrc =
-		attachment?.signedUrl ?? attachment?.thumbnails?.card_cover?.signedUrl ?? 'https://placehold.co/310x240.png'
+	// Country images are served from the mirrored shared volume (see
+	// docs/architecture.md § Country Images). If the mirror is empty (e.g.
+	// export pipeline hasn't run yet), show a placeholder — we intentionally
+	// do not fall back to NocoDB's short-lived signed URLs, since that
+	// defeats browser / image-optimizer caching.
+	const imageSrc = mirroredImageUrl ?? 'https://placehold.co/310x240.png'
 
 	// Partition CountryData by type (already ordered by Order from server)
 	const stats = data.filter(r => r.fields.Type === 'stat')

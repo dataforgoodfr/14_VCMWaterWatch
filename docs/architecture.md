@@ -179,6 +179,22 @@ Used as a **local staging database** for the ETL pipelines. Not accessed at runt
 
 **Consumption:** The MapLibre GL client registers a `pmtiles://` protocol adapter that fetches tile data via Range requests, rendering vector layers for countries and distribution zones directly in the browser.
 
+### 6. Country Images
+
+Country profile images are stored as attachments in NocoDB, which hands them out as **short-lived S3 signed URLs** (signature + timestamp change on every request). Using those URLs directly in the webapp defeats browser / Next.js image-optimizer / CDN caching — the country illustration was flagged as the LCP element on `/country-profile`.
+
+To fix this, country images are mirrored to a shared Docker volume and served from a stable same-origin URL, following the same pattern as PMTiles.
+
+**Generation:** `pipelines/export/export_country_images.py` reads `Country` records, downloads the first image attachment server-side (the signed URL is never exposed), and writes `{code}.{hash}.{ext}` plus a `manifest.json` to the destination directory. Files are written to a staging directory first and the manifest is swapped in atomically — readers always see a consistent set. Stale files are GC'd after the swap. On transient download failure for a specific country, the previous manifest entry is preserved.
+
+**Trigger:** The pipeline worker runs the flow on NocoDB webhooks for the `Country` table, debounced 60s, sharing `_flow_run_lock` with the PMTiles export (so the two flows serialize).
+
+**Serving:** Next.js serves the images as plain static assets under `/country-images/...`. The `/api/countries/[code]` BFF route resolves the mirrored URL server-side via `webapp/lib/countryImage.ts`, which reads `manifest.json` with mtime-based cache invalidation (no restart needed when the volume updates). The `CountryProfileDetail` client component receives the resolved URL as a prop and uses `priority` on the `<Image>`.
+
+**Volume layout (prod):** `country-images-data` named volume mounted at `/public/country-images` on both `worker` (read/write) and `webapp` (read).
+
+**Local dev:** A seed `manifest.json` + images are committed at `webapp/public/country-images/` so `pnpm dev` works without running the pipeline. The directory is excluded from the Docker image via `.dockerignore`; in production the volume mount supplies the live set. Refresh locally with `just pipelines export-country-images`.
+
 ## Data Flow Summary
 
 ```
@@ -198,10 +214,11 @@ External Sources (Eurostat, Ofwat, Vewin, ...)
         │                   [Export]
         │                       │
         │                       ▼
-        │               pmtiles-data volume
-        │                       │
-        │                       ▼
-        │               Next.js /pmtiles/* ──▶ MapLibre GL (browser)
+        │               pmtiles-data volume            country-images-data volume
+        │                       │                               │
+        │                       ▼                               ▼
+        │               Next.js /pmtiles/* ──▶ MapLibre          Next.js /country-images/*
+        │                                      GL (browser)     ──▶ <Image> (browser)
         │
         └──▶ Next.js API routes ──▶ Pages (SSR + client components)
 ```
@@ -217,7 +234,9 @@ All services are defined in `docker-compose.deploy.yml` and deployed via [Coolif
 | **worker** | `deploy/Dockerfile.worker` (FastAPI) | Receives NocoDB webhooks, runs export pipelines |
 | **postgres** | Provided by Coolify as external resource | Database for NocoDB |
 
-- **Shared volume:** `pmtiles-data` — mounted into both `webapp` (read) and `worker` (read/write) at `/public/pmtiles`
+- **Shared volumes:**
+  - `pmtiles-data` — mounted into both `webapp` (read) and `worker` (read/write) at `/public/pmtiles`
+  - `country-images-data` — mounted into both `webapp` (read) and `worker` (read/write) at `/public/country-images`
 - **Networking:** Coolify external network for postgres access; all services communicate over the default Docker Compose network
 - **Webhook URL** (configured in NocoDB): `http://worker:3000/webhooks/nocodb`
 - **ETL pipelines** (extract/transform/load): Run manually by developers via `just` commands — not deployed as services

@@ -57,12 +57,14 @@ services:
       - NOCODB_URL=${NOCODB_URL:-http://nocodb:8080}
       - NODE_ENV=production
       - PM_TILES_DIR=${PM_TILES_DIR:-/public/pmtiles}
+      - COUNTRY_IMAGES_DIR=${COUNTRY_IMAGES_DIR:-/public/country-images}
       # Limit mem - otherwise it won't build on the Coolify VM
     depends_on:
       - nocodb
     restart: unless-stopped
     volumes:
       - pmtiles-data:/public/pmtiles
+      - country-images-data:/public/country-images
     labels:
       - 'traefik.http.middlewares.mybasicauth.basicauth.users=vcm:$2y$05$U9xfGncXlz8eRkC6itgtOul/aDhTeHz.qBBXk6hss4xyBbT.cpgn6'
 
@@ -76,12 +78,15 @@ services:
       - NOCODB_TOKEN=${NOCODB_TOKEN}
       - NOCODB_URL=${NOCODB_URL:-http://nocodb:8080}
       - PM_TILES_DIR=${PM_TILES_DIR:-/public/pmtiles}
+      - COUNTRY_IMAGES_DIR=${COUNTRY_IMAGES_DIR:-/public/country-images}
     depends_on:
       - nocodb
     restart: unless-stopped
     volumes:
       - pmtiles-data:/public/pmtiles
+      - country-images-data:/public/country-images
 
 volumes:
   nocodb-data:
   pmtiles-data:
+  country-images-data:
