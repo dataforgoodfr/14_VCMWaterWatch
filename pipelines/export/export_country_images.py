@@ -100,9 +100,11 @@ def download_country_images_task(output_dir: Path) -> dict[str, str]:
         image_bytes = response.content
         content_hash = hashlib.sha256(image_bytes).hexdigest()[:8]
 
-        # Determine extension from Content-Type header, then attachment mimetype
+        # Determine extension: prefer the NocoDB mimetype field (set at
+        # upload time and stable), fall back to the HTTP Content-Type
+        # header (can be 'application/octet-stream' for S3 presigned URLs).
         content_type = response.headers.get("content-type", "").split(";")[0].strip()
-        mime = content_type or attachment.get("mimetype")
+        mime = attachment.get("mimetype") or content_type
         ext = _ext_from_mimetype(mime)
 
         filename = f"{code}.{content_hash}{ext}"
@@ -139,6 +141,24 @@ def export_country_images_flow(destination: Path) -> None:
         if not manifest:
             logger.warning("No images downloaded; skipping destination update")
             return
+
+        # Merge with the existing manifest to preserve entries for countries
+        # whose downloads failed transiently this run (network glitch, temporary
+        # 5xx).  Only entries whose image file is still on disk are kept, so
+        # codes genuinely removed from NocoDB are eventually cleaned up.
+        existing_manifest_path = destination / "manifest.json"
+        if existing_manifest_path.exists():
+            try:
+                existing = json.loads(existing_manifest_path.read_text(encoding="utf-8"))
+                for code, filename in existing.items():
+                    if code not in manifest and (destination / filename).exists():
+                        manifest[code] = filename
+                        logger.debug(
+                            f"Country {code}: keeping previous image {filename} "
+                            "(download failed this run)"
+                        )
+            except Exception as exc:
+                logger.warning(f"Could not read existing manifest for merging: {exc}")
 
         # Write manifest into staging dir (moved last, acts as commit point)
         manifest_tmp = tmp_dir / "manifest.json"
