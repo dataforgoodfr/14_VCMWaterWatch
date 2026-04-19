@@ -71,15 +71,12 @@ export function CountryProfileDetail({ country, data, mirroredImageUrl, loading,
 
 	const f = country.fields
 
-	const attachment = f.Image?.[0]
-
-	// Prefer the mirrored stable URL resolved server-side (passed as prop from
-	// the API route which has fs access); fall back to the NocoDB signed URL.
-	const imageSrc =
-		mirroredImageUrl ??
-		attachment?.signedUrl ??
-		attachment?.thumbnails?.card_cover?.signedUrl ??
-		'https://placehold.co/310x240.png'
+	// Country images are served from the mirrored shared volume (see
+	// docs/architecture.md § Country Images). If the mirror is empty (e.g.
+	// export pipeline hasn't run yet), show a placeholder — we intentionally
+	// do not fall back to NocoDB's short-lived signed URLs, since that
+	// defeats browser / image-optimizer caching.
+	const imageSrc = mirroredImageUrl ?? 'https://placehold.co/310x240.png'
 
 	// Partition CountryData by type (already ordered by Order from server)
 	const stats = data.filter(r => r.fields.Type === 'stat')
