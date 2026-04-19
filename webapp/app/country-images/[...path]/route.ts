@@ -85,7 +85,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 		return new Response('Not found', { status: 404 })
 	}
 
-	return new Response(buffer, {
+	return new Response(new Uint8Array(buffer), {
 		status: 200,
 		headers: {
 			'Content-Type': getContentType(filePath),

@@ -18,3 +18,9 @@ repos:
         files: ^webapp/
         entry: sh -c "cd webapp && npx lint-staged --no-stash"
         language: system
+      - id: tsc-webapp
+        name: TypeScript type-check (webapp)
+        files: ^webapp/.*\.(ts|tsx)$
+        entry: sh -c "cd webapp && npx tsc --noEmit"
+        language: system
+        pass_filenames: false
