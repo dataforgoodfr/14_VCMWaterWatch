@@ -2,14 +2,16 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-Run `npm install`
+This project uses [pnpm](https://pnpm.io/) as its package manager. Enable it via `corepack enable` if needed.
+
+Run `pnpm install`
 
 Set the environment variables in your `.env.local` file like defined in `.env.example`. You can also symlink the repo root `.env` to `webapp/.env.local` if you use the same config for both the Python pipeline and the webapp.
 
 First, run the development server:
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
