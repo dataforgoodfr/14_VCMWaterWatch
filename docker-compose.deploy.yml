@@ -65,6 +65,12 @@ services:
     volumes:
       - pmtiles-data:/public/pmtiles
       - country-images-data:/public/country-images
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     labels:
       - 'traefik.http.middlewares.mybasicauth.basicauth.users=vcm:$2y$05$U9xfGncXlz8eRkC6itgtOul/aDhTeHz.qBBXk6hss4xyBbT.cpgn6'
 
