@@ -7,6 +7,7 @@ import { FlaskConical, HelpCircle, MapPin, Percent, TrainTrack, TriangleAlert } 
 import { InfoCard } from '@/components/InfoCard'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Card, CardContent } from '@/components/ui/card'
+import { getCountryImageSrc } from '@/lib/countryImage'
 import type { CountryDataRecord, CountryDetailRecord } from '@/types/apiTypes'
 
 /** Icon lookup by Order (1-indexed) */
@@ -72,8 +73,13 @@ export function CountryProfileDetail({ country, data, loading, error }: CountryP
 
 	const attachment = f.Image?.[0]
 
+	// Prefer the mirrored stable URL from the shared volume; fall back to
+	// the NocoDB signed URL for local dev when the manifest has no entry yet.
 	const imageSrc =
-		attachment?.signedUrl ?? attachment?.thumbnails?.card_cover?.signedUrl ?? 'https://placehold.co/310x240.png'
+		getCountryImageSrc(f.Code) ??
+		attachment?.signedUrl ??
+		attachment?.thumbnails?.card_cover?.signedUrl ??
+		'https://placehold.co/310x240.png'
 
 	// Partition CountryData by type (already ordered by Order from server)
 	const stats = data.filter(r => r.fields.Type === 'stat')
