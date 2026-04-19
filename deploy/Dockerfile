@@ -1,15 +1,16 @@
 FROM node:24-alpine AS base
+RUN corepack enable
 
 FROM base AS deps
 WORKDIR /app
-COPY webapp/package.json webapp/package-lock.json ./
-RUN npm ci
+COPY webapp/package.json webapp/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY webapp/ .
-RUN npm run build
+RUN pnpm run build
 
 FROM base AS runner
 WORKDIR /app
