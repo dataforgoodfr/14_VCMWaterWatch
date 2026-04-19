@@ -62,10 +62,6 @@
     "vitest": "^4.1.4"
   },
   "pnpm": {
-    "overrides": {
-      "@types/react": "19.2.14",
-      "@types/react-dom": "19.2.3"
-    },
     "onlyBuiltDependencies": [
       "sharp",
       "unrs-resolver"
