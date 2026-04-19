@@ -97,6 +97,7 @@ export function CountryProfileDetail({ country, data, loading, error }: CountryP
 								alt={f.Name ? `Illustration — ${f.Name}` : 'Country illustration'}
 								width={640}
 								height={300}
+								priority
 								className='h-[300px] w-full rounded-md object-cover'
 							/>
 						</div>
