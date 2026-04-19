@@ -29,3 +29,6 @@ jobs:
       - name: Run tests
         working-directory: webapp
         run: pnpm test
+      - name: Type-check
+        working-directory: webapp
+        run: pnpm exec tsc --noEmit

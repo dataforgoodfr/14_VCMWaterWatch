@@ -19,3 +19,7 @@ jobs:
         path: ~/.cache/pre-commit
         key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
     - uses: pre-commit/action@v3.0.0
+      env:
+        # tsc-webapp needs webapp/node_modules which isn't installed in this job.
+        # Type-checking runs in the vitest workflow instead, where deps exist.
+        SKIP: tsc-webapp
