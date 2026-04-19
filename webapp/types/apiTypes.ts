@@ -225,7 +225,7 @@ export interface CountryDetailFields {
 }
 export type CountryDetailRecord = Record<CountryDetailFields>
 
-export type CountryDataType = 'stat' | 'legislation' | 'missing_data'
+export type CountryDataType = 'stat' | 'legislation' | 'missing_data' | 'more_details'
 
 export interface CountryDataFields {
 	Type: CountryDataType
