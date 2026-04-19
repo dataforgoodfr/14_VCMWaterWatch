@@ -85,5 +85,10 @@ tasks-calculate-missing-distribution-zone:
 export-pmtiles:
   uv run python -m pipelines.export.export_pmtiles
 
+# Mirror country profile images from NocoDB to the local country-images directory.
+# Set COUNTRY_IMAGES_DIR to override the destination (default: webapp/public/country-images).
+export-country-images:
+  COUNTRY_IMAGES_DIR=${COUNTRY_IMAGES_DIR:-webapp/public/country-images} uv run python -m pipelines.export.export_country_images
+
 test:
   uv run python -m pytest
