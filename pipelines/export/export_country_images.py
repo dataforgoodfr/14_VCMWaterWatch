@@ -131,9 +131,12 @@ def export_country_images_flow(destination: Path) -> None:
     logger = get_run_logger()
     destination.mkdir(parents=True, exist_ok=True)
 
-    # Stage new images in a sibling temp directory to avoid partial state
+    # Stage new images in a subdirectory of destination (same filesystem) so
+    # os.replace is atomic. Using destination.parent can cross a mount point
+    # in production (e.g. /public vs /public/country-images bind mount) and
+    # raise "Invalid cross-device link" (EXDEV).
     with tempfile.TemporaryDirectory(
-        dir=destination.parent, prefix=".country-images-staging-"
+        dir=destination, prefix=".country-images-staging-"
     ) as tmp_str:
         tmp_dir = Path(tmp_str)
         manifest = download_country_images_task(output_dir=tmp_dir)
@@ -179,9 +182,13 @@ def export_country_images_flow(destination: Path) -> None:
         os.replace(manifest_tmp, destination / "manifest.json")
         logger.info(f"manifest.json updated with {len(manifest)} entries")
 
-        # Remove stale files (old hashes / codes no longer in NocoDB)
+        # Remove stale files (old hashes / codes no longer in NocoDB).
+        # Skip the manifest and any hidden staging directories that live in
+        # the destination (including our own, still open as tmp_dir).
         for existing in list(destination.iterdir()):
             if existing.name == "manifest.json":
+                continue
+            if existing.name.startswith("."):
                 continue
             if existing.name not in new_filenames:
                 existing.unlink()
