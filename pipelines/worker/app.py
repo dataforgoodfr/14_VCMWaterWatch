@@ -49,7 +49,9 @@ _debounce_timer: threading.Timer | None = None
 _search_debounce_lock = threading.Lock()
 _search_debounce_timer: threading.Timer | None = None
 
-# Lock and timer for country images debounce
+# Country images flow runs without debounce (webhook fires rarely and users
+# want to see the new image immediately). A lock still exists for test-suite
+# compatibility but is no longer used to schedule timers.
 _country_images_debounce_lock = threading.Lock()
 _country_images_debounce_timer: threading.Timer | None = None
 
@@ -99,24 +101,27 @@ def _schedule_search_index():
 
 
 def _run_country_images_flow():
-    """Run the country images mirror flow. Called by the debounce timer."""
+    """Run the country images mirror flow in a background thread."""
+    dest = Path(os.environ.get("COUNTRY_IMAGES_DIR", "data/export/country-images"))
+    logger.info("Country images flow: acquiring flow-run lock (destination=%s)", dest)
     with _flow_run_lock:
+        logger.info("Country images flow: starting export")
         try:
-            dest = Path(os.environ.get("COUNTRY_IMAGES_DIR", "data/export/country-images"))
             export_country_images_flow(destination=dest)
+            logger.info("Country images flow: completed successfully")
         except Exception:
             logger.exception("Country images flow failed")
 
 
 def _schedule_country_images():
-    """Schedule (or reschedule) the country images flow after DEBOUNCE_SECONDS."""
-    global _country_images_debounce_timer
-    with _country_images_debounce_lock:
-        if _country_images_debounce_timer is not None:
-            _country_images_debounce_timer.cancel()
-        _country_images_debounce_timer = threading.Timer(DEBOUNCE_SECONDS, _run_country_images_flow)
-        _country_images_debounce_timer.daemon = True
-        _country_images_debounce_timer.start()
+    """Trigger the country images flow immediately in a background thread.
+
+    No debounce: webhook frequency for Country edits is low and users expect
+    the mirror to update promptly after an image change.
+    """
+    logger.info("Country images: dispatching flow run (no debounce)")
+    t = threading.Thread(target=_run_country_images_flow, name="country-images-flow", daemon=True)
+    t.start()
 
 
 @app.get("/health")
