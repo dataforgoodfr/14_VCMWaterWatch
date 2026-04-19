@@ -83,6 +83,8 @@ export function CountryProfileDetail({ country, data, mirroredImageUrl, loading,
 
 	const legislationItems = data.filter(r => r.fields.Type === 'legislation')
 
+	const moreDetailsItems = data.filter(r => r.fields.Type === 'more_details')
+
 	const missingDataItems = data.filter(r => r.fields.Type === 'missing_data')
 
 	return (
@@ -126,20 +128,36 @@ export function CountryProfileDetail({ country, data, mirroredImageUrl, loading,
 						</div>
 					</dl>
 
-					{legislationItems.length > 0 && (
-						<Accordion type='single' collapsible className='w-full'>
-							<AccordionItem value='more-details' className='border-navy-200 border-b-0'>
-								<AccordionTrigger className='text-navy-800 py-3 font-[lexend] text-[19px] font-medium hover:no-underline'>
-									More details
-								</AccordionTrigger>
-								<AccordionContent className='pb-2'>
-									<ul className='font-regular list-disc pl-5 text-[17px] text-gray-600'>
-										{legislationItems.map(row => (
-											<li key={row.id}>{row.fields.Content}</li>
-										))}
-									</ul>
-								</AccordionContent>
-							</AccordionItem>
+					{(legislationItems.length > 0 || moreDetailsItems.length > 0) && (
+						<Accordion type='multiple' className='w-full'>
+							{legislationItems.length > 0 && (
+								<AccordionItem value='legislation' className='border-navy-200 border-b-0'>
+									<AccordionTrigger className='text-navy-800 py-3 font-[lexend] text-[19px] font-medium hover:no-underline'>
+										Legislation
+									</AccordionTrigger>
+									<AccordionContent className='pb-2'>
+										<ul className='font-regular list-disc pl-5 text-[17px] text-gray-600'>
+											{legislationItems.map(row => (
+												<li key={row.id}>{row.fields.Content}</li>
+											))}
+										</ul>
+									</AccordionContent>
+								</AccordionItem>
+							)}
+							{moreDetailsItems.length > 0 && (
+								<AccordionItem value='more-details' className='border-navy-200 border-b-0'>
+									<AccordionTrigger className='text-navy-800 py-3 font-[lexend] text-[19px] font-medium hover:no-underline'>
+										More details
+									</AccordionTrigger>
+									<AccordionContent className='pb-2'>
+										<ul className='font-regular list-disc pl-5 text-[17px] text-gray-600'>
+											{moreDetailsItems.map(row => (
+												<li key={row.id}>{row.fields.Content}</li>
+											))}
+										</ul>
+									</AccordionContent>
+								</AccordionItem>
+							)}
 						</Accordion>
 					)}
 				</div>
