@@ -130,7 +130,10 @@ def export_entity_images_task(
 
         key = _slugify(str(raw_key)) if slugify else str(raw_key)
 
-        # Collision detection for slugified keys
+        # Collision detection for slugified keys.
+        # The first occurrence keeps the bare slug; subsequent occurrences with
+        # the same slug get a numeric suffix starting at -2 (i.e. `key`,
+        # `key-2`, `key-3`, …).  There is intentionally no `key-1` variant.
         if key in seen_slugs:
             seen_slugs[key] += 1
             suffixed = f"{key}-{seen_slugs[key]}"
