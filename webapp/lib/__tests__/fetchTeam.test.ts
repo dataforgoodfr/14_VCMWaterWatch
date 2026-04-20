@@ -20,6 +20,11 @@ vi.mock('../instance', () => ({
 	instance: { get: vi.fn() }
 }))
 
+// Mock the meta tables module so fetchTeam resolves a Team table id
+vi.mock('../fetchMetaTables', () => ({
+	getTableIdByName: vi.fn(() => Promise.resolve('test-team-table-id'))
+}))
+
 import { instance } from '../instance'
 import { fetchTeam } from '../fetchTeam'
 

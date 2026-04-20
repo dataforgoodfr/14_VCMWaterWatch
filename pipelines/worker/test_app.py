@@ -89,6 +89,20 @@ class TestWebhookEndpoint:
         assert "export_country_images" in pipelines
         mock_images.assert_called_once()
 
+    def test_webhook_triggers_team_images_on_team(self, client):
+        """A POST with table=Team triggers the team images flow."""
+        with patch("pipelines.worker.app.export_team_images") as mock_images:
+            mock_images.return_value = None
+            response = client.post(
+                "/webhooks/nocodb",
+                json={"type": "records.after.update", "data": {"table_name": "Team"}},
+            )
+            time.sleep(0.05)
+        assert response.status_code == 202
+        pipelines = response.json()["pipelines"]
+        assert "export_team_images" in pipelines
+        mock_images.assert_called_once()
+
     def test_webhook_triggers_on_distribution_zone(self, client):
         with patch("pipelines.worker.app.export_pmtiles_flow") as mock_flow, \
                 patch("pipelines.worker.app.build_search_index"):
