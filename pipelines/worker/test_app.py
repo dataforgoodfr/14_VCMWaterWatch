@@ -63,7 +63,7 @@ class TestWebhookEndpoint:
     def test_webhook_triggers_export_pmtiles(self, client):
         """A POST to /webhooks/nocodb with table=Country triggers the export flow."""
         with patch("pipelines.worker.app.export_pmtiles_flow") as mock_flow, \
-                patch("pipelines.worker.app.export_country_images_flow"):
+                patch("pipelines.worker.app.export_country_images"):
             mock_flow.return_value = None
             response = client.post(
                 "/webhooks/nocodb",
@@ -77,7 +77,7 @@ class TestWebhookEndpoint:
     def test_webhook_triggers_country_images_on_country(self, client):
         """A POST with table=Country also triggers the country images flow."""
         with patch("pipelines.worker.app.export_pmtiles_flow"), \
-                patch("pipelines.worker.app.export_country_images_flow") as mock_images:
+                patch("pipelines.worker.app.export_country_images") as mock_images:
             mock_images.return_value = None
             response = client.post(
                 "/webhooks/nocodb",
@@ -129,7 +129,7 @@ class TestWebhookDebounce:
         app_module.DEBOUNCE_SECONDS = 0.3
 
         with patch("pipelines.worker.app.export_pmtiles_flow") as mock_flow, \
-                patch("pipelines.worker.app.export_country_images_flow"):
+                patch("pipelines.worker.app.export_country_images"):
             mock_flow.return_value = None
             for _ in range(5):
                 client.post(
@@ -146,7 +146,7 @@ class TestWebhookDebounce:
         app_module.DEBOUNCE_SECONDS = 0.2
 
         with patch("pipelines.worker.app.export_pmtiles_flow") as mock_flow, \
-                patch("pipelines.worker.app.export_country_images_flow"):
+                patch("pipelines.worker.app.export_country_images"):
             mock_flow.return_value = None
             client.post(
                 "/webhooks/nocodb",
