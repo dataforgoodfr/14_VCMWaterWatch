@@ -189,11 +189,11 @@ To fix this, country images are mirrored to a shared Docker volume and served fr
 
 **Trigger:** The pipeline worker runs the flow on NocoDB webhooks for the `Country` table, debounced 60s, sharing `_flow_run_lock` with the PMTiles export (so the two flows serialize).
 
-**Serving:** A dedicated Next.js route handler at `webapp/app/country-images/[...path]/route.ts` serves requests to `/country-images/...` by reading files directly from `COUNTRY_IMAGES_DIR` on the host filesystem. This mirrors the PMTiles pattern (`webapp/app/pmtiles/[...path]/route.ts`) so both assets share the same single code path in dev and prod, driven by env vars rather than Next.js' static file handler (which cannot serve files from a volume mounted outside `public/`). The handler sets `Cache-Control: public, max-age=31536000, immutable` (safe because filenames are content-hashed). The `/api/countries/[code]` BFF route resolves the mirrored URL server-side via `webapp/lib/countryImage.ts`, which reads `manifest.json` with mtime-based cache invalidation (no restart needed when the volume updates). The `CountryProfileDetail` client component receives the resolved URL as a prop and uses `priority` on the `<Image>`.
+**Serving:** A dedicated Next.js route handler at `webapp/app/images/[entity]/[...path]/route.ts` serves requests to `/images/...` by reading files directly from `EXPORT_IMAGES_DIR` on the host filesystem. This mirrors the PMTiles pattern (`webapp/app/pmtiles/[...path]/route.ts`) so both assets share the same single code path in dev and prod, driven by env vars rather than Next.js' static file handler (which cannot serve files from a volume mounted outside `public/`). The handler sets `Cache-Control: public, max-age=31536000, immutable` (safe because filenames are content-hashed). The `/api/countries/[code]` BFF route resolves the mirrored URL server-side via `webapp/lib/entityImage.ts`, which reads `manifest.json` with mtime-based cache invalidation (no restart needed when the volume updates). The `CountryProfileDetail` client component receives the resolved URL as a prop and uses `priority` on the `<Image>`.
 
-**Volume layout (prod):** `country-images-data` named volume mounted at `/public/country-images` on both `worker` (read/write) and `webapp` (read). `COUNTRY_IMAGES_DIR=/public/country-images` is set on the webapp service in `docker-compose.deploy.yml`.
+**Volume layout (prod):** `images-data` named volume mounted at `/public/images` on both `worker` (read/write) and `webapp` (read). `EXPORT_IMAGES_DIR=/public/images` is set on the webapp service in `docker-compose.deploy.yml`.
 
-**Local dev:** Set `COUNTRY_IMAGES_DIR=../data/export/country-images` in `webapp/.env.local` (already done). A seed `manifest.json` is committed at `data/export/country-images/`. Refresh the seed with `just pipelines export-country-images`.
+**Local dev:** Set `EXPORT_IMAGES_DIR=../data/export/images` in `webapp/.env.local` (already done). A seed `manifest.json` is committed at `data/export/images/`. Refresh the seed with `just pipelines export-country-images / export-team-images`.
 
 ## Data Flow Summary
 
@@ -214,10 +214,10 @@ External Sources (Eurostat, Ofwat, Vewin, ...)
         │                   [Export]
         │                       │
         │                       ▼
-        │               pmtiles-data volume            country-images-data volume
+        │               pmtiles-data volume            images-data volume
         │                       │                               │
         │                       ▼                               ▼
-        │               Next.js /pmtiles/* ──▶ MapLibre          Next.js /country-images/*
+        │               Next.js /pmtiles/* ──▶ MapLibre          Next.js /images/*
         │                                      GL (browser)     ──▶ <Image> (browser)
         │
         └──▶ Next.js API routes ──▶ Pages (SSR + client components)
@@ -236,7 +236,7 @@ All services are defined in `docker-compose.deploy.yml` and deployed via [Coolif
 
 - **Shared volumes:**
   - `pmtiles-data` — mounted into both `webapp` (read) and `worker` (read/write) at `/public/pmtiles`
-  - `country-images-data` — mounted into both `webapp` (read) and `worker` (read/write) at `/public/country-images`
+  - `images-data` — mounted into both `webapp` (read) and `worker` (read/write) at `/public/images`
 - **Networking:** Coolify external network for postgres access; all services communicate over the default Docker Compose network
 - **Webhook URL** (configured in NocoDB): `http://worker:3000/webhooks/nocodb`
 - **ETL pipelines** (extract/transform/load): Run manually by developers via `just` commands — not deployed as services

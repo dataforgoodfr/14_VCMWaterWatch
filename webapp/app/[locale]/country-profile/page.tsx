@@ -1,7 +1,10 @@
 import { fetchCountries } from '@/lib/fetchCountries'
+import { SEMI_STATIC_REVALIDATE_SECONDS } from '@/lib/revalidate'
 import type { CountryListRecord } from '@/types/apiTypes'
 
 import { CountryCarousel } from './components/CountryCarousel'
+
+export const revalidate = SEMI_STATIC_REVALIDATE_SECONDS
 
 interface CountryProfilePageProps {
 	params: Promise<{ locale: string }>

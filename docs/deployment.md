@@ -26,3 +26,26 @@
  - configure a branch to test under the setting, but you'll have to manually trigger the workflow in github
  to push an image
 
+
+## Migrating from `country-images-data` to `images-data` volume
+
+The `country-images-data` Docker volume has been renamed to `images-data`
+(mounted at `/public/images`) and the env var `COUNTRY_IMAGES_DIR` has been
+replaced with `EXPORT_IMAGES_DIR`.
+
+**Steps when upgrading an existing deployment:**
+
+1. In Coolify, update the environment variable:
+   - Remove `COUNTRY_IMAGES_DIR`
+   - Add `EXPORT_IMAGES_DIR=/public/images`
+2. After deploying the new image, re-run the image export pipelines so the
+   new volume is populated:
+   ```
+   just pipelines export-country-images
+   just pipelines export-team-images
+   ```
+3. The old `country-images-data` volume can be removed once you confirm the
+   new `images-data` volume is working correctly:
+   ```
+   docker volume rm <project>_country-images-data
+   ```
