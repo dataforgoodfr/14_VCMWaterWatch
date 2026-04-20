@@ -16,7 +16,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from pipelines.export.export_country_images import export_country_images_flow
+from pipelines.export.export_entity_images import export_entity_images_flow
 from pipelines.export.export_pmtiles import export_pmtiles_flow
 from pipelines.tasks.build_search_index import build_search_index
 
@@ -33,6 +33,9 @@ PMTILES_TRIGGER_TABLES = {"Country", "DistributionZone"}
 
 # Tables whose changes should trigger a country images mirror
 COUNTRY_IMAGES_TRIGGER_TABLES = {"Country"}
+
+# Tables whose changes should trigger a team images mirror
+TEAM_IMAGES_TRIGGER_TABLES = {"Team"}
 
 # Tables whose changes should trigger a search index rebuild
 SEARCH_INDEX_TRIGGER_TABLES = {"DistributionZone", "Municipality"}
@@ -54,6 +57,10 @@ _search_debounce_timer: threading.Timer | None = None
 # compatibility but is no longer used to schedule timers.
 _country_images_debounce_lock = threading.Lock()
 _country_images_debounce_timer: threading.Timer | None = None
+
+# Team images flow: same no-debounce pattern as country images.
+_team_images_debounce_lock = threading.Lock()
+_team_images_debounce_timer: threading.Timer | None = None
 
 # Serialize all Prefect flow runs so only one ephemeral server exists at a time
 _flow_run_lock = threading.Lock()
@@ -102,12 +109,17 @@ def _schedule_search_index():
 
 def _run_country_images_flow():
     """Run the country images mirror flow in a background thread."""
-    dest = Path(os.environ.get("COUNTRY_IMAGES_DIR", "data/export/country-images"))
-    logger.info("Country images flow: acquiring flow-run lock (destination=%s)", dest)
+    logger.info("Country images flow: acquiring flow-run lock")
     with _flow_run_lock:
         logger.info("Country images flow: starting export")
         try:
-            export_country_images_flow(destination=dest)
+            export_entity_images_flow(
+                entity_name="country",
+                table_name="Country",
+                key_field="Code",
+                fields=["Id", "Code", "Image"],
+                slugify=False,
+            )
             logger.info("Country images flow: completed successfully")
         except Exception:
             logger.exception("Country images flow failed")
@@ -121,6 +133,34 @@ def _schedule_country_images():
     """
     logger.info("Country images: dispatching flow run (no debounce)")
     t = threading.Thread(target=_run_country_images_flow, name="country-images-flow", daemon=True)
+    t.start()
+
+
+def _run_team_images_flow():
+    """Run the team images mirror flow in a background thread."""
+    logger.info("Team images flow: acquiring flow-run lock")
+    with _flow_run_lock:
+        logger.info("Team images flow: starting export")
+        try:
+            export_entity_images_flow(
+                entity_name="team",
+                table_name="Team",
+                key_field="Name",
+                fields=["Id", "Name", "Image"],
+                slugify=True,
+            )
+            logger.info("Team images flow: completed successfully")
+        except Exception:
+            logger.exception("Team images flow failed")
+
+
+def _schedule_team_images():
+    """Trigger the team images flow immediately in a background thread.
+
+    Same no-debounce rationale as country images.
+    """
+    logger.info("Team images: dispatching flow run (no debounce)")
+    t = threading.Thread(target=_run_team_images_flow, name="team-images-flow", daemon=True)
     t.start()
 
 
@@ -163,6 +203,13 @@ def nocodb_webhook(payload: dict):
         )
         _schedule_country_images()
         scheduled.append("export_country_images")
+
+    if table_name in TEAM_IMAGES_TRIGGER_TABLES:
+        logger.info(
+            f"Webhook received for table {table_name}, scheduling team images mirror"
+        )
+        _schedule_team_images()
+        scheduled.append("export_team_images")
 
     if scheduled:
         return JSONResponse(
