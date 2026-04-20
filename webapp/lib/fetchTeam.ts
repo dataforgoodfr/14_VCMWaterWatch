@@ -77,6 +77,8 @@ export async function fetchTeam(): Promise<TeamMember[]> {
 				params: {
 					fields: TEAM_FIELDS,
 					sort: 'nc_order',
+					// TODO: paginate if the team exceeds 200 members — mirror the
+					// load_all_records() pattern from pipelines/common/services.py
 					pageSize: 200
 				},
 				timeout: 10000
