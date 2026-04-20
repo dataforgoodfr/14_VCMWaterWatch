@@ -13,8 +13,22 @@ import { FetchResponseRecords, instance } from '@/lib/instance'
 
 const TEAM_FIELDS = 'Id,Name,Expertise,City,Image,SubTeam,nc_order'
 
-/** Slugify a name the same way the Python export pipeline does:
- *  lowercase, ASCII-fold, non-alphanum → `-`, collapse, trim. */
+/**
+ * Slugify a name the same way the Python export pipeline does:
+ * lowercase, ASCII-fold, non-alphanum → `-`, collapse, trim.
+ *
+ * IMPORTANT: this function must produce identical output to `_slugify()` in
+ * `pipelines/export/export_entity_images.py` because the result is used as a
+ * key to look up filenames in the manifest written by that pipeline.  If the
+ * two implementations diverge, image look-ups will silently return `null`.
+ *
+ * Equivalence note: TypeScript strips U+0300–U+036F (Combining Diacritical
+ * Marks block) after NFD decomposition; Python uses `encode("ascii",
+ * "ignore")` which drops all non-ASCII bytes after NFD.  These are identical
+ * for Latin/Greek/Cyrillic names but could theoretically differ for characters
+ * with combining marks outside U+0300–036F (e.g. some Vietnamese or Semitic
+ * names).  Add a cross-language fixture test if such names are introduced.
+ */
 function slugify(name: string): string {
 	return name
 		.normalize('NFD')

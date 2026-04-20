@@ -59,6 +59,20 @@ def _slugify(value: str) -> str:
     3. Replace non-alphanumeric characters with ``-``.
     4. Collapse repeated ``-``.
     5. Strip leading/trailing ``-``.
+
+    .. important::
+        This function **must** produce identical output to ``slugify()`` in
+        ``webapp/lib/fetchTeam.ts`` because the result is used as a manifest
+        key that the webapp looks up at runtime.  If the two implementations
+        diverge, image look-ups will silently return ``null``.
+
+        Equivalence note: Python uses ``encode("ascii", "ignore")`` after NFD
+        decomposition, which drops all non-ASCII bytes.  TypeScript strips only
+        U+0300\u2013U+036F (Combining Diacritical Marks block).  These are
+        identical for Latin/Greek/Cyrillic names but could theoretically differ
+        for characters with combining marks outside that range (e.g. some
+        Vietnamese or Semitic names).  Add a cross-language fixture test if
+        such names are introduced.
     """
     # Decompose accented characters and drop the combining marks
     normalised = unicodedata.normalize("NFD", value)
