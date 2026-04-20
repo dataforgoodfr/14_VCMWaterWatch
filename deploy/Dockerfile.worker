@@ -22,8 +22,8 @@ COPY pipelines/ ./pipelines/
 ENV PM_TILES_DIR=/public/pmtiles
 RUN mkdir -p /public/pmtiles
 
-ENV COUNTRY_IMAGES_DIR=/public/country-images
-RUN mkdir -p /public/country-images
+ENV EXPORT_IMAGES_DIR=/public/images
+RUN mkdir -p /public/images
 
 EXPOSE 3000
 
