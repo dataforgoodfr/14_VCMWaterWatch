@@ -4,7 +4,9 @@ import path from 'path'
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import { ALLOWED_ENTITIES, GET } from './route'
+import { ALLOWED_ENTITIES } from '@/lib/entityImage'
+
+import { GET } from './route'
 
 let tmpDir: string
 const originalEnv = process.env.EXPORT_IMAGES_DIR
@@ -32,8 +34,8 @@ afterEach(() => {
 
 describe('ALLOWED_ENTITIES', () => {
 	it('includes country and team', () => {
-		expect(ALLOWED_ENTITIES.has('country')).toBe(true)
-		expect(ALLOWED_ENTITIES.has('team')).toBe(true)
+		expect(ALLOWED_ENTITIES).toContain('country')
+		expect(ALLOWED_ENTITIES).toContain('team')
 	})
 })
 
@@ -65,6 +67,17 @@ describe('GET /images/[entity]/[...path]', () => {
 		const res = await GET(stubRequest, {
 			params: makeParams('country', ['..', '..', 'etc', 'passwd'])
 		})
+
+		expect(res.status).toBe(404)
+	})
+
+	it('returns 404 when normalised path is "." (e.g. [foo, ..])', async () => {
+		process.env.EXPORT_IMAGES_DIR = tmpDir
+		const entityDir = path.join(tmpDir, 'country')
+
+		fs.mkdirSync(entityDir, { recursive: true })
+
+		const res = await GET(stubRequest, { params: makeParams('country', ['foo', '..']) })
 
 		expect(res.status).toBe(404)
 	})

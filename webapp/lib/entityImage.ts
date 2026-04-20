@@ -28,8 +28,16 @@
 import fs from 'fs'
 import path from 'path'
 
-/** Entity names supported by this helper (mirrors ALLOWED_ENTITIES in the route). */
-export type EntityName = 'country' | 'team'
+/**
+ * Allowlist of entity names that may be served via the `/images/[entity]/...`
+ * route and resolved by `getEntityImageSrc`.
+ *
+ * This is the single source of truth: the route handler imports it from here
+ * rather than duplicating the list.  Add new entity names here when the
+ * pipeline exports them.
+ */
+export const ALLOWED_ENTITIES = ['country', 'team'] as const
+export type EntityName = (typeof ALLOWED_ENTITIES)[number]
 
 type Manifest = Record<string, string>
 

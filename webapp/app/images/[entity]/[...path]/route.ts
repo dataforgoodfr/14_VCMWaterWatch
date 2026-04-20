@@ -19,11 +19,9 @@ import path from 'node:path'
 
 import type { NextRequest } from 'next/server'
 
-/**
- * Allowlist of entity names that may be served via this route.
- * Add new entity names here when the pipeline exports them.
- */
-export const ALLOWED_ENTITIES = new Set(['country', 'team'])
+import { ALLOWED_ENTITIES } from '@/lib/entityImage'
+
+const ALLOWED_ENTITY_SET = new Set<string>(ALLOWED_ENTITIES)
 
 const CONTENT_TYPES: Record<string, string> = {
 	jpg: 'image/jpeg',
@@ -58,7 +56,7 @@ function resolveImagePath(entity: string, pathParts: string[]): string | null {
 		return null
 	}
 
-	if (!ALLOWED_ENTITIES.has(entity)) {
+	if (!ALLOWED_ENTITY_SET.has(entity)) {
 		return null
 	}
 
@@ -69,7 +67,10 @@ function resolveImagePath(entity: string, pathParts: string[]): string | null {
 	const joined = pathParts.join('/')
 	const normalised = path.normalize(joined)
 
-	if (normalised.includes('..')) {
+	// Reject `..` (path traversal) and `.` — `path.normalize(['foo','..'])`
+	// returns `'.'` which would resolve to the entity directory itself and
+	// trigger EISDIR on readFile.
+	if (normalised.includes('..') || normalised === '.') {
 		return null
 	}
 

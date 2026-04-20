@@ -6,11 +6,9 @@
  */
 
 import { getEntityImageSrc } from './entityImage'
+import { getTableIdByName } from './fetchMetaTables'
 import { instance } from './instance'
 import type { FetchResponseRecords } from './instance'
-
-/** Table ID for the NocoDB Team table. */
-const TEAM_TABLE_ID = 'mdwyoi1vy3ol4am'
 
 const TEAM_FIELDS = 'Id,Name,Expertise,City,Image,SubTeam,nc_order'
 
@@ -50,12 +48,21 @@ function slugifyName(name: string): string {
 
 export async function fetchTeam(): Promise<TeamMember[]> {
 	try {
+		const tableId = await getTableIdByName('Team')
+
+		if (!tableId) {
+			console.warn('fetchTeam: Team table not found in NocoDB meta')
+			return []
+		}
+
 		const response = await instance.get<FetchResponseRecords<NocoDBTeamRow>>(
-			`/data/${process.env.NOCODB_BASE_ID}/${TEAM_TABLE_ID}/records`,
+			`/data/${process.env.NOCODB_BASE_ID}/${tableId}/records`,
 			{
 				params: {
 					fields: TEAM_FIELDS,
 					sort: 'nc_order',
+					// TODO: paginate if the team exceeds 200 members — mirror the
+					// load_all_records() pattern from pipelines/common/services.py
 					pageSize: 200
 				},
 				timeout: 10000
