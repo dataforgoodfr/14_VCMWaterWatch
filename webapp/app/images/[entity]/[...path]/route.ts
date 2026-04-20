@@ -49,7 +49,10 @@ function sanitizePath(parts: string[]): string | null {
 
 	const clean = path.normalize(parts.join('/'))
 
-	if (clean.includes('..')) {
+	// Reject any path that contains `..` after normalisation, and also reject
+	// `'.'` which path.normalize() produces for inputs like ['foo', '..'] —
+	// that would resolve to the entity directory itself (EISDIR on readFile).
+	if (clean.includes('..') || clean === '.') {
 		return null
 	}
 
