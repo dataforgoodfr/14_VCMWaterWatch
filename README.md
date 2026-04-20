@@ -72,14 +72,17 @@ A lightweight FastAPI service runs alongside the webapp to handle data pipeline 
 
 - **NocoDB webhooks** → the worker receives webhook POSTs over the Docker internal network
 - **PMTiles generation** → triggered automatically when Country or DistributionZone records change
-- **Country images mirroring** → triggered on Country changes; downloads NocoDB image attachments to a shared volume so the webapp can serve them from a stable, cache-friendly URL instead of short-lived S3 signed URLs (see `docs/architecture.md` § Country Images)
-- **Shared volumes** → `pmtiles-data` at `/public/pmtiles` and `country-images-data` at `/public/country-images`, both mounted by worker and webapp; each volume is served by a dedicated Next.js route handler (`/pmtiles/[...path]` and `/country-images/[...path]`) reading its directory via an env var (`PM_TILES_DIR` / `COUNTRY_IMAGES_DIR`)
+- **Entity images mirroring** → triggered on Country/Team changes; downloads NocoDB image attachments to a shared volume so the webapp can serve them from stable, cache-friendly URLs instead of short-lived S3 signed URLs (see `docs/architecture.md` § Country Images)
+- **Shared volumes** → `pmtiles-data` at `/public/pmtiles` and `images-data` at `/public/images`, both mounted by worker and webapp; each volume is served by a dedicated Next.js route handler (`/pmtiles/[...path]` and `/images/[entity]/[...path]`) reading its directory via an env var (`PM_TILES_DIR` / `EXPORT_IMAGES_DIR`)
 - **Webhook URL** (configured in NocoDB): `http://worker:3000/webhooks/nocodb`
 
 To run the exports manually (local dev):
 ```bash
 just pipelines export-pmtiles
 just pipelines export-country-images
+just pipelines export-team-images
+# or both image exports at once:
+just pipelines export-all-images
 ```
 
 ### Adding new webhook triggers
