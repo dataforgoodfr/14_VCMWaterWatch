@@ -8,13 +8,11 @@ Kept as a named module so existing Prefect deployments, webhook triggers, and
 
 
 from pipelines.export.export_entity_images import (
-    _ext_from_mimetype,
     export_entity_images_flow,
     export_entity_images_task,
 )
 
 __all__ = [
-    "_ext_from_mimetype",
     "export_entity_images_task",
     "export_entity_images_flow",
 ]
