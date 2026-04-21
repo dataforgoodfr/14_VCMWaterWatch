@@ -4,8 +4,6 @@ The SearchIndex concatenates zone name, municipality names (from the zone's
 Municipalities link), and actor names to enable search across all three.
 """
 
-from prefect import flow, task
-from prefect.cache_policies import NO_CACHE
 from pipelines.common import services
 
 
@@ -31,7 +29,6 @@ def _linked_record_ids(links) -> list[int]:
     return ids
 
 
-@task(name="build_search_index", cache_policy=NO_CACHE)
 def build_search_index_task(db_helper):
     """
     Build a SearchIndex text field for each DistributionZone by combining
@@ -79,7 +76,6 @@ def build_search_index_task(db_helper):
     return len(updates)
 
 
-@flow(name="build_search_index")
 def build_search_index():
     db = services.db_helper()
     count = build_search_index_task(db)
