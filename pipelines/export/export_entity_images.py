@@ -28,6 +28,7 @@ The manifest is written last so readers always see a consistent state.
 
 import hashlib
 import json
+import logging
 import mimetypes
 import os
 import re
@@ -36,10 +37,10 @@ import unicodedata
 from pathlib import Path
 
 import httpx
-from prefect import flow, get_run_logger, task
-from prefect.cache_policies import NO_CACHE
 
 from pipelines.common import services
+
+logger = logging.getLogger(__name__)
 
 
 def _ext_from_mimetype(mime: str | None) -> str:
@@ -79,7 +80,6 @@ def _slugify(value: str) -> str:
     return dashed.strip("-")
 
 
-@task(name="download_entity_images", cache_policy=NO_CACHE)
 def export_entity_images_task(
     table_name: str,
     key_field: str,
@@ -108,7 +108,6 @@ def export_entity_images_task(
         A dict mapping the key (or slug) to the filename written inside
         *output_dir*.
     """
-    logger = get_run_logger()
     db_helper = services.db_helper()
 
     records = db_helper.load_all_records(table_name=table_name, fields=fields)
@@ -198,7 +197,6 @@ def export_entity_images_task(
     return manifest
 
 
-@flow(name="export_entity_images", persist_result=False)
 def export_entity_images_flow(
     entity_name: str,
     table_name: str,
@@ -224,8 +222,6 @@ def export_entity_images_flow(
         fields:       Field names to fetch from NocoDB.
         slugify:      Whether to slugify the key value for filenames.
     """
-    logger = get_run_logger()
-
     images_dir = Path(
         os.environ.get("EXPORT_IMAGES_DIR", "data/export/images")
     )
