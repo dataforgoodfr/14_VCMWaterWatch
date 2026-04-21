@@ -10,7 +10,7 @@ import { getTableIdByName } from './fetchMetaTables'
 import { instance } from './instance'
 import type { FetchResponseRecords } from './instance'
 
-const TEAM_FIELDS = 'Id,Name,Expertise,City,Image,SubTeam,nc_order'
+const TEAM_FIELDS = 'Id,Name,Expertise,City,Image,Squad,nc_order'
 
 interface NocoDBTeamRowFields {
 	Id: number
@@ -18,7 +18,7 @@ interface NocoDBTeamRowFields {
 	Expertise: string | null
 	City: string | null
 	Image: unknown
-	SubTeam: string | null
+	Squad: string | null
 	nc_order: number | null
 }
 
@@ -91,7 +91,7 @@ export async function fetchTeam(): Promise<TeamMember[]> {
 					name: fields.Name,
 					role: fields.Expertise ?? '',
 					city: fields.City ?? null,
-					subTeam: fields.SubTeam ?? null,
+					subTeam: fields.Squad ?? null,
 					imageSrc: getEntityImageSrc('team', slug)
 				}
 			})

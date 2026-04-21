@@ -38,7 +38,7 @@ function makeRow(
 		Name: string | null
 		Expertise: string | null
 		City: string | null
-		SubTeam: string | null
+		Squad: string | null
 		nc_order: number | null
 	}> = {}
 ) {
@@ -51,7 +51,7 @@ function makeRow(
 			Expertise: 'Hydrology',
 			City: 'Paris',
 			Image: null,
-			SubTeam: 'project',
+			Squad: 'project',
 			nc_order: 1,
 			...fieldOverrides
 		}
