@@ -252,7 +252,7 @@ class TestExportEntityImagesTaskTeam:
         ):
             mock_services.db_helper.return_value = mock_db
             result = export_entity_images_task.fn(
-                table_name="Team",
+                table_name="Members",
                 key_field="Name",
                 entity_name="team",
                 fields=["Id", "Name", "Image"],
@@ -307,7 +307,7 @@ class TestExportEntityImagesTaskTeam:
         ):
             mock_services.db_helper.return_value = mock_db
             manifest = export_entity_images_task.fn(
-                table_name="Team",
+                table_name="Members",
                 key_field="Name",
                 entity_name="team",
                 fields=["Id", "Name", "Image"],
@@ -439,7 +439,7 @@ class TestExportEntityImagesFlow:
             records,
             tmp_path,
             entity_name="team",
-            table_name="Team",
+            table_name="Members",
             key_field="Name",
             fields=["Id", "Name", "Image"],
             slugify=True,

@@ -91,7 +91,7 @@ def export_entity_images_task(
     """Download entity images and return a key → filename mapping.
 
     Args:
-        table_name:  NocoDB table to query (e.g. ``"Country"`` or ``"Team"``).
+        table_name:  NocoDB table to query (e.g. ``"Country"`` or ``"Members"``).
         key_field:   Field to use as the image key (e.g. ``"Code"`` or
                      ``"Name"``).
         entity_name: Human-readable name for logging (e.g. ``"country"``).

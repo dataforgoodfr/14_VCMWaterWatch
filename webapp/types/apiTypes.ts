@@ -39,7 +39,7 @@ export type TableTitle =
 	| 'Contribution'
 	| 'Volunteer'
 	| 'LetterTemplate'
-	| 'Team'
+	| 'Members'
 
 export interface MetaTable {
 	id: string

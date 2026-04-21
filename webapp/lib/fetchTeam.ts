@@ -53,10 +53,10 @@ interface NocoDBTeamRecord {
 
 export async function fetchTeam(): Promise<TeamMember[]> {
 	try {
-		const tableId = await getTableIdByName('Team')
+		const tableId = await getTableIdByName('Members')
 
 		if (!tableId) {
-			console.warn('fetchTeam: Team table not found in NocoDB meta')
+			console.warn('fetchTeam: Members table not found in NocoDB meta')
 			return []
 		}
 
