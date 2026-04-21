@@ -9,9 +9,8 @@ import { TeamCard } from '@/components/TeamCard'
 import { getT } from '@/i18n/server'
 import type { Locale } from '@/i18n/i18next.config'
 import { fetchTeam } from '@/lib/fetchTeam'
-import { SEMI_STATIC_REVALIDATE_SECONDS } from '@/lib/revalidate'
 
-export const revalidate = SEMI_STATIC_REVALIDATE_SECONDS
+export const revalidate = 300 // SEMI_STATIC_REVALIDATE_SECONDS
 
 const COLORS = ['teal', 'green', 'purple', 'navy'] as const
 
