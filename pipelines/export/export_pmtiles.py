@@ -1,5 +1,5 @@
 """
-Prefect workflow to export zone data from NocoDB as PMTiles.
+Export zone data from NocoDB as PMTiles.
 
 Reads zone records (Country, DistributionZone) from NocoDB, produces a GeoJSON
 FeatureCollection per table in a staging directory, then converts them to PMTiles
@@ -14,16 +14,16 @@ Output GeoJSON fields per feature:
 """
 
 import json
+import logging
 import os
 import shutil
 import subprocess
 import tempfile
 from pathlib import Path
 
-from prefect import flow, get_run_logger, task
-from prefect.cache_policies import NO_CACHE
-
 from pipelines.common import services
+
+logger = logging.getLogger(__name__)
 
 ZONE_FIELDS = ["Id", "Code", "Name", "Geometry", "PVC Level", "VCM Level", "Map Color"]
 # Extra fields per table (e.g. linked record display values)
@@ -34,13 +34,11 @@ ZONE_TABLES = {
 }
 
 
-@task(name="export_zones_geojson", cache_policy=NO_CACHE)
 def export_zones_geojson_task(table_name: str, output_dir: Path) -> Path:
     """
     Read all records from a zone table and write a GeoJSON FeatureCollection.
     Records without geometry are skipped.
     """
-    logger = get_run_logger()
     db_helper = services.db_helper()
 
     fields = ZONE_FIELDS + EXTRA_FIELDS.get(table_name, [])
@@ -90,10 +88,8 @@ def export_zones_geojson_task(table_name: str, output_dir: Path) -> Path:
     return output_path
 
 
-@task(name="create_pmtiles", cache_policy=NO_CACHE)
 def create_pmtiles_task(geojson_file: Path, layer: str, output_dir: Path) -> Path:
     """Convert a GeoJSON file to a PMTiles archive using tippecanoe."""
-    logger = get_run_logger()
     output_dir.mkdir(parents=True, exist_ok=True)
     pmtiles_file = output_dir / f"{layer}.pmtiles"
 
@@ -123,7 +119,6 @@ def create_pmtiles_task(geojson_file: Path, layer: str, output_dir: Path) -> Pat
     return pmtiles_file
 
 
-@flow(name="export_pmtiles", persist_result=False)
 def export_pmtiles_flow(destination: Path) -> None:
     """Export zone data from NocoDB to PMTiles.
 

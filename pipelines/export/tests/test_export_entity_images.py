@@ -106,7 +106,7 @@ class TestExportEntityImagesTaskCountry:
             patch("httpx.get", return_value=mock_response),
         ):
             mock_services.db_helper.return_value = mock_db
-            result = export_entity_images_task.fn(
+            result = export_entity_images_task(
                 table_name="Country",
                 key_field="Code",
                 entity_name="country",
@@ -206,7 +206,7 @@ class TestExportEntityImagesTaskCountry:
             patch("httpx.get", side_effect=fake_get),
         ):
             mock_services.db_helper.return_value = mock_db
-            manifest = export_entity_images_task.fn(
+            manifest = export_entity_images_task(
                 table_name="Country",
                 key_field="Code",
                 entity_name="country",
@@ -251,7 +251,7 @@ class TestExportEntityImagesTaskTeam:
             patch("httpx.get", return_value=mock_response),
         ):
             mock_services.db_helper.return_value = mock_db
-            result = export_entity_images_task.fn(
+            result = export_entity_images_task(
                 table_name="Members",
                 key_field="Name",
                 entity_name="team",
@@ -306,7 +306,7 @@ class TestExportEntityImagesTaskTeam:
             patch("httpx.get", side_effect=fake_get),
         ):
             mock_services.db_helper.return_value = mock_db
-            manifest = export_entity_images_task.fn(
+            manifest = export_entity_images_task(
                 table_name="Members",
                 key_field="Name",
                 entity_name="team",

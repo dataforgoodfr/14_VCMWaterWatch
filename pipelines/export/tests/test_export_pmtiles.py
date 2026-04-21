@@ -37,7 +37,7 @@ class TestExportZonesGeojson:
         with patch("pipelines.export.export_pmtiles.services") as mock_services:
             mock_services.db_helper.return_value = mock_db
 
-            path = export_zones_geojson_task.fn(
+            path = export_zones_geojson_task(
                 table_name="Country", output_dir=tmp_path
             )
 
@@ -77,7 +77,7 @@ class TestExportZonesGeojson:
         with patch("pipelines.export.export_pmtiles.services") as mock_services:
             mock_services.db_helper.return_value = mock_db
 
-            path = export_zones_geojson_task.fn(
+            path = export_zones_geojson_task(
                 table_name="DistributionZone", output_dir=tmp_path
             )
 
@@ -101,7 +101,7 @@ class TestExportZonesGeojson:
         with patch("pipelines.export.export_pmtiles.services") as mock_services:
             mock_services.db_helper.return_value = mock_db
 
-            path = export_zones_geojson_task.fn(
+            path = export_zones_geojson_task(
                 table_name="Country", output_dir=tmp_path
             )
 
@@ -140,7 +140,7 @@ class TestCreatePmtiles:
         geojson_file.write_text(json.dumps(_sample_geojson()))
         output_dir = tmp_path / "output"
 
-        result = create_pmtiles_task.fn(
+        result = create_pmtiles_task(
             geojson_file=geojson_file, layer="data_countries", output_dir=output_dir,
         )
 
@@ -153,7 +153,7 @@ class TestCreatePmtiles:
         geojson_file.write_text(json.dumps(_sample_geojson()))
         output_dir = tmp_path / "nested" / "deep" / "output"
 
-        result = create_pmtiles_task.fn(
+        result = create_pmtiles_task(
             geojson_file=geojson_file, layer="test_layer", output_dir=output_dir,
         )
 
@@ -165,10 +165,10 @@ class TestCreatePmtiles:
         geojson_file.write_text(json.dumps(_sample_geojson()))
         output_dir = tmp_path / "output"
 
-        create_pmtiles_task.fn(
+        create_pmtiles_task(
             geojson_file=geojson_file, layer="data_countries", output_dir=output_dir
         )
-        result = create_pmtiles_task.fn(
+        result = create_pmtiles_task(
             geojson_file=geojson_file, layer="data_countries", output_dir=output_dir
         )
 
@@ -180,6 +180,6 @@ class TestCreatePmtiles:
         output_dir = tmp_path / "output"
 
         with pytest.raises(subprocess.CalledProcessError):
-            create_pmtiles_task.fn(
+            create_pmtiles_task(
                 geojson_file=bad_file, layer="bad_layer", output_dir=output_dir
             )
