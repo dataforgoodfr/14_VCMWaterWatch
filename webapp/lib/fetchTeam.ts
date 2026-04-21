@@ -12,7 +12,7 @@ import type { FetchResponseRecords } from './instance'
 
 const TEAM_FIELDS = 'Id,Name,Expertise,City,Image,SubTeam,nc_order'
 
-interface NocoDBTeamRow {
+interface NocoDBTeamRowFields {
 	Id: number
 	Name: string | null
 	Expertise: string | null
@@ -46,6 +46,11 @@ function slugifyName(name: string): string {
 		.replace(/^-+|-+$/g, '')
 }
 
+interface NocoDBTeamRecord {
+	id: string | number
+	fields: NocoDBTeamRowFields
+}
+
 export async function fetchTeam(): Promise<TeamMember[]> {
 	try {
 		const tableId = await getTableIdByName('Team')
@@ -55,12 +60,12 @@ export async function fetchTeam(): Promise<TeamMember[]> {
 			return []
 		}
 
-		const response = await instance.get<FetchResponseRecords<NocoDBTeamRow>>(
+		const response = await instance.get<FetchResponseRecords<NocoDBTeamRecord>>(
 			`/data/${process.env.NOCODB_BASE_ID}/${tableId}/records`,
 			{
 				params: {
 					fields: TEAM_FIELDS,
-					sort: 'nc_order',
+					sort: JSON.stringify([{ field: 'nc_order', direction: 'asc' }]),
 					// TODO: paginate if the team exceeds 200 members — mirror the
 					// load_all_records() pattern from pipelines/common/services.py
 					pageSize: 200
@@ -73,19 +78,20 @@ export async function fetchTeam(): Promise<TeamMember[]> {
 			throw new Error(`Failed to fetch team: ${response.statusText}`)
 		}
 
-		const rows = response.data.records ?? []
+		const records = response.data.records ?? []
 
-		return rows
-			.filter((row): row is NocoDBTeamRow & { Name: string } => Boolean(row.Name))
-			.map(row => {
-				const slug = slugifyName(row.Name)
+		return records
+			.filter((record): record is NocoDBTeamRecord & { fields: { Name: string } } => Boolean(record.fields?.Name))
+			.map(record => {
+				const { fields } = record
+				const slug = slugifyName(fields.Name)
 
 				return {
-					id: String(row.Id),
-					name: row.Name,
-					role: row.Expertise ?? '',
-					city: row.City ?? null,
-					subTeam: row.SubTeam ?? null,
+					id: String(record.id),
+					name: fields.Name,
+					role: fields.Expertise ?? '',
+					city: fields.City ?? null,
+					subTeam: fields.SubTeam ?? null,
 					imageSrc: getEntityImageSrc('team', slug)
 				}
 			})

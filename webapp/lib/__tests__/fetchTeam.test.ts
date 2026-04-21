@@ -34,7 +34,7 @@ const mockGet = vi.mocked(instance.get)
 
 function makeRow(
 	overrides: Partial<{
-		Id: number
+		id: number
 		Name: string | null
 		Expertise: string | null
 		City: string | null
@@ -42,15 +42,19 @@ function makeRow(
 		nc_order: number | null
 	}> = {}
 ) {
+	const { id = 1, ...fieldOverrides } = overrides
+
 	return {
-		Id: 1,
-		Name: 'Alice Smith',
-		Expertise: 'Hydrology',
-		City: 'Paris',
-		Image: null,
-		SubTeam: 'project',
-		nc_order: 1,
-		...overrides
+		id,
+		fields: {
+			Name: 'Alice Smith',
+			Expertise: 'Hydrology',
+			City: 'Paris',
+			Image: null,
+			SubTeam: 'project',
+			nc_order: 1,
+			...fieldOverrides
+		}
 	}
 }
 
@@ -92,7 +96,7 @@ describe('fetchTeam', () => {
 	it('slugifies accented names for image lookup', async () => {
 		mockGet.mockResolvedValueOnce({
 			status: 200,
-			data: { records: [makeRow({ Id: 2, Name: 'Ève Müller' })] }
+			data: { records: [makeRow({ id: 2, Name: 'Ève Müller' })] }
 		})
 
 		const result = await fetchTeam()
@@ -103,7 +107,7 @@ describe('fetchTeam', () => {
 	it('filters out rows without a Name', async () => {
 		mockGet.mockResolvedValueOnce({
 			status: 200,
-			data: { records: [makeRow({ Name: null }), makeRow({ Id: 2, Name: 'Alice Smith' })] }
+			data: { records: [makeRow({ Name: null }), makeRow({ id: 2, Name: 'Alice Smith' })] }
 		})
 
 		const result = await fetchTeam()
@@ -137,7 +141,10 @@ describe('fetchTeam', () => {
 		expect(mockGet).toHaveBeenCalledWith(
 			expect.stringContaining('/records'),
 			expect.objectContaining({
-				params: expect.objectContaining({ sort: 'nc_order' }) as Record<string, unknown>
+				params: expect.objectContaining({ sort: JSON.stringify([{ field: 'nc_order', direction: 'asc' }]) }) as Record<
+					string,
+					unknown
+				>
 			}) as Record<string, unknown>
 		)
 	})
