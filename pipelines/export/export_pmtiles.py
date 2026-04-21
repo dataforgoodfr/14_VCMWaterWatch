@@ -1,5 +1,5 @@
 """
-Prefect workflow to export zone data from NocoDB as PMTiles.
+Export zone data from NocoDB as PMTiles.
 
 Reads zone records (Country, DistributionZone) from NocoDB, produces a GeoJSON
 FeatureCollection per table in a staging directory, then converts them to PMTiles

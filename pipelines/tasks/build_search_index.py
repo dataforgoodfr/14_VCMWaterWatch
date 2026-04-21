@@ -1,5 +1,5 @@
 """
-Prefect workflow for building a SearchIndex field on DistributionZone records.
+Build a SearchIndex field on DistributionZone records.
 The SearchIndex concatenates zone name, municipality names (from the zone's
 Municipalities link), and actor names to enable search across all three.
 """

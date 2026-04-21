@@ -1,5 +1,5 @@
 """
-Generic Prefect workflow to mirror NocoDB entity images to a shared directory.
+Generic pipeline to mirror NocoDB entity images to a shared directory.
 
 Entity images in NocoDB are stored as S3 attachments with short-lived signed
 URLs.  This flow downloads each entity's first image, names it with a
