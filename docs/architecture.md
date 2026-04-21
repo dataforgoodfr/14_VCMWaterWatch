@@ -195,8 +195,6 @@ To fix this, entity images are mirrored to a shared Docker volume and served fro
 
 **Local dev:** Set `EXPORT_IMAGES_DIR=../data/export/images` in `webapp/.env.local`. Refresh images with `just pipelines export-country-images`, `just pipelines export-team-images`, or `just pipelines export-all-images`.
 
-**Migration note:** The old `country-images-data` volume and `COUNTRY_IMAGES_DIR` env var have been removed. Operators upgrading from the previous deployment should drop the old volume (`docker volume rm <project>_country-images-data`) after re-running the export flows against the new `images-data` volume.
-
 ## Data Flow Summary
 
 ```
