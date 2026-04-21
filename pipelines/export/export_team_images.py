@@ -20,7 +20,7 @@ def export_team_images():
     """Mirror team member images from NocoDB."""
     export_entity_images_flow(
         entity_name="team",
-        table_name="Team",
+        table_name="Members",
         key_field="Name",
         fields=TEAM_FIELDS,
         slugify=True,

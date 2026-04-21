@@ -34,7 +34,7 @@ PMTILES_TRIGGER_TABLES = {"Country", "DistributionZone"}
 
 # Tables whose changes should trigger a country/team images mirror
 COUNTRY_IMAGES_TRIGGER_TABLES = {"Country"}
-TEAM_IMAGES_TRIGGER_TABLES = {"Team"}
+TEAM_IMAGES_TRIGGER_TABLES = {"Members"}
 
 # Tables whose changes should trigger a search index rebuild
 SEARCH_INDEX_TRIGGER_TABLES = {"DistributionZone", "Municipality"}
