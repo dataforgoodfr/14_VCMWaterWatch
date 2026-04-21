@@ -5,7 +5,7 @@ import ActSearchSection from './components/ActSearchSection'
 import ActionGuide from './components/ActionGuide'
 import GetInvolvedSection from './components/GetInvolvedSection'
 
-export const revalidate = 300
+export const revalidate = 300 // SEMI_STATIC_REVALIDATE_SECONDS
 
 export default async function ActPage({ params }: { params: Promise<{ locale: string }> }) {
 	const { locale } = await params

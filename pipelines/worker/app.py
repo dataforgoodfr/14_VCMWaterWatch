@@ -16,7 +16,8 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from pipelines.export.export_country_images import export_country_images_flow
+from pipelines.export.export_country_images import export_country_images
+from pipelines.export.export_team_images import export_team_images
 from pipelines.export.export_pmtiles import export_pmtiles_flow
 from pipelines.tasks.build_search_index import build_search_index
 
@@ -31,8 +32,9 @@ app = FastAPI(title="VCM WaterWatch Pipeline Worker")
 # Tables whose changes should trigger a PMTiles rebuild
 PMTILES_TRIGGER_TABLES = {"Country", "DistributionZone"}
 
-# Tables whose changes should trigger a country images mirror
+# Tables whose changes should trigger a country/team images mirror
 COUNTRY_IMAGES_TRIGGER_TABLES = {"Country"}
+TEAM_IMAGES_TRIGGER_TABLES = {"Team"}
 
 # Tables whose changes should trigger a search index rebuild
 SEARCH_INDEX_TRIGGER_TABLES = {"DistributionZone", "Municipality"}
@@ -102,12 +104,11 @@ def _schedule_search_index():
 
 def _run_country_images_flow():
     """Run the country images mirror flow in a background thread."""
-    dest = Path(os.environ.get("COUNTRY_IMAGES_DIR", "data/export/country-images"))
-    logger.info("Country images flow: acquiring flow-run lock (destination=%s)", dest)
+    logger.info("Country images flow: acquiring flow-run lock")
     with _flow_run_lock:
         logger.info("Country images flow: starting export")
         try:
-            export_country_images_flow(destination=dest)
+            export_country_images()
             logger.info("Country images flow: completed successfully")
         except Exception:
             logger.exception("Country images flow failed")
@@ -121,6 +122,29 @@ def _schedule_country_images():
     """
     logger.info("Country images: dispatching flow run (no debounce)")
     t = threading.Thread(target=_run_country_images_flow, name="country-images-flow", daemon=True)
+    t.start()
+
+
+def _run_team_images_flow():
+    """Run the team images mirror flow in a background thread."""
+    logger.info("Team images flow: acquiring flow-run lock")
+    with _flow_run_lock:
+        logger.info("Team images flow: starting export")
+        try:
+            export_team_images()
+            logger.info("Team images flow: completed successfully")
+        except Exception:
+            logger.exception("Team images flow failed")
+
+
+def _schedule_team_images():
+    """Trigger the team images flow immediately in a background thread.
+
+    No debounce: webhook frequency for Team edits is low and users expect
+    the mirror to update promptly after an image change.
+    """
+    logger.info("Team images: dispatching flow run (no debounce)")
+    t = threading.Thread(target=_run_team_images_flow, name="team-images-flow", daemon=True)
     t.start()
 
 
@@ -163,6 +187,13 @@ def nocodb_webhook(payload: dict):
         )
         _schedule_country_images()
         scheduled.append("export_country_images")
+
+    if table_name in TEAM_IMAGES_TRIGGER_TABLES:
+        logger.info(
+            f"Webhook received for table {table_name}, scheduling team images mirror"
+        )
+        _schedule_team_images()
+        scheduled.append("export_team_images")
 
     if scheduled:
         return JSONResponse(
