@@ -3,7 +3,6 @@ import { TeamCard } from '@/components/TeamCard'
 import { getT } from '@/i18n/server'
 import type { Locale } from '@/i18n/i18next.config'
 import { fetchTeam } from '@/lib/fetchTeam'
-import type { TeamMember } from '@/lib/fetchTeam'
 import CtaBanner from '../resources/components/CtaBanner'
 
 export const revalidate = 300 // SEMI_STATIC_REVALIDATE_SECONDS
@@ -39,35 +38,6 @@ function initials(name: string): string {
 function humaniseSubTeam(value: string): string {
 	return value.replace(/[_-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
-
-const teams: { labelKey: string; members: TeamMember[] }[] = [
-	{
-		labelKey: 'about-team-product',
-		members: [
-			{
-				id: 'ml-prod',
-				name: 'Marie ...',
-				role: 'Rôle',
-				city: null,
-				subTeam: null,
-				imageSrc: null
-			}
-		]
-	},
-	{
-		labelKey: 'about-team-legal',
-		members: [
-			{
-				id: 'ml-prod',
-				name: 'Marie ...',
-				role: 'Rôle',
-				city: null,
-				subTeam: null,
-				imageSrc: null
-			}
-		]
-	}
-]
 
 export default async function AboutPage({ params }: { params: Promise<{ locale: string }> }) {
 	const { locale } = await params
@@ -143,29 +113,6 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
 							</div>
 						)
 					})}
-				</section>
-
-				{/* Team Section */}
-				<section className='container mx-auto px-4 pb-12 md:px-8'>
-					<h2 className='text-navy-800 font-[lexend] text-2xl font-semibold'>{t('about-team-title')}</h2>
-
-					{teams.map((team, idx) => (
-						<div key={team.labelKey} className={idx === 0 ? 'mt-8' : 'mt-10'}>
-							<h3 className='text-navy-800 mb-4 font-[lexend] text-base font-semibold'>{t(team.labelKey)}</h3>
-							<div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-								{team.members.map(member => (
-									<TeamCard
-										key={member.id}
-										initials={initials(member.name)}
-										name={member.name}
-										role={member.role}
-										color={memberColor(member.id)}
-										imageSrc={member.imageSrc}
-									/>
-								))}
-							</div>
-						</div>
-					))}
 				</section>
 
 				{/* Join CTA */}
