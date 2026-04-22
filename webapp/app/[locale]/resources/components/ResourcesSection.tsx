@@ -70,8 +70,7 @@ export default function ResourcesSection() {
 			<div className='mb-8'>
 				<h2 className='text-navy-800 font-[lexend] text-2xl font-semibold'>Resources</h2>
 				<p className='text-navy-600 mt-2 max-w-2xl text-base'>
-					Guides, reports, templates, and other materials to help citizens, researchers, and advocates understand and act on
-					VCM water contamination.
+					Guides, reports and templates to train and source your processes.
 				</p>
 			</div>
 
@@ -83,12 +82,12 @@ export default function ResourcesSection() {
 			</div>
 
 			{/* CTA banner */}
-			<div className='mt-10'>
+			<div className='mt-8'>
 				<CtaBanner
-					title='Have a resource to share?'
-					subtitle='Help the community grow by submitting a guide, report, or any relevant material.'
+					title='Do you have a resource to share?'
+					subtitle='Feel free to write us.'
 					buttonLabel='Contact us'
-					href='/act#involved'
+					href={`mailto:${process.env.CONTACT_EMAIL}`}
 				/>
 			</div>
 		</div>

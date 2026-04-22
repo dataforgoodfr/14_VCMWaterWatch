@@ -25,14 +25,10 @@ export default function ActSearchBar({ onSelect }: ActSearchBarProps) {
 
 		if (skipSearchFromSelectionRef.current) {
 			skipSearchFromSelectionRef.current = false
-			setResults([])
-			setOpen(false)
 			return
 		}
 
 		if (query.length < 3) {
-			setResults([])
-			setOpen(false)
 			return
 		}
 
@@ -78,10 +74,19 @@ export default function ActSearchBar({ onSelect }: ActSearchBarProps) {
 			<input
 				type='text'
 				value={query}
-				onChange={e => setQuery(e.target.value)}
+				onChange={e => {
+					const nextQuery = e.target.value
+
+					setQuery(nextQuery)
+
+					if (nextQuery.length < 3) {
+						setResults([])
+						setOpen(false)
+					}
+				}}
 				onKeyDown={e => e.key === 'Escape' && setOpen(false)}
 				placeholder='Enter your city, postal code, or water company...'
-				className='w-full rounded-lg border border-gray-300 px-4 py-3 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none'
+				className='h-[72px] w-full rounded-lg border border-gray-300 px-4 py-3 text-lg shadow-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none'
 			/>
 
 			{open && (

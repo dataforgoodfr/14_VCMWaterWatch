@@ -5,19 +5,19 @@ export const InfoSection = () => {
 		{
 			label: 'The issue',
 			content:
-				'Classified as a definite human carcinogen (Group 1) by the IARC, it is linked to risks of hepatic angiosarcoma and hepatocellular carcinoma. Vinyl chloride monomer (VCM) is a highly carcinogenic compound that can contaminate drinking water through aging PVC pipes.'
+				'Classified as a known human carcinogen (Group 1) by the International Agency for Research on Cancer, vinyl chloride is associated with an increased risk of hepatic angiosarcoma and hepatocellular carcinoma, two forms of liver cancer. Vinyl chloride monomer (VCM) can leach into drinking water from PVC pipes installed before 1980. Although the European Union established a regulatory limit of 0.5 μg/L in 1998, monitoring of this substance is not systematically required, creating a significant blind spot in water quality surveillance.'
 		},
 		{
 			label: 'Why it matters',
 			content:
-				'Millions of kilometers of PVC piping are installed across Europe, and a significant share is nearing end of life. Data transparency varies widely between countries, making it hard to assess population-level risk with precision.'
+				'Hundreds of thousands of kilometers of pre-1980 PVC pipes remain in use across Europe. In France, where systematic monitoring was introduced in 2012, more than 5,000 municipalities have reported VCM concentrations exceeding the EU threshold, in some cases reaching several hundred μg/L. In other European countries, where legacy PVC infrastructure is also known to exist, no comparable monitoring programs are in place, -leaving potential contamination largely undetected.'
 		}
 	]
 
 	const stats = [
-		{ value: '275,000 km', label: 'of piping' },
-		{ value: '12 countries', label: 'in Europe' },
-		{ value: 'XXX', label: 'people potentially affected' }
+		{ value: '< 300,000 km', label: 'of piping' },
+		{ value: '16 countries', label: 'at risk' },
+		{ value: '6 countries', label: 'with identified contamination' }
 	]
 
 	return (

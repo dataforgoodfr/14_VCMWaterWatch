@@ -1,35 +1,25 @@
 import CtaBanner from './CtaBanner'
 
-// Each card uses a simple styled span (circle + text character) instead of a lucide icon.
-// This matches the design mockup which shows minimal circle icons.
 const INFO_CARDS = [
 	{
 		iconChar: 'ℹ',
-		iconBg: 'bg-blue-100',
-		iconColor: 'text-blue-700',
 		title: 'Data Sources',
-		body: 'Data comes from three sources: (1) official reports from national health authorities, (2) citizen contributions verified by our team, (3) peer-reviewed scientific publications.'
+		body: 'The collected data mainly comes from four sources: official reports from national health or environmental authorities, data provided by water companies, public archives supplied by PVC manufacturers, and academic publications focused on vinyl chloride monomer. Data directly provided by water users can also be used as a complementary input in order to build a more precise assessment of contamination risks.'
 	},
 	{
 		iconChar: '✓',
-		iconBg: 'bg-green-100',
-		iconColor: 'text-green-700',
-		title: 'Verification Process',
-		body: 'Each citizen contribution goes through validation: verification of the source document, cross-referencing with official data, and validation by at least one member of the scientific team.'
+		title: 'Verification process',
+		body: 'All data have been reviewed and validated by the Earth Chair, a research unit affiliated with the University of Angers, which was the first to raise awareness of the risks associated with vinyl chloride monomer contamination in water distribution networks. This verification process helps ensure the reliability of the information presented on the VCM Watch platform.'
 	},
 	{
 		iconChar: '?',
-		iconBg: 'bg-amber-100',
-		iconColor: 'text-amber-700',
-		title: 'Interpreting Thresholds',
-		body: 'CVM concentrations are expressed in µg/L. The European directive sets a threshold of 0.5 µg/L. Some countries apply stricter standards. See the table below.'
+		title: 'Interpretation of thresholds',
+		body: 'VCM concentrations are expressed in micrograms per liter (μg/L). One microgram is equal to one millionth of a gram. VCM is considered a non threshold carcinogenic substance, meaning that even a single molecule may potentially cause cancer. However, the risk remains very low below a certain level. The European Union set a threshold of 0.5 μg/L for vinyl chloride monomer in drinking water in 1998. Above this level, health risks are considered unacceptable according to international safety standards. This threshold remains relatively conservative, as the World Health Organization recommends not exceeding 0.3 μg/L.'
 	},
 	{
 		iconChar: '!',
-		iconBg: 'bg-red-100',
-		iconColor: 'text-red-700',
 		title: 'Limitations & Precautions',
-		body: 'Map data does not replace official analysis. When in doubt, contact your local health authority. VCM Watch is a citizen awareness tool.'
+		body: 'The risk assessment depends on information provided by health authorities and water companies, which may contain certain gaps. The presence of PVC pipes installed before 1980 indicates only a potential risk: it does not automatically imply that the water is contaminated. VCM levels can also vary significantly from one household to another within the same municipality due to the complex physical processes governing the diffusion of this substance in water. In case of doubt, you are encouraged to request a tap water test from your water supplier or from an analytical laboratory.'
 	}
 ]
 
@@ -62,7 +52,7 @@ const CVM_TABLE_ROWS = [
 		level: 'Alert',
 		dotColor: 'bg-red-500',
 		interpretation: 'Significant exceedance',
-		action: 'Contact ARS urgently'
+		action: 'Contacter la compagnie d’eau et les autorités sanitaires'
 	},
 	{
 		concentration: 'Not measured',
@@ -80,19 +70,20 @@ export default function MethodologySection() {
 			{/* Section header */}
 			<div className='mb-8'>
 				<h2 className='text-navy-800 font-[lexend] text-2xl font-semibold'>Methodology</h2>
-				<p className='text-navy-600 mt-2 max-w-2xl text-base'>
-					How to interpret the data and who to contact to act correctly.
+				<p className='text-navy-600 mt-2 text-base'>
+					Vinyl chloride monomer is a carcinogenic gas that can be released into water through PVC pipes installed
+					before 1980. Outside France, and more recently Spain, no country systematically monitors the presence of vinyl
+					chloride monomer in water. In order to assess contamination risks, the VCM Watch platform team has compiled
+					data from multiple sources that make it possible to identify the presence of problematic pipelines.
 				</p>
 			</div>
 
 			{/* 2×2 info cards */}
 			<div className='mb-10 grid grid-cols-1 gap-5 sm:grid-cols-2'>
 				{INFO_CARDS.map(card => (
-					<div key={card.title} className='border-navy-200 bg-navy-50 rounded-xl border p-5'>
+					<div key={card.title} className='rounded-sm bg-white p-8 shadow-xs'>
 						<div className='mb-3 flex items-center gap-3'>
-							<span
-								className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base font-bold ${card.iconBg} ${card.iconColor}`}
-							>
+							<span className='bg-navy-800 flex h-9 w-9 shrink-0 items-center justify-center rounded-sm text-base font-bold text-white'>
 								{card.iconChar}
 							</span>
 							<h3 className='text-navy-800 font-[lexend] text-base font-semibold'>{card.title}</h3>
@@ -105,14 +96,22 @@ export default function MethodologySection() {
 			{/* CVM Concentration Reference Table */}
 			<div className='mb-10'>
 				<h3 className='text-navy-800 mb-4 font-[lexend] text-lg font-semibold'>CVM Concentration Reference Table</h3>
-				<div className='border-navy-200 overflow-x-auto rounded-xl border'>
+				<div className='border-navy-200 overflow-x-auto rounded-sm border'>
 					<table className='w-full text-sm'>
 						<thead>
 							<tr className='bg-navy-800 text-left text-white'>
-								<th scope='col' className='px-4 py-3 font-semibold'>Concentration (µg/L)</th>
-								<th scope='col' className='px-4 py-3 font-semibold'>Level</th>
-								<th scope='col' className='px-4 py-3 font-semibold'>Interpretation</th>
-								<th scope='col' className='px-4 py-3 font-semibold'>Recommended Action</th>
+								<th scope='col' className='px-4 py-3 font-semibold'>
+									Concentration (µg/L)
+								</th>
+								<th scope='col' className='px-4 py-3 font-semibold'>
+									Level
+								</th>
+								<th scope='col' className='px-4 py-3 font-semibold'>
+									Interpretation
+								</th>
+								<th scope='col' className='px-4 py-3 font-semibold'>
+									Recommended Action
+								</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -133,18 +132,19 @@ export default function MethodologySection() {
 					</table>
 				</div>
 				<p className='text-navy-500 mt-2 text-xs'>
-					* Thresholds based on WHO guidelines and EU Directive 2020/2184. Site-specific factors may affect the final classification.
+					* Thresholds based on WHO guidelines and EU Directive 2020/2184. Site-specific factors may affect the final
+					classification.
 				</p>
 			</div>
 
 			{/* Who to contact CTA */}
-			<div>
+			<div className='pb-10'>
 				<h3 className='text-navy-800 mb-4 font-[lexend] text-lg font-semibold'>Who to contact?</h3>
 				<CtaBanner
 					title='Questions about the methodology?'
 					subtitle='Reach out to our scientific team or join the open-source project to propose improvements.'
 					buttonLabel='Get in touch'
-					href='/act#involved'
+					href={`mailto:${process.env.CONTACT_EMAIL}`}
 				/>
 			</div>
 		</div>

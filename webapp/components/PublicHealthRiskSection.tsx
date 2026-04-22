@@ -15,8 +15,8 @@ export const PubliHealthRiskSection = () => {
 					<div>
 						<p className='text-navy-500 font-[lexend] text-[24px] font-medium'>Classification</p>
 						<p className='font-regular text-[20px] text-gray-600'>
-							Vinyl chloride monomer is classified in Group 1 by the International Agency for Research on Cancer (IARC):
-							definite human carcinogen.
+							Vinyl chloride monomer is classified as a Group 1 substance (known carcinogen) by the International Agency
+							for Research on Cancer (IARC).
 						</p>
 					</div>
 
@@ -31,8 +31,7 @@ export const PubliHealthRiskSection = () => {
 								<span className='font-bold'>Hepatocellular carcinoma:</span> more common form of liver cancer
 							</li>
 							<li className='font-regular text-[20px] text-gray-600'>
-								<span className='font-bold'>Other risks:</span> neurological effects and peripheral vascular issues
-								(e.g. Raynaud&apos;s phenomenon)
+								<span className='font-bold'>Hepatic steatosis:</span> “fatty liver” disease
 							</li>
 						</ul>
 					</div>
@@ -40,8 +39,9 @@ export const PubliHealthRiskSection = () => {
 					<div>
 						<p className='text-navy-500 font-[lexend] text-[24px] font-medium'>Safety levels</p>
 						<p className='font-regular text-[20px] text-gray-600'>
-							The EU directive sets a limit of 0.5 µg/L in drinking water. However, because VCM is carcinogenic, there
-							is no exposure threshold considered risk-free.
+							The 1998 EU Directive sets a limit value of 0.5 µg/L for vinyl chloride monomer in drinking water, while
+							the World Health Organization recommends a more stringent guideline value of 0.3 µg/L. However, as a
+							non-threshold carcinogen, vinyl chloride is considered to have no completely risk-free level of exposure.
 						</p>
 					</div>
 				</div>

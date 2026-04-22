@@ -24,7 +24,10 @@ export default function ResourceTabNav() {
 
 		TABS.forEach(({ id }) => {
 			const el = document.getElementById(id)
-			if (!el) return
+
+			if (!el) {
+				return
+			}
 
 			const observer = new IntersectionObserver(
 				([entry]) => {
@@ -36,6 +39,7 @@ export default function ResourceTabNav() {
 
 					// Set active to the first tab whose section is visible
 					const firstVisible = TABS.find(t => intersecting.has(t.id))
+
 					if (firstVisible) {
 						setActiveTab(firstVisible.id)
 					}
@@ -53,8 +57,8 @@ export default function ResourceTabNav() {
 	}, [])
 
 	return (
-		<nav className='border-navy-200 bg-navy-50/80 sticky top-[64px] lg:top-[84px] z-10 border-b backdrop-blur-sm'>
-			<div className='flex gap-1 px-1 py-1'>
+		<nav className='border-navy-200 sticky top-0 z-10 border-b bg-white backdrop-blur-sm'>
+			<div className='container mx-auto flex gap-1 px-2'>
 				{TABS.map(tab => (
 					<Link
 						key={tab.id}
@@ -62,9 +66,9 @@ export default function ResourceTabNav() {
 						onClick={() => setActiveTab(tab.id)}
 						aria-current={activeTab === tab.id ? 'true' : undefined}
 						className={cn(
-							'font-[lexend] rounded-lg px-5 py-2 text-sm font-medium transition-colors',
+							'px-5 py-4 font-[lexend] text-sm font-medium transition-colors',
 							activeTab === tab.id
-								? 'bg-navy-800 text-white'
+								? 'border-aqua-400 text-medium border-b-[3px]'
 								: 'text-navy-600 hover:bg-navy-100 hover:text-navy-800'
 						)}
 					>

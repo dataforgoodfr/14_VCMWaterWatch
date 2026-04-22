@@ -41,16 +41,18 @@ export default function ResourceCard({ type, title, description, actionLabel, ac
 	const config = TYPE_CONFIG[type]
 
 	return (
-		<div className='border-navy-200 bg-navy-50 flex h-full flex-col rounded-xl border p-5'>
+		<div className='flex h-full flex-col rounded-sm bg-white p-10 shadow-xs'>
 			{/* Tag badge */}
 			<div className='mb-3'>
-				<span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold ${config.className}`}>
+				<span
+					className={`inline-block rounded border px-2.5 py-0.5 text-xs font-semibold capitalize ${config.className}`}
+				>
 					{config.label}
 				</span>
 			</div>
 
 			{/* Title */}
-			<h3 className='text-navy-800 mb-2 font-[lexend] text-base font-semibold leading-snug'>{title}</h3>
+			<h3 className='text-navy-800 mb-2 font-[lexend] text-base leading-snug font-semibold'>{title}</h3>
 
 			{/* Description */}
 			<p className='text-navy-600 mb-4 flex-1 text-sm leading-relaxed'>{description}</p>
