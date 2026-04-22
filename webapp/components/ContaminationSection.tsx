@@ -4,23 +4,23 @@ export const ContaminationSection = () => {
 	return (
 		<div className='py-6'>
 			<h3 className='text-navy-800 pt-16 pb-8 font-[lexend] text-[32px] font-semibold'>
-				Documented contamination examples
+				Documented contamination cases
 			</h3>
-			<div className='flex flex-col gap-12 md:flex-row'>
+			<div className='flex flex-col items-center gap-12 md:flex-row md:items-start md:justify-between'>
 				<CardImage
-					img={{ url: '/images/contaminations-usa.jpg', alt: 'Louisville, Kentucky, USA.' }}
-					title='Louisville, Kentucky (USA), 2004'
-					description='High VCM levels detected in several neighborhoods served by PVC pipes installed in the 1970s. Emergency replacement of 12 km of network.'
+					img={{ url: '/images/contaminations-usa.jpg', alt: 'Miami, Florida (USA).' }}
+					title='Miami, Florida (USA), 1975'
+					description='The leaching phenomenon of VCM from contaminated PVC pipes is first identified. The US Environmental Protection Agency identify high levels of VCM in drinking water (5,6 μg/L). Additional contamination cases are subsequently confirmed in the US.'
 				/>
 				<CardImage
-					img={{ url: '/images/contaminations-italie.jpg', alt: 'Campania region, Italy.' }}
-					title='Campania region, Italy, 2008'
-					description='Large-scale contamination linked to degraded PVC pipes. Epidemiological study showing increased liver disease incidence in affected areas.'
+					img={{ url: '/images/contaminations-italie.jpg', alt: 'France.' }}
+					title='France, 2010s-2020s'
+					description='Systematic VCM analyses reveal contamination in thousands of municipalities across the country, with the highest number of cases observed in Nouvelle-Aquitaine and Normandy. In affected areas, drinking water consumption is restricted and pipes are progressively replaced. However, no nationwide communication campaign is implemented to inform citizens.'
 				/>
 				<CardImage
-					img={{ url: '/images/contaminations-scandales.jpg', alt: 'Black-and-white photo of an industrial plant.' }}
-					title='Industrial scandals, 1970s–1990s'
-					description='Multiple cases of hepatic angiosarcoma among PVC industry workers in Europe and the United States highlighted VCM toxicity.'
+					img={{ url: '/images/contaminations-scandales.jpg', alt: 'United Kingdom, Italy, Germany, Sweden, Denmark' }}
+					title='United Kingdom, Italy, Germany, Sweden, Denmark, 2010s–2020s'
+					description='Sporadic VCM analyses reveal contamination in a limited number of municipalities across Europe. However, no nationwide monitoring campaigns are implemented in these countries.'
 				/>
 			</div>
 		</div>

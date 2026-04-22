@@ -13,16 +13,16 @@ interface CtaBannerProps {
 
 export default function CtaBanner({ title, subtitle, buttonLabel, href }: CtaBannerProps) {
 	return (
-		<div className='bg-navy-900 flex flex-col items-start justify-between gap-4 rounded-xl px-6 py-6 sm:flex-row sm:items-center'>
+		<div className='bg-aqua-100 flex flex-col items-start justify-between gap-1 rounded-sm px-6 py-6 sm:flex-row sm:items-center'>
 			<div>
-				<p className='font-[lexend] text-base font-semibold text-white'>{title}</p>
-				<p className='mt-1 text-sm text-white/70'>{subtitle}</p>
+				<p className='text-navy-800 font-[lexend] text-[19px] font-bold'>{title}</p>
+				<p className='text-md mt-1 text-gray-500'>{subtitle}</p>
 			</div>
 			<Button
 				asChild
-				variant='outlinePrimary'
+				variant='default'
 				size='xl'
-				className='shrink-0 border-white text-white hover:bg-white hover:text-navy-900'
+				className='shrink-0 rounded-sm border-white bg-green-700 text-white hover:bg-green-600'
 			>
 				<Link href={href} className='text-[15px]'>
 					{buttonLabel}

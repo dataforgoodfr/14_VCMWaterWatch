@@ -1,29 +1,33 @@
 const data = [
 	{
-		date: '1975',
+		date: '1974',
 		title: 'United States',
-		description: 'The EPA classifies VCM as a carcinogen and sets the first limits for drinking water.'
+		description:
+			'OSHA establishes workplace air regulations for vinyl chloride in 1974, following a major occupational health scandal in which exposed workers in PVC production plants developed fatal hepatic angiosarcomas.'
 	},
 	{
 		date: '1978',
 		title: 'Europe',
 		description:
-			'First European directive on water quality for human consumption. VCM is identified as a substance of concern.'
+			'European Directive 78/610/EEC prohibits the installation of PVC water pipes contaminated with VCM, which is known to migrate into drinking water. The directive is transposed into national legislation by Member States in the following years.'
 	},
 	{
 		date: '1998',
-		title: 'Directive 98/83/EC',
-		description: 'EU directive setting a limit of 0.5 µg/L for vinyl chloride monomer in drinking water.'
-	},
-	{
-		date: '2010',
-		title: 'France',
-		description: 'National environmental health plan published, including monitoring of aging PVC networks.'
+		title: 'Europe',
+		description:
+			'EU Directive 98/83/EC sets a parametric value of 0.5 µg/L for vinyl chloride monomer in drinking water. However, it does not require monitoring of this parameter, which limits its effective enforcement.'
 	},
 	{
 		date: '2012',
-		title: 'Tighter controls',
-		description: 'Several member states strengthen oversight and launch programmes to replace at-risk pipes.'
+		title: 'France',
+		description:
+			'Instruction n° DGS/EA4/2012/366 mandates systematic monitoring of vinyl chloride monomer (VCM) in drinking water. In the following years, tens of thousands of analyses are carried out, revealing contamination in thousands of municipalities.'
+	},
+	{
+		date: '2023',
+		title: 'Spain',
+		description:
+			'Royal Decree 3/2023 establishes a framework for systematic VCM testing in distribution networks and at consumer taps where PVC pipes are suspected. Monitoring results under this new framework are not yet publicly available.'
 	}
 ]
 

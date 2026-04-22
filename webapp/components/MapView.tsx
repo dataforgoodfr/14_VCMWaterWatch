@@ -450,9 +450,9 @@ export function MapView() {
 							className='pointer-events-auto absolute max-w-[min(26rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-full'
 							style={zoneCardStyle}
 						>
-							<Card className='border-navy-100 gap-0 bg-white py-0 shadow-md'>
+							<Card className='border-navy-100 w-[300px] gap-0 rounded-sm bg-white py-0 shadow-md'>
 								<CardContent className='flex flex-col gap-2 px-4 py-3'>
-									<p className='text-navy-800 text-sm font-medium'>{zoneCard.name}</p>
+									<p className='text-navy-800 text-lg font-semibold'>{zoneCard.name}</p>
 									<div className='flex flex-wrap gap-2'>
 										{zoneCardPvcBadge ? (
 											<span
@@ -496,7 +496,7 @@ export function MapView() {
 											{zoneCard.zoneId != null ? (
 												<Link
 													href={`/${locale}${ROUTES.ACT}?zone=${zoneCard.zoneId}`}
-													className='bg-navy-800 hover:bg-navy-700 mt-1 inline-flex items-center justify-center rounded-lg px-4 py-2 text-xs font-medium text-white transition-colors'
+													className='mt-1 w-fit rounded-sm border-white bg-green-700 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-green-600'
 												>
 													Take action !
 												</Link>
