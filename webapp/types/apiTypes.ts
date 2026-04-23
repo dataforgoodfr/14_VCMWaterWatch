@@ -33,7 +33,6 @@ export type TableTitle =
 	| 'Country'
 	| 'CountryData'
 	| 'DistributionZone'
-	| 'Map - Tooltip'
 	| 'Municipality'
 	| 'BlogPost'
 	| 'Contribution'
@@ -160,6 +159,7 @@ export interface DistributionZoneDetailFields {
 	Code: string
 	'PVC Level': string | null
 	'VCM Level': string | null
+	'PVC Level comment': string | null
 	'Map Color'?: string | null
 	Country: Country
 	ActorName: string[]
@@ -167,12 +167,6 @@ export interface DistributionZoneDetailFields {
 	/** Resolved server-side from linked Municipality records; not from geometry fields */
 	MunicipalityNames?: string[]
 	'Municipality Geometries'?: string[]
-	/** Linked Map - Tooltip row(s); shape depends on NocoDB API */
-	'Map - Tooltip'?: unknown
-	/** Resolved server-side: PVC Level for map tooltip badge */
-	MapTooltipPvcLevel?: string | null
-	/** Resolved server-side: PVC Level Comment from Map - Tooltip */
-	MapTooltipPvcComment?: string | null
 }
 export type DistributionZoneDetailRecord = Record<DistributionZoneDetailFields>
 
