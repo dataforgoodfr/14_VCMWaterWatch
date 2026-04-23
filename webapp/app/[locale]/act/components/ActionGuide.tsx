@@ -3,10 +3,10 @@ import ScenarioColumns from './ScenarioColumns'
 export default function ActionGuide() {
 	return (
 		<div>
-			<h2 className='text-navy-800 mb-6 font-[lexend] text-2xl font-semibold'>What can you do?</h2>
+			{/* <h2 className='text-navy-800 mb-6 font-[lexend] text-2xl font-semibold'>What can you do?</h2>
 			<p className='text-navy-800 mb-4 text-sm'>
 				Select the scenario that matches your situation to see recommended actions.
-			</p>
+			</p> */}
 			<ScenarioColumns />
 
 			{/* Callouts previously in ActionGuideSidebar */}
