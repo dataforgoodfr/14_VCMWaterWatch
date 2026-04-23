@@ -12,7 +12,7 @@ interface CardImagePropsType {
 
 export function CardImage({ img, title, description }: CardImagePropsType) {
 	return (
-		<Card className='relative mx-auto w-full max-w-sm border-none pt-0 shadow-none'>
+		<Card className='relative mx-auto w-full border-none pt-0 shadow-none'>
 			<div className='absolute inset-0 z-30 aspect-video' />
 			<Image
 				src={img.url}
