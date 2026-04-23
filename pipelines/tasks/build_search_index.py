@@ -47,10 +47,10 @@ def build_search_index_task(db_helper):
 
     zones = db_helper.load_all_records(
         "DistributionZone",
-        fields=["Id", "Name", "ActorName", "Municipalities"],
+        fields=["Id", "Name", "ActorName", "Municipalities", "SearchIndex"],
     )
 
-    # Build search index for each zone
+    # Build search index for each zone; update only when the value changed.
     updates = []
     for zone in zones:
         parts = [zone["Name"]]
@@ -68,7 +68,9 @@ def build_search_index_task(db_helper):
                 parts.append(str(actor_names))
 
         search_index = " | ".join(parts)
-        updates.append({"Id": zone["Id"], "SearchIndex": search_index})
+        previous = zone.get("SearchIndex")
+        if previous != search_index:
+            updates.append({"Id": zone["Id"], "SearchIndex": search_index})
 
     if updates:
         db_helper.update_records(updates, "DistributionZone")
