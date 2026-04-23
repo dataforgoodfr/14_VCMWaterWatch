@@ -28,7 +28,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 		const [zoneRes, recentAnalyses] = await Promise.all([
 			instance.get(`/data/${process.env.NOCODB_BASE_ID}/${tableId}/records/${id}`, {
 				timeout: 10000,
-				params: { fields: 'PVC Level Comment' }
+				params: { fields: 'PVC Level comment' }
 			}),
 			fetchRecentAnalyses(zoneId)
 		])
@@ -37,7 +37,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 		const f = data?.fields
 
 		return NextResponse.json({
-			pvcLevelComment: f?.['PVC Level Comment'] ?? null,
+			pvcLevelComment: f?.['PVC Level comment'] ?? null,
 			recentAnalyses
 		})
 	} catch (error) {
