@@ -70,7 +70,6 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
 				{/* Header */}
 				<div className='container mx-auto px-4 pt-16 md:px-8'>
 					<h1 className='text-navy-800 font-[lexend] text-3xl font-semibold'>{t('about-title')}</h1>
-					<p className='text-navy-600 mt-2 text-lg'>{t('about-subtitle')}</p>
 				</div>
 
 				{/* Description Card */}
