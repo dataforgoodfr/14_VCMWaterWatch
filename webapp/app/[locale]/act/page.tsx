@@ -1,16 +1,14 @@
-// import { fetchLetterTemplates } from '@/lib/fetchLetterTemplates'
-
+import { fetchLetterTemplates } from '@/lib/fetchLetterTemplates'
+import ActionGuide from './components/ActionGuide'
 import ActSearchSection from './components/ActSearchSection'
-// import GetInvolvedSection from './components/GetInvolvedSection'
-import ScenarioColumns from './components/ScenarioColumns'
-import TakeActionInfos from './components/TakeActionInfos'
+import GetInvolvedSection from './components/GetInvolvedSection'
 
 export const revalidate = 300 // SEMI_STATIC_REVALIDATE_SECONDS
 
-export default function ActPage() {
-	// const { locale } = await params
+export default async function ActPage({ params }: { params: Promise<{ locale: string }> }) {
+	const { locale } = await params
 
-	// const templates = await fetchLetterTemplates(locale)
+	const templates = await fetchLetterTemplates(locale)
 
 	return (
 		<main className='bg-gray-50'>
@@ -24,9 +22,11 @@ export default function ActPage() {
 
 					<ActSearchSection />
 
-					<ScenarioColumns />
+					{/* <ScenarioColumns /> */}
+					<ActionGuide />
 
-					<TakeActionInfos />
+					{/* <TakeActionInfos /> */}
+					<GetInvolvedSection templates={templates} />
 				</div>
 			</div>
 		</main>

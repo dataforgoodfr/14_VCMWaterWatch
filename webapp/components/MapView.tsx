@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 
 import Link from 'next/link'
 
+import { ArrowUpRight } from 'lucide-react'
 import maplibregl from 'maplibre-gl'
 import type { MapLayerMouseEvent, MapLibreEvent } from 'maplibre-gl'
 import { Protocol } from 'pmtiles'
@@ -28,7 +29,10 @@ import {
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 
 import { MapRiskFilters } from './MapRiskFilters'
+
 import { SearchBar } from './SearchBar'
+
+import { Button } from './ui/button'
 
 let protocolRegistered = false
 let pmtilesProtocol: Protocol | null = null
@@ -454,6 +458,7 @@ export function MapView() {
 								<CardContent className='flex flex-col gap-2 px-4 py-3'>
 									<p className='text-navy-800 text-lg font-semibold'>{zoneCard.name}</p>
 									<div className='flex flex-wrap gap-2'>
+										<p className='text-xs text-gray-500'>Data may be uncomplete or not available yet.</p>
 										{zoneCardPvcBadge ? (
 											<span
 												className='inline-flex rounded-3xl border px-3 py-1.5 text-left text-xs font-medium'
@@ -494,12 +499,17 @@ export function MapView() {
 												</div>
 											) : null}
 											{zoneCard.zoneId != null ? (
-												<Link
-													href={`/${locale}${ROUTES.ACT}?zone=${zoneCard.zoneId}`}
-													className='mt-1 w-fit rounded-sm border-white bg-green-700 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-green-600'
+												<Button
+													asChild
+													variant='default'
+													size='lg'
+													className='w-fit shrink-0 rounded-sm border-white bg-green-700 text-white hover:bg-green-600'
 												>
-													Take action !
-												</Link>
+													<Link href={`/${locale}${ROUTES.ACT}?zone=${zoneCard.zoneId}`} className='text-[15px]'>
+														Take action
+														<ArrowUpRight className='transition-transform group-hover:translate-x-1 group-hover:-translate-y-1' />
+													</Link>
+												</Button>
 											) : null}
 										</>
 									) : null}
