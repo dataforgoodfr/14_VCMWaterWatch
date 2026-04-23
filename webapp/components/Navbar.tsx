@@ -14,7 +14,6 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { ROUTES } from '@/routes/routes'
-import LanguageDropDown from './LanguageDropDown'
 
 interface MenuItem {
 	title: string
@@ -149,12 +148,12 @@ const Navbar = ({
 											<ChevronRightIcon />
 										</Link>
 									))}
-									<div className='mt-4'>
+									{/* <div className='mt-4'>
 										<LanguageDropDown
 											className='hover:text-aqua-200 justify-start px-3 text-base text-white/95'
 											onLocaleSelected={() => setIsMobileMenuOpen(false)}
 										/>
-									</div>
+									</div> */}
 								</div>
 							</SheetContent>
 						</Sheet>
