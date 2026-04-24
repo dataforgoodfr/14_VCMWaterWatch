@@ -81,7 +81,7 @@ export type RessourcesRecord = Record<RessourcesFields>
 export interface RessourcesFields {
 	Title: string
 	Type: string | null
-	Short_Description: string | null
+	'Short Description': string | null
 	URL: string | null
 	Language: string | null
 }
