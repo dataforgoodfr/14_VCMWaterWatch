@@ -39,6 +39,7 @@ export type TableTitle =
 	| 'Volunteer'
 	| 'LetterTemplate'
 	| 'Members'
+	| 'Ressources'
 
 export interface MetaTable {
 	id: string
@@ -74,6 +75,16 @@ export interface Record<T> {
 }
 
 export type BlogPostRecord = Record<BlogPostFields>
+
+export type RessourcesRecord = Record<RessourcesFields>
+
+export interface RessourcesFields {
+	Title: string
+	Type: string | null
+	Short_Description: string | null
+	URL: string | null
+	Language: string | null
+}
 
 export interface BlogPostFields {
 	Title: string
