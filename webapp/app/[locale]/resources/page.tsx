@@ -1,8 +1,12 @@
+import { fetchRessources } from '@/lib/fetchRessources'
 import MethodologySection from './components/MethodologySection'
 import ResourcesSection from './components/ResourcesSection'
 import ResourceTabNav from './components/ResourceTabNav'
 
-export default function ResourcesPage() {
+export default async function ResourcesPage({ params }: { params: Promise<{ locale: string }> }) {
+	const { locale } = await params
+	const resources = await fetchRessources({ locale })
+
 	return (
 		<main className='bg-gray-50'>
 			<ResourceTabNav />
@@ -11,7 +15,7 @@ export default function ResourcesPage() {
 				<div className='mt-12 space-y-16'>
 					{/* Resources section */}
 					<section id='resources' className='scroll-mt-[148px]'>
-						<ResourcesSection />
+						<ResourcesSection resources={resources} />
 					</section>
 
 					<hr className='border-navy-200' />
