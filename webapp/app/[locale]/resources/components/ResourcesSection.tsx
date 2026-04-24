@@ -24,7 +24,7 @@ export default function ResourcesSection({ resources }: ResourcesSectionProps) {
 							key={r.id}
 							typeKey={r.fields.Type ?? null}
 							title={r.fields.Title}
-							description={r.fields.Short_Description ?? ''}
+							description={r.fields['Short Description'] ?? ''}
 							actionUrl={r.fields.URL ?? '#'}
 						/>
 					))}
