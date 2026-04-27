@@ -19,6 +19,9 @@ from fastapi.responses import JSONResponse
 from pipelines.export.export_country_images import export_country_images
 from pipelines.export.export_team_images import export_team_images
 from pipelines.export.export_pmtiles import export_pmtiles_flow
+from pipelines.load.import_water_companies_from_staging import (
+    import_water_companies_from_staging_flow,
+)
 from pipelines.tasks.build_search_index import build_search_index
 
 logging.basicConfig(
@@ -39,6 +42,9 @@ TEAM_IMAGES_TRIGGER_TABLES = {"Members"}
 # Tables whose changes should trigger a search index rebuild
 SEARCH_INDEX_TRIGGER_TABLES = {"DistributionZone", "Municipality"}
 
+# Tables whose changes should trigger a water company staging import
+WATER_COMPANY_IMPORT_TRIGGER_TABLES = {"Water Company Import"}
+
 # Debounce delay — how long to wait after the last webhook before running the flow.
 # Override via WEBHOOK_DEBOUNCE_SECONDS env var. Default 60s.
 DEBOUNCE_SECONDS = float(os.environ.get("WEBHOOK_DEBOUNCE_SECONDS", "60"))
@@ -50,6 +56,10 @@ _debounce_timer: threading.Timer | None = None
 # Lock and timer for search index debounce
 _search_debounce_lock = threading.Lock()
 _search_debounce_timer: threading.Timer | None = None
+
+# Lock and timer for water company import debounce
+_water_company_import_debounce_lock = threading.Lock()
+_water_company_import_debounce_timer: threading.Timer | None = None
 
 # Country images flow runs without debounce (webhook fires rarely and users
 # want to see the new image immediately). A lock still exists for test-suite
@@ -100,6 +110,28 @@ def _schedule_search_index():
         _search_debounce_timer = threading.Timer(DEBOUNCE_SECONDS, _run_search_index_flow)
         _search_debounce_timer.daemon = True
         _search_debounce_timer.start()
+
+
+def _run_water_company_import_flow():
+    """Run the water company staging import flow. Called by the debounce timer."""
+    with _flow_run_lock:
+        try:
+            import_water_companies_from_staging_flow()
+        except Exception:
+            logger.exception("Water company import flow failed")
+
+
+def _schedule_water_company_import():
+    """Schedule (or reschedule) the water company import flow after DEBOUNCE_SECONDS."""
+    global _water_company_import_debounce_timer
+    with _water_company_import_debounce_lock:
+        if _water_company_import_debounce_timer is not None:
+            _water_company_import_debounce_timer.cancel()
+        _water_company_import_debounce_timer = threading.Timer(
+            DEBOUNCE_SECONDS, _run_water_company_import_flow
+        )
+        _water_company_import_debounce_timer.daemon = True
+        _water_company_import_debounce_timer.start()
 
 
 def _run_country_images_flow():
@@ -187,6 +219,13 @@ def nocodb_webhook(payload: dict):
         )
         _schedule_country_images()
         scheduled.append("export_country_images")
+
+    if table_name in WATER_COMPANY_IMPORT_TRIGGER_TABLES:
+        logger.info(
+            f"Webhook received for table {table_name}, scheduling water company import"
+        )
+        _schedule_water_company_import()
+        scheduled.append("import_water_companies_from_staging")
 
     if table_name in TEAM_IMAGES_TRIGGER_TABLES:
         logger.info(
