@@ -53,7 +53,7 @@ def build_search_index_task(db_helper):
     # Build search index for each zone; update only when the value changed.
     updates = []
     for zone in zones:
-        parts = [zone["Name"]]
+        parts = [zone["Name"] or ""]
 
         muni_ids = _linked_record_ids(zone.get("Municipalities"))
         muni_names = [id_to_name[i] for i in muni_ids if i in id_to_name]
@@ -67,7 +67,7 @@ def build_search_index_task(db_helper):
             else:
                 parts.append(str(actor_names))
 
-        search_index = " | ".join(parts)
+        search_index = " | ".join(p for p in parts if p)
         previous = zone.get("SearchIndex")
         if previous != search_index:
             updates.append({"Id": zone["Id"], "SearchIndex": search_index})
