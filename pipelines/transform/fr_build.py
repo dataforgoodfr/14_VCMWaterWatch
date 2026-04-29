@@ -28,10 +28,15 @@ def _get_dmeau_path(data_directory: Path) -> Path:
 
 
 def _attach_dansmoneau(conn: duckdb.DuckDBPyConnection, dmeau_path: Path) -> None:
-    """Attach the dansmoneau DuckDB as a read-only database named 'dmeau'."""
+    """Attach the dansmoneau DuckDB as a read-only database named 'data'.
+
+    The upstream file (data.duckdb) was built with 'data' as its internal
+    catalog name.  DuckDB 1.x does not remap internal catalog references when
+    attaching with a different alias, so we must preserve the original name.
+    """
     # Install spatial extension for geometry support
     conn.execute("INSTALL spatial; LOAD spatial;")
-    conn.execute(f"ATTACH '{dmeau_path}' AS dmeau (READ_ONLY)")
+    conn.execute(f"ATTACH '{dmeau_path}' AS data (READ_ONLY)")
 
 
 @task(name="fr_build_distribution_zones", cache_policy=NO_CACHE)
@@ -46,9 +51,9 @@ def build_distribution_zones(conn: duckdb.DuckDBPyConnection) -> int:
             'FR'         AS "CountryCode",
             'Distribution' AS "Type",
             str_split(u.inseecommunes, ',') AS "Municipalities",
-            ST_AsGeoJSON(g.geom) AS "Geometry"
-        FROM dmeau.main.int__udi u
-        LEFT JOIN dmeau.main.int__udi_geom g USING (cdreseau)
+            g.geom::VARCHAR AS "Geometry"
+        FROM data.main.int__udi u
+        LEFT JOIN data.main.int__udi_geom g ON u.cdreseau = g.code_udi
         WHERE u.cdreseau IS NOT NULL
     """)
     count = conn.execute('SELECT count(*) FROM staging."DistributionZone_fr"').fetchone()[0]
@@ -66,8 +71,8 @@ def build_water_companies(conn: duckdb.DuckDBPyConnection) -> int:
             SELECT
                 cdreseau,
                 distrlib,
-                ROW_NUMBER() OVER (PARTITION BY cdreseau ORDER BY datetimeprel DESC) AS rn
-            FROM dmeau.main.edc_prelevements
+                ROW_NUMBER() OVER (PARTITION BY cdreseau ORDER BY dateprel DESC) AS rn
+            FROM data.main.edc_prelevements
             WHERE de_partition >= 2023
               AND distrlib IS NOT NULL
               AND cdreseau IS NOT NULL
@@ -98,7 +103,7 @@ def build_analysis_dansmoneau(conn: duckdb.DuckDBPyConnection) -> int:
             CAST(valtraduite AS DOUBLE)    AS "CVMMeasure",
             'dansmoneau'                   AS "Source",
             referenceprel                  AS "SourceRef"
-        FROM dmeau.main.int__resultats_udi_communes
+        FROM data.main.int__resultats_udi_communes
         WHERE categorie = 'cvm'
           AND de_partition >= 2023
           AND valtraduite IS NOT NULL
@@ -121,19 +126,26 @@ def build_analysis_outline(conn: duckdb.DuckDBPyConnection) -> int:
     ).fetchall()
     if not tables:
         logger.warning("raw.outline_cvm_samples not found; skipping Outline analysis build")
-        conn.execute('CREATE OR REPLACE TABLE staging."Analysis_fr_outline" (dummy INTEGER)')
+        conn.execute('''CREATE OR REPLACE TABLE staging."Analysis_fr_outline" (
+            "DistributionZoneCode" VARCHAR,
+            "MunicipalityCode"     VARCHAR,
+            "Date"                 DATE,
+            "CVMMeasure"           DOUBLE,
+            "Source"               VARCHAR,
+            "SourceRef"            VARCHAR
+        )''')
         return 0
 
     # Resolve commune names via COG, then explode to UDIs
     max_partition = conn.execute(
-        "SELECT max(de_partition) FROM dmeau.main.cog_communes"
+        "SELECT max(de_partition) FROM data.main.cog_communes"
     ).fetchone()[0]
 
     conn.execute(f"""
         CREATE OR REPLACE TABLE staging._outline_resolved AS
         SELECT s.*, c.COM AS inseecommune
         FROM raw.outline_cvm_samples s
-        LEFT JOIN dmeau.main.cog_communes c
+        LEFT JOIN data.main.cog_communes c
           ON c.DEP  = s.dept
          AND c.NCC  = s.commune_name_norm
          AND c.TYPECOM = 'COM'
@@ -163,7 +175,7 @@ def build_analysis_outline(conn: duckdb.DuckDBPyConnection) -> int:
             FROM staging._outline_resolved r
             JOIN (
                 SELECT cdreseau, unnest(str_split(inseecommunes, ',')) AS inseecommune
-                FROM dmeau.main.int__udi
+                FROM data.main.int__udi
             ) u USING (inseecommune)
             WHERE r.inseecommune IS NOT NULL
               AND r.value_ugl IS NOT NULL

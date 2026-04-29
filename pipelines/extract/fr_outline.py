@@ -91,11 +91,22 @@ def _parse_value(raw) -> Optional[float]:
 # Per-region parsers
 # ---------------------------------------------------------------------------
 
+def _normalize(text: str) -> str:
+    """Lowercase + remove accents for fuzzy header matching."""
+    return _remove_accents(text.strip().lower())
+
+
 def _find_header_row(ws, candidates: list[str]) -> int:
-    """Return the 1-based row index where all candidate strings appear."""
+    """Return the 1-based row index where all candidates appear as substrings
+    of at least one cell value (accent-insensitive)."""
     for row in ws.iter_rows():
-        cell_values = {str(c.value).strip().lower() if c.value else "" for c in row}
-        if all(c.lower() in cell_values for c in candidates):
+        cell_values = [
+            _normalize(str(c.value)) for c in row if c.value is not None
+        ]
+        if all(
+            any(cand.lower() in cv for cv in cell_values)
+            for cand in candidates
+        ):
             return row[0].row
     raise ValueError(
         f"Could not find header row containing {candidates} in sheet '{ws.title}'"
@@ -103,9 +114,11 @@ def _find_header_row(ws, candidates: list[str]) -> int:
 
 
 def _col_index(ws, header_row: int, name: str) -> int:
-    """Return the 1-based column index for *name* in *header_row*."""
+    """Return the 1-based column index for *name* (substring, accent-insensitive)
+    in *header_row*."""
+    name_norm = _normalize(name)
     for cell in ws[header_row]:
-        if cell.value and str(cell.value).strip().lower() == name.lower():
+        if cell.value and name_norm in _normalize(str(cell.value)):
             return cell.column
     raise ValueError(f"Column '{name}' not found in header row {header_row}")
 
@@ -124,7 +137,7 @@ def _parse_bretagne(path: Path) -> list[dict]:
         date_col = _col_index(sheet, hr, "date")
         # CVM column – try a few variants
         cvm_col = None
-        for candidate in ["cvm (µg/l)", "cvm (ug/l)", "cvm", "valeur (µg/l)", "valeur"]:
+        for candidate in ["cvm (µg/l)", "cvm (ug/l)", "cvm", "valeur (µg/l)", "valeur", "chlorure", "resultat"]:
             try:
                 cvm_col = _col_index(sheet, hr, candidate)
                 break
@@ -196,11 +209,15 @@ def _parse_generic(path: Path, dept_col_hint: str = "departement") -> list[dict]
             continue
 
         # dept may come from a column or the sheet title
-        try:
-            dept_col = _col_index(sheet, hr, dept_col_hint)
-            sheet_dept = None
-        except ValueError:
-            dept_col = None
+        dept_col = None
+        for dept_hint in [dept_col_hint, "dept"]:
+            try:
+                dept_col = _col_index(sheet, hr, dept_hint)
+                sheet_dept = None
+                break
+            except ValueError:
+                pass
+        if dept_col is None:
             # Try to extract dept from sheet name e.g. "Dept 14" or "14"
             m = re.search(r"\b(\d{1,2}[aAbB]?)\b", sheet.title)
             sheet_dept = m.group(1) if m else None
@@ -214,7 +231,7 @@ def _parse_generic(path: Path, dept_col_hint: str = "departement") -> list[dict]
         except ValueError:
             continue
         cvm_col = None
-        for candidate in ["cvm (µg/l)", "cvm (ug/l)", "cvm", "valeur (µg/l)", "valeur"]:
+        for candidate in ["cvm (µg/l)", "cvm (ug/l)", "cvm", "valeur (µg/l)", "valeur", "chlorure", "resultat"]:
             try:
                 cvm_col = _col_index(sheet, hr, candidate)
                 break

@@ -47,14 +47,14 @@ def dmeau_db(tmp_path) -> Path:
 
     conn.execute("""
         CREATE TABLE int__udi_geom (
-            cdreseau VARCHAR,
-            geom GEOMETRY
+            code_udi VARCHAR,
+            geom JSON
         )
     """)
     conn.execute("""
         INSERT INTO int__udi_geom VALUES
-            ('UDI001', ST_GeomFromText('POLYGON((0 0,1 0,1 1,0 1,0 0))')),
-            ('UDI002', ST_GeomFromText('POLYGON((1 0,2 0,2 1,1 1,1 0))'))
+            ('UDI001', '{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]}'),
+            ('UDI002', '{"type":"Polygon","coordinates":[[[1,0],[2,0],[2,1],[1,1],[1,0]]]}')
     """)
 
     conn.execute("""
@@ -63,7 +63,7 @@ def dmeau_db(tmp_path) -> Path:
             distrlib VARCHAR,
             moalib VARCHAR,
             ugelib VARCHAR,
-            datetimeprel TIMESTAMP,
+            dateprel DATE,
             de_partition INTEGER
         )
     """)
