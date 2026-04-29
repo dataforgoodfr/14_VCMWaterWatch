@@ -13,6 +13,7 @@ Output columns:
   source_file       – basename of the source Excel file
 """
 
+import datetime
 import re
 import unicodedata
 from pathlib import Path
@@ -148,7 +149,6 @@ def _parse_bretagne(path: Path) -> list[dict]:
             if not dept or not commune:
                 continue
 
-            import datetime
             if isinstance(date_raw, datetime.datetime):
                 plv_date = date_raw.date()
             elif isinstance(date_raw, datetime.date):
@@ -240,7 +240,6 @@ def _parse_generic(path: Path, dept_col_hint: str = "departement") -> list[dict]
             if not dept or not commune:
                 continue
 
-            import datetime
             if isinstance(date_raw, datetime.datetime):
                 plv_date = date_raw.date()
             elif isinstance(date_raw, datetime.date):
