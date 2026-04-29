@@ -102,37 +102,21 @@ def _ensure_udf(conn: duckdb.DuckDBPyConnection) -> None:
         pass
 
 
-def _list_sheets(path: Path) -> list[str]:
-    """Return worksheet titles in workbook order.
-
-    Uses openpyxl because DuckDB 1.5's ``excel`` extension doesn't expose a
-    sheet-enumeration function; the cost is trivial (read-only metadata read).
-    """
-    import openpyxl
-
-    wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
-    try:
-        return [s.title for s in wb.worksheets]
-    finally:
-        wb.close()
-
-
 def _detect_header_row(
     conn: duckdb.DuckDBPyConnection,
     path_str: str,
-    sheet: str,
     scan_rows: int = 30,
 ) -> Optional[tuple[int, list[str]]]:
-    """Scan the first *scan_rows* rows of *sheet* for a valid header row.
+    """Scan the first *scan_rows* rows of the workbook's first sheet for a
+    valid header row.
 
-    A header row must contain all four required columns (dept, commune, date,
-    value) detected by fuzzy substring match.  Returns
+    A header row must contain all four required columns (dept, commune,
+    date, value) detected by fuzzy substring match.  Returns
     ``(row_number_1_indexed, header_cells)`` or ``None``.
     """
-    sheet_esc = sheet.replace("'", "''")
     sample = conn.execute(
-        f"SELECT * FROM read_xlsx('{path_str}', sheet='{sheet_esc}', "
-        f"header=false, all_varchar=true) LIMIT {scan_rows}"
+        f"SELECT * FROM read_xlsx('{path_str}', header=false, "
+        f"all_varchar=true) LIMIT {scan_rows}"
     ).fetchall()
 
     for idx, row in enumerate(sample, start=1):
@@ -150,15 +134,16 @@ def _detect_header_row(
 def parse_xlsx(conn: duckdb.DuckDBPyConnection, path: Path) -> list[dict]:
     """Parse an Outline xlsx file via DuckDB's excel extension.
 
-    Iterates through every worksheet and auto-detects the header row (handles
-    preamble rows).  Sheets must have all four required columns (dept,
-    commune, date, value) detected by fuzzy substring match; sheets that
-    don't match are silently skipped.  Files where no sheet matches return an
-    empty list – callers should surface this as a warning.
+    Reads the workbook's first sheet, auto-detects the header row (scans a
+    short preamble), and projects into the canonical ``outline_cvm_samples``
+    shape.
 
-    The dept column must contain numeric codes (e.g. ``'07'``, ``14``) or
-    Corsica codes (``'2A'``, ``'2B'``); files with non-numeric dept columns
-    (department names) are not supported and should be skipped upstream.
+    Returns an empty list when the file's structure is unsupported:
+      * the first sheet has no header with dept + commune + date + value;
+      * the dept column holds department names instead of numeric codes
+        (e.g. ``'AIN'``) – we cannot link those back to INSEE communes.
+
+    Callers should surface empty results as a warning.
     """
     import math
     import pandas as pd
@@ -167,98 +152,81 @@ def parse_xlsx(conn: duckdb.DuckDBPyConnection, path: Path) -> list[dict]:
     conn.execute("INSTALL excel; LOAD excel;")
 
     path_str = str(path).replace("'", "''")
-    sheet_names = _list_sheets(path)
 
-    all_records: list[dict] = []
-    for sheet in sheet_names:
-        hdr = _detect_header_row(conn, path_str, sheet)
-        if hdr is None:
-            continue
-        hdr_row, cols = hdr
+    hdr = _detect_header_row(conn, path_str)
+    if hdr is None:
+        return []
+    hdr_row, cols = hdr
 
-        dept_col = _find_col(cols, ["departement", "dept"])
-        commune_col = _find_col(cols, ["commune"])
-        date_col = _find_col(cols, ["date"])
-        value_col = _find_col(cols, ["chlorure", "cvm", "valeur", "resultat"])
-        # _detect_header_row guarantees commune/date/value are present.
+    dept_col = _find_col(cols, ["departement", "dept"])
+    commune_col = _find_col(cols, ["commune"])
+    date_col = _find_col(cols, ["date"])
+    value_col = _find_col(cols, ["chlorure", "cvm", "valeur", "resultat"])
+    # _detect_header_row guarantees all four are present.
 
-        sheet_esc = sheet.replace("'", "''")
-        # DuckDB range starts at header row; header=true consumes hdr_row as
-        # the column labels and returns subsequent rows as data.
-        read_expr = (
-            f"read_xlsx('{path_str}', sheet='{sheet_esc}', "
-            f"header=true, all_varchar=true, range='A{hdr_row}:ZZ1048576')"
-        )
+    read_expr = (
+        f"read_xlsx('{path_str}', header=true, all_varchar=true, "
+        f"range='A{hdr_row}:ZZ1048576')"
+    )
 
-        # Dept normalisation: numeric → stripped of leading zeros / '.0';
-        # otherwise keep upper-cased varchar (preserves Corsica 2A/2B).
-        if dept_col:
-            dept_expr = (
-                f"COALESCE("
-                f"  TRY_CAST(TRY_CAST({_qid(dept_col)} AS DOUBLE) AS BIGINT)::VARCHAR, "
-                f"  trim(upper({_qid(dept_col)}))"
-                f")"
-            )
-        else:
-            dept_expr = "NULL"
+    # Dept normalisation: numeric → stripped of leading zeros / '.0';
+    # otherwise keep upper-cased varchar (preserves Corsica 2A/2B).
+    dept_expr = (
+        f"COALESCE("
+        f"  TRY_CAST(TRY_CAST({_qid(dept_col)} AS DOUBLE) AS BIGINT)::VARCHAR, "
+        f"  trim(upper({_qid(dept_col)}))"
+        f")"
+    )
 
-        # Value normalisation: handle decimal-comma, '#EMPTY', '<0.5', '>X', N/A.
-        value_expr = (
-            f"TRY_CAST("
-            f"  CASE "
-            f"    WHEN {_qid(value_col)} IS NULL THEN NULL "
-            f"    WHEN regexp_matches(trim({_qid(value_col)}), '^[<>]') THEN NULL "
-            f"    WHEN upper(trim({_qid(value_col)})) IN ('#EMPTY','N/A','ND','') THEN NULL "
-            f"    ELSE replace(trim({_qid(value_col)}), ',', '.') "
-            f"  END "
-            f"AS DOUBLE)"
-        )
+    # Value normalisation: handle decimal-comma, '#EMPTY', '<0.5', '>X', N/A.
+    value_expr = (
+        f"TRY_CAST("
+        f"  CASE "
+        f"    WHEN {_qid(value_col)} IS NULL THEN NULL "
+        f"    WHEN regexp_matches(trim({_qid(value_col)}), '^[<>]') THEN NULL "
+        f"    WHEN upper(trim({_qid(value_col)})) IN ('#EMPTY','N/A','ND','') THEN NULL "
+        f"    ELSE replace(trim({_qid(value_col)}), ',', '.') "
+        f"  END "
+        f"AS DOUBLE)"
+    )
 
-        sql = f"""
-            SELECT
-                {dept_expr}                              AS dept,
-                trim({_qid(commune_col)})                AS commune_name_raw,
-                normalize_commune_name(
-                    trim({_qid(commune_col)})
-                )                                        AS commune_name_norm,
-                TRY_CAST({_qid(date_col)} AS DATE)       AS plv_date,
-                {value_expr}                             AS value_ugl,
-                '{path.name.replace("'", "''")}'         AS source_file
-            FROM {read_expr}
-            WHERE {_qid(commune_col)} IS NOT NULL
-        """
-        df = conn.execute(sql).fetchdf()
-        if dept_col:
-            df = df[df["dept"].notna() & (df["dept"].astype(str).str.len() > 0)]
+    sql = f"""
+        SELECT
+            {dept_expr}                              AS dept,
+            trim({_qid(commune_col)})                AS commune_name_raw,
+            normalize_commune_name(
+                trim({_qid(commune_col)})
+            )                                        AS commune_name_norm,
+            TRY_CAST({_qid(date_col)} AS DATE)       AS plv_date,
+            {value_expr}                             AS value_ugl,
+            '{path.name.replace("'", "''")}'         AS source_file
+        FROM {read_expr}
+        WHERE {_qid(commune_col)} IS NOT NULL
+    """
+    df = conn.execute(sql).fetchdf()
+    df = df[df["dept"].notna() & (df["dept"].astype(str).str.len() > 0)]
 
-            # Sanity-check dept values: INSEE codes are numeric (optionally with
-            # 2A/2B for Corsica).  If the column holds department names (e.g.
-            # 'AIN', 'ALLIER') instead, bail on this sheet – we cannot link
-            # back to communes without a numeric dept.
-            if len(df) > 0:
-                sample = df["dept"].astype(str).head(50)
-                numeric_like = sample.str.match(r"^(\d+|2[AB])$", case=False)
-                if numeric_like.mean() < 0.5:
-                    # Return a signal to caller via exception-free side channel:
-                    # we simply drop the sheet's rows.  The empty result for
-                    # the file triggers the caller's skip-with-warning.
-                    continue
+    # Sanity-check dept values: INSEE codes are numeric (optionally with
+    # 2A/2B for Corsica).  If the column holds department names (e.g. 'AIN',
+    # 'ALLIER') instead, bail – we cannot link back to INSEE communes.
+    if len(df) > 0:
+        sample = df["dept"].astype(str).head(50)
+        if sample.str.match(r"^(\d+|2[AB])$", case=False).mean() < 0.5:
+            return []
 
-        # pandas NaN → None, Timestamp → datetime.date for clean downstream use.
-        for r in df.to_dict(orient="records"):
-            clean = {}
-            for k, v in r.items():
-                if v is None:
-                    clean[k] = None
-                elif isinstance(v, float) and math.isnan(v):
-                    clean[k] = None
-                elif isinstance(v, pd.Timestamp):
-                    clean[k] = v.date() if not pd.isna(v) else None
-                else:
-                    clean[k] = v
-            all_records.append(clean)
-
-    return all_records
+    # pandas NaN → None, Timestamp → datetime.date for clean downstream use.
+    records: list[dict] = []
+    for r in df.to_dict(orient="records"):
+        clean = {}
+        for k, v in r.items():
+            if v is None or (isinstance(v, float) and math.isnan(v)):
+                clean[k] = None
+            elif isinstance(v, pd.Timestamp):
+                clean[k] = v.date() if not pd.isna(v) else None
+            else:
+                clean[k] = v
+        records.append(clean)
+    return records
 
 
 # ---------------------------------------------------------------------------
