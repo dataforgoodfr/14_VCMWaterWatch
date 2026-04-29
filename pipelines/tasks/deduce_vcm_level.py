@@ -18,6 +18,8 @@ from prefect.cache_policies import NO_CACHE
 
 from pipelines.common import services, staging_db
 
+# CVM threshold in µg/L above which a zone is classified as 'High'
+CVM_THRESHOLD_UGL = 0.5
 
 @task(name="deduce_vcm_level_compute", cache_policy=NO_CACHE)
 def compute_vcm_levels(conn: duckdb.DuckDBPyConnection) -> dict[str, str]:
@@ -36,11 +38,11 @@ def compute_vcm_levels(conn: duckdb.DuckDBPyConnection) -> dict[str, str]:
         logger.warning("staging.Analysis_fr not found; no VCM levels computed")
         return {}
 
-    rows = conn.execute("""
+    rows = conn.execute(f"""
         SELECT
             "DistributionZoneCode" AS code,
             CASE
-                WHEN max("CVMMeasure") > 0.5 THEN 'High'
+                WHEN max("CVMMeasure") > {CVM_THRESHOLD_UGL} THEN 'High'
                 WHEN count(*) > 0            THEN 'Low'
                 ELSE                              'Unknown'
             END AS level
