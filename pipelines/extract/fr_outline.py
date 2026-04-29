@@ -1,8 +1,9 @@
 """
 Prefect workflow for extracting Outline regional CVM Excel exports.
 
-Parses three regional Excel files (Bretagne, Normandie, Nouvelle-Aquitaine) and
-writes normalised rows into ``raw.outline_cvm_samples``.
+Parses regional Excel files in ``data/raw/vcm_france/`` using DuckDB's
+``excel`` extension and writes normalised rows into
+``raw.outline_cvm_samples``.
 
 Output columns:
   dept              – department code (str, e.g. "29", "2A")
@@ -11,15 +12,18 @@ Output columns:
   plv_date          – sampling date (Python date)
   value_ugl         – CVM measurement in µg/L (float or None)
   source_file       – basename of the source Excel file
+
+Column detection is fuzzy (accent-insensitive substring match) so the same
+generic parser handles Bretagne / Normandie / Nouvelle-Aquitaine despite their
+schema differences.
 """
 
-import datetime
 import re
 import unicodedata
 from pathlib import Path
 from typing import Optional
 
-import openpyxl
+import duckdb
 from prefect import flow, get_run_logger, task
 from prefect.cache_policies import NO_CACHE
 
@@ -27,7 +31,7 @@ from pipelines.common import staging_db
 
 
 # ---------------------------------------------------------------------------
-# Normalisation helpers
+# Normalisation helpers (used both directly and as DuckDB UDFs)
 # ---------------------------------------------------------------------------
 
 def _remove_accents(text: str) -> str:
@@ -36,12 +40,10 @@ def _remove_accents(text: str) -> str:
     return "".join(ch for ch in nfd if unicodedata.category(ch) != "Mn")
 
 
-_TRAILING_ARTICLES = re.compile(
-    r"\s+\(L[AE]S?\)$", re.IGNORECASE
-)
+_TRAILING_ARTICLES = re.compile(r"\s+\(L[AE]S?\)$", re.IGNORECASE)
 
 
-def normalize_commune_name(name: str) -> str:
+def normalize_commune_name(name: Optional[str]) -> str:
     """Normalize a commune name for COG join.
 
     Steps:
@@ -54,7 +56,7 @@ def normalize_commune_name(name: str) -> str:
     """
     if not name:
         return ""
-    name = name.strip().upper()
+    name = str(name).strip().upper()
     name = _remove_accents(name)
     name = name.replace("-", " ").replace("'", " ").replace("\u2019", " ")
     name = _TRAILING_ARTICLES.sub("", name)
@@ -62,239 +64,201 @@ def normalize_commune_name(name: str) -> str:
     return name
 
 
-def _parse_value(raw) -> Optional[float]:
-    """Parse a CVM measurement value.
+def _norm_header(h: str) -> str:
+    """Lowercase + accent-stripped header value, for fuzzy matching."""
+    return _remove_accents(str(h)).lower().strip()
 
-    - ``#EMPTY``, blank, None → None
-    - ``<0.5``-style strings → None (below detection limit, treated as no
-      quantifiable measurement; callers may choose to map to 0.0 instead)
-    - Decimal-comma strings like ``"0,12"`` → 0.12
-    - Numeric types returned as-is.
+
+def _find_col(cols: list[str], candidates: list[str]) -> Optional[str]:
+    """Return the first column whose normalised name contains any candidate."""
+    for cand in candidates:
+        cand_n = cand.lower()
+        for c in cols:
+            if cand_n in _norm_header(c):
+                return c
+    return None
+
+
+def _qid(name: str) -> str:
+    """Quote a DuckDB column identifier."""
+    return '"' + name.replace('"', '""') + '"'
+
+
+# ---------------------------------------------------------------------------
+# Parser
+# ---------------------------------------------------------------------------
+
+def _ensure_udf(conn: duckdb.DuckDBPyConnection) -> None:
+    """Register the ``normalize_commune_name`` Python UDF on the connection.
+
+    Safe to call more than once – re-registration is a no-op after the first.
     """
-    if raw is None:
-        return None
-    if isinstance(raw, (int, float)):
-        return float(raw)
-    s = str(raw).strip()
-    if not s or s.upper() in ("#EMPTY", "N/A", "ND"):
-        return None
-    if s.startswith("<") or s.startswith(">"):
-        return None
-    s = s.replace(",", ".")
     try:
-        return float(s)
-    except ValueError:
-        return None
+        conn.create_function(
+            "normalize_commune_name", normalize_commune_name, ["VARCHAR"], "VARCHAR"
+        )
+    except (duckdb.CatalogException, duckdb.NotImplementedException, duckdb.InvalidInputException):
+        # Already registered on this connection
+        pass
 
 
-# ---------------------------------------------------------------------------
-# Per-region parsers
-# ---------------------------------------------------------------------------
+def _list_sheets(path: Path) -> list[str]:
+    """Return worksheet titles in workbook order.
 
-def _normalize(text: str) -> str:
-    """Lowercase + remove accents for fuzzy header matching."""
-    return _remove_accents(text.strip().lower())
-
-
-def _find_header_row(ws, candidates: list[str]) -> int:
-    """Return the 1-based row index where all candidates appear as substrings
-    of at least one cell value (accent-insensitive)."""
-    for row in ws.iter_rows():
-        cell_values = [
-            _normalize(str(c.value)) for c in row if c.value is not None
-        ]
-        if all(
-            any(cand.lower() in cv for cv in cell_values)
-            for cand in candidates
-        ):
-            return row[0].row
-    raise ValueError(
-        f"Could not find header row containing {candidates} in sheet '{ws.title}'"
-    )
-
-
-def _col_index(ws, header_row: int, name: str) -> int:
-    """Return the 1-based column index for *name* (substring, accent-insensitive)
-    in *header_row*."""
-    name_norm = _normalize(name)
-    for cell in ws[header_row]:
-        if cell.value and name_norm in _normalize(str(cell.value)):
-            return cell.column
-    raise ValueError(f"Column '{name}' not found in header row {header_row}")
-
-
-def _parse_bretagne(path: Path) -> list[dict]:
-    """Parse Annexe C (Bretagne).xlsx."""
-    wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
-    rows: list[dict] = []
-    for sheet in wb.worksheets:
-        try:
-            hr = _find_header_row(sheet, ["departement", "commune", "date"])
-        except ValueError:
-            continue
-        dept_col = _col_index(sheet, hr, "departement")
-        commune_col = _col_index(sheet, hr, "commune")
-        date_col = _col_index(sheet, hr, "date")
-        # CVM column – try a few variants
-        cvm_col = None
-        for candidate in ["cvm (µg/l)", "cvm (ug/l)", "cvm", "valeur (µg/l)", "valeur", "chlorure", "resultat"]:
-            try:
-                cvm_col = _col_index(sheet, hr, candidate)
-                break
-            except ValueError:
-                pass
-        if cvm_col is None:
-            continue
-
-        for row in sheet.iter_rows(min_row=hr + 1, values_only=True):
-            dept_raw = row[dept_col - 1]
-            commune_raw = row[commune_col - 1]
-            date_raw = row[date_col - 1]
-            value_raw = row[cvm_col - 1]
-
-            if dept_raw is None and commune_raw is None:
-                continue
-            dept = str(dept_raw).strip().lstrip("0") if dept_raw else None
-            # Dept codes like "029" → "29"; keep "2A", "2B" as-is
-            if dept and dept.isdigit():
-                dept = str(int(dept))
-            commune = str(commune_raw).strip() if commune_raw else None
-            if not dept or not commune:
-                continue
-
-            if isinstance(date_raw, datetime.datetime):
-                plv_date = date_raw.date()
-            elif isinstance(date_raw, datetime.date):
-                plv_date = date_raw
-            else:
-                # Try parsing string
-                try:
-                    plv_date = datetime.date.fromisoformat(str(date_raw).strip())
-                except (ValueError, TypeError):
-                    plv_date = None
-
-            rows.append({
-                "dept": dept,
-                "commune_name_raw": commune,
-                "commune_name_norm": normalize_commune_name(commune),
-                "plv_date": plv_date,
-                "value_ugl": _parse_value(value_raw),
-                "source_file": path.name,
-            })
-    wb.close()
-    return rows
-
-
-def _parse_normandie(path: Path) -> list[dict]:
-    """Parse Annexe F (Normandie).xlsx.
-
-    Normandie sheets can have département in the sheet name or a column.
+    Uses openpyxl because DuckDB 1.5's ``excel`` extension doesn't expose a
+    sheet-enumeration function; the cost is trivial (read-only metadata read).
     """
-    return _parse_generic(path, dept_col_hint="departement")
+    import openpyxl
 
-
-def _parse_nouvelle_aquitaine(path: Path) -> list[dict]:
-    """Parse Annexe G (Nouvelle-Aquitaine).xlsx."""
-    return _parse_generic(path, dept_col_hint="departement")
-
-
-def _parse_generic(path: Path, dept_col_hint: str = "departement") -> list[dict]:
-    """Generic parser for regions where the schema is similar to Bretagne."""
     wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
-    rows: list[dict] = []
-    for sheet in wb.worksheets:
-        try:
-            hr = _find_header_row(sheet, ["commune", "date"])
-        except ValueError:
+    try:
+        return [s.title for s in wb.worksheets]
+    finally:
+        wb.close()
+
+
+def _detect_header_row(
+    conn: duckdb.DuckDBPyConnection,
+    path_str: str,
+    sheet: str,
+    scan_rows: int = 30,
+) -> Optional[tuple[int, list[str]]]:
+    """Scan the first *scan_rows* rows of *sheet* for a valid header row.
+
+    A header row must contain all four required columns (dept, commune, date,
+    value) detected by fuzzy substring match.  Returns
+    ``(row_number_1_indexed, header_cells)`` or ``None``.
+    """
+    sheet_esc = sheet.replace("'", "''")
+    sample = conn.execute(
+        f"SELECT * FROM read_xlsx('{path_str}', sheet='{sheet_esc}', "
+        f"header=false, all_varchar=true) LIMIT {scan_rows}"
+    ).fetchall()
+
+    for idx, row in enumerate(sample, start=1):
+        cells = [str(c) if c is not None else "" for c in row]
+        if (
+            _find_col(cells, ["departement", "dept"])
+            and _find_col(cells, ["commune"])
+            and _find_col(cells, ["date"])
+            and _find_col(cells, ["chlorure", "cvm", "valeur", "resultat"])
+        ):
+            return idx, cells
+    return None
+
+
+def parse_xlsx(conn: duckdb.DuckDBPyConnection, path: Path) -> list[dict]:
+    """Parse an Outline xlsx file via DuckDB's excel extension.
+
+    Iterates through every worksheet and auto-detects the header row (handles
+    preamble rows).  Sheets must have all four required columns (dept,
+    commune, date, value) detected by fuzzy substring match; sheets that
+    don't match are silently skipped.  Files where no sheet matches return an
+    empty list – callers should surface this as a warning.
+
+    The dept column must contain numeric codes (e.g. ``'07'``, ``14``) or
+    Corsica codes (``'2A'``, ``'2B'``); files with non-numeric dept columns
+    (department names) are not supported and should be skipped upstream.
+    """
+    import math
+    import pandas as pd
+
+    _ensure_udf(conn)
+    conn.execute("INSTALL excel; LOAD excel;")
+
+    path_str = str(path).replace("'", "''")
+    sheet_names = _list_sheets(path)
+
+    all_records: list[dict] = []
+    for sheet in sheet_names:
+        hdr = _detect_header_row(conn, path_str, sheet)
+        if hdr is None:
             continue
+        hdr_row, cols = hdr
 
-        # dept may come from a column or the sheet title
-        dept_col = None
-        for dept_hint in [dept_col_hint, "dept"]:
-            try:
-                dept_col = _col_index(sheet, hr, dept_hint)
-                sheet_dept = None
-                break
-            except ValueError:
-                pass
-        if dept_col is None:
-            # Try to extract dept from sheet name e.g. "Dept 14" or "14"
-            m = re.search(r"\b(\d{1,2}[aAbB]?)\b", sheet.title)
-            sheet_dept = m.group(1) if m else None
+        dept_col = _find_col(cols, ["departement", "dept"])
+        commune_col = _find_col(cols, ["commune"])
+        date_col = _find_col(cols, ["date"])
+        value_col = _find_col(cols, ["chlorure", "cvm", "valeur", "resultat"])
+        # _detect_header_row guarantees commune/date/value are present.
 
-        try:
-            commune_col = _col_index(sheet, hr, "commune")
-        except ValueError:
-            continue
-        try:
-            date_col = _col_index(sheet, hr, "date")
-        except ValueError:
-            continue
-        cvm_col = None
-        for candidate in ["cvm (µg/l)", "cvm (ug/l)", "cvm", "valeur (µg/l)", "valeur", "chlorure", "resultat"]:
-            try:
-                cvm_col = _col_index(sheet, hr, candidate)
-                break
-            except ValueError:
-                pass
-        if cvm_col is None:
-            continue
+        sheet_esc = sheet.replace("'", "''")
+        # DuckDB range starts at header row; header=true consumes hdr_row as
+        # the column labels and returns subsequent rows as data.
+        read_expr = (
+            f"read_xlsx('{path_str}', sheet='{sheet_esc}', "
+            f"header=true, all_varchar=true, range='A{hdr_row}:ZZ1048576')"
+        )
 
-        for row in sheet.iter_rows(min_row=hr + 1, values_only=True):
-            commune_raw = row[commune_col - 1]
-            date_raw = row[date_col - 1]
-            value_raw = row[cvm_col - 1]
+        # Dept normalisation: numeric → stripped of leading zeros / '.0';
+        # otherwise keep upper-cased varchar (preserves Corsica 2A/2B).
+        if dept_col:
+            dept_expr = (
+                f"COALESCE("
+                f"  TRY_CAST(TRY_CAST({_qid(dept_col)} AS DOUBLE) AS BIGINT)::VARCHAR, "
+                f"  trim(upper({_qid(dept_col)}))"
+                f")"
+            )
+        else:
+            dept_expr = "NULL"
 
-            if dept_col is not None:
-                dept_raw = row[dept_col - 1]
-                dept = str(dept_raw).strip().lstrip("0") if dept_raw else None
-                if dept and dept.isdigit():
-                    dept = str(int(dept))
-            else:
-                dept = sheet_dept
+        # Value normalisation: handle decimal-comma, '#EMPTY', '<0.5', '>X', N/A.
+        value_expr = (
+            f"TRY_CAST("
+            f"  CASE "
+            f"    WHEN {_qid(value_col)} IS NULL THEN NULL "
+            f"    WHEN regexp_matches(trim({_qid(value_col)}), '^[<>]') THEN NULL "
+            f"    WHEN upper(trim({_qid(value_col)})) IN ('#EMPTY','N/A','ND','') THEN NULL "
+            f"    ELSE replace(trim({_qid(value_col)}), ',', '.') "
+            f"  END "
+            f"AS DOUBLE)"
+        )
 
-            commune = str(commune_raw).strip() if commune_raw else None
-            if not dept or not commune:
-                continue
+        sql = f"""
+            SELECT
+                {dept_expr}                              AS dept,
+                trim({_qid(commune_col)})                AS commune_name_raw,
+                normalize_commune_name(
+                    trim({_qid(commune_col)})
+                )                                        AS commune_name_norm,
+                TRY_CAST({_qid(date_col)} AS DATE)       AS plv_date,
+                {value_expr}                             AS value_ugl,
+                '{path.name.replace("'", "''")}'         AS source_file
+            FROM {read_expr}
+            WHERE {_qid(commune_col)} IS NOT NULL
+        """
+        df = conn.execute(sql).fetchdf()
+        if dept_col:
+            df = df[df["dept"].notna() & (df["dept"].astype(str).str.len() > 0)]
 
-            if isinstance(date_raw, datetime.datetime):
-                plv_date = date_raw.date()
-            elif isinstance(date_raw, datetime.date):
-                plv_date = date_raw
-            else:
-                try:
-                    plv_date = datetime.date.fromisoformat(str(date_raw).strip())
-                except (ValueError, TypeError):
-                    plv_date = None
+            # Sanity-check dept values: INSEE codes are numeric (optionally with
+            # 2A/2B for Corsica).  If the column holds department names (e.g.
+            # 'AIN', 'ALLIER') instead, bail on this sheet – we cannot link
+            # back to communes without a numeric dept.
+            if len(df) > 0:
+                sample = df["dept"].astype(str).head(50)
+                numeric_like = sample.str.match(r"^(\d+|2[AB])$", case=False)
+                if numeric_like.mean() < 0.5:
+                    # Return a signal to caller via exception-free side channel:
+                    # we simply drop the sheet's rows.  The empty result for
+                    # the file triggers the caller's skip-with-warning.
+                    continue
 
-            rows.append({
-                "dept": dept,
-                "commune_name_raw": commune,
-                "commune_name_norm": normalize_commune_name(commune),
-                "plv_date": plv_date,
-                "value_ugl": _parse_value(value_raw),
-                "source_file": path.name,
-            })
-    wb.close()
-    return rows
+        # pandas NaN → None, Timestamp → datetime.date for clean downstream use.
+        for r in df.to_dict(orient="records"):
+            clean = {}
+            for k, v in r.items():
+                if v is None:
+                    clean[k] = None
+                elif isinstance(v, float) and math.isnan(v):
+                    clean[k] = None
+                elif isinstance(v, pd.Timestamp):
+                    clean[k] = v.date() if not pd.isna(v) else None
+                else:
+                    clean[k] = v
+            all_records.append(clean)
 
-
-# Dispatch table keyed by lower-case filename stem patterns
-_PARSERS = {
-    "bretagne": _parse_bretagne,
-    "normandie": _parse_normandie,
-    "nouvelle-aquitaine": _parse_nouvelle_aquitaine,
-    "aquitaine": _parse_nouvelle_aquitaine,  # shortened variant
-}
-
-
-def _choose_parser(path: Path):
-    stem = path.stem.lower()
-    for key, fn in _PARSERS.items():
-        if key in stem:
-            return fn
-    # Default fallback
-    return _parse_generic
+    return all_records
 
 
 # ---------------------------------------------------------------------------
@@ -303,43 +267,64 @@ def _choose_parser(path: Path):
 
 @task(name="extract_fr_outline_parse", cache_policy=NO_CACHE)
 def parse_outline_files(data_directory: Path) -> list[dict]:
-    """Parse all Outline Excel files in data/raw/vcm_france/."""
+    """Parse all Outline Excel files in ``data/raw/vcm_france/``."""
     logger = get_run_logger()
     vcm_dir = data_directory / "raw" / "vcm_france"
     if not vcm_dir.exists():
         logger.warning(f"Directory {vcm_dir} does not exist; no Outline files parsed")
         return []
 
-    all_rows: list[dict] = []
     xlsx_files = sorted(vcm_dir.glob("*.xlsx"))
     if not xlsx_files:
         logger.warning(f"No .xlsx files found in {vcm_dir}")
         return []
 
-    for xlsx in xlsx_files:
-        logger.info(f"Parsing {xlsx.name} …")
-        parser = _choose_parser(xlsx)
-        try:
-            rows = parser(xlsx)
+    # Throw-away in-memory connection for the xlsx reads
+    conn = duckdb.connect()
+    try:
+        all_rows: list[dict] = []
+        skipped: list[str] = []
+        for xlsx in xlsx_files:
+            logger.info(f"Parsing {xlsx.name} …")
+            try:
+                rows = parse_xlsx(conn, xlsx)
+            except Exception as exc:
+                # Unexpected failure (corrupt xlsx, I/O error) – re-raise so
+                # the pipeline fails loudly.  Structural mismatches are
+                # signalled via an empty result, not an exception.
+                logger.error(f"  ✗ Failed to parse {xlsx.name}: {exc}")
+                raise
+            if not rows:
+                logger.warning(
+                    f"  ⚠ Skipped {xlsx.name}: no sheet with a recognisable header "
+                    f"(expected dept + commune + date + value columns with numeric "
+                    f"dept codes)."
+                )
+                skipped.append(xlsx.name)
+                continue
             logger.info(f"  → {len(rows)} rows from {xlsx.name}")
             all_rows.extend(rows)
-        except Exception as exc:
-            logger.error(f"  ✗ Failed to parse {xlsx.name}: {exc}")
-            raise
+    finally:
+        conn.close()
 
+    if skipped:
+        logger.warning(
+            f"Outline extract: skipped {len(skipped)} file(s) with unsupported "
+            f"structure: {skipped}"
+        )
     logger.info(f"Total Outline rows: {len(all_rows)}")
     return all_rows
 
 
 @task(name="extract_fr_outline_write", cache_policy=NO_CACHE)
 def write_outline_samples(conn, rows: list[dict]) -> None:
-    """Write parsed rows into raw.outline_cvm_samples."""
+    """Write parsed rows into ``raw.outline_cvm_samples``."""
     staging_db.write_table(conn, "outline_cvm_samples", rows, schema="raw")
 
 
 @flow(name="extract_fr_outline", persist_result=False)
 def extract_fr_outline(data_directory: Path = Path("data")) -> None:
-    """Extract Outline CVM samples into raw.outline_cvm_samples."""
+    """Extract Outline CVM samples into ``raw.outline_cvm_samples``."""
     rows = parse_outline_files(data_directory)
     conn = staging_db.get_connection(data_directory)
     try:
