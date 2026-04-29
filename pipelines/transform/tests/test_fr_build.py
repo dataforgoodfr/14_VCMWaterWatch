@@ -131,6 +131,17 @@ def conn_with_dmeau(tmp_path, dmeau_db):
     conn.execute(f"ATTACH '{raw_path}' AS raw")
     conn.execute(f"ATTACH '{staging_path}' AS staging")
     _attach_dansmoneau(conn, dmeau_db)
+    # Seed INSEE→COMM_ID map used by build_distribution_zones.  Covers the
+    # commune codes referenced by the test UDI fixtures.
+    conn.execute("""
+        CREATE OR REPLACE TEMP TABLE _fr_insee_to_comm AS
+        SELECT * FROM (VALUES
+            ('29001', 'FR11929001'),
+            ('29002', 'FR11929002'),
+            ('29003', 'FR11929003'),
+            ('29004', 'FR11929004')
+        ) AS t(insee, comm_id)
+    """)
     yield conn
     conn.close()
 

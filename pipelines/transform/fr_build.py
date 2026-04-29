@@ -21,10 +21,51 @@ from prefect.cache_policies import NO_CACHE
 from pipelines.common import staging_db
 
 DANSMONEAU_FILE = "fr_dansmoneau.duckdb"
+MUNICIPALITIES_GEOJSON = "municipalities.geojson"
 
 
 def _get_dmeau_path(data_directory: Path) -> Path:
     return data_directory / "raw" / DANSMONEAU_FILE
+
+
+@task(name="fr_build_insee_comm_map", cache_policy=NO_CACHE)
+def build_insee_comm_map(conn: duckdb.DuckDBPyConnection, data_directory: Path) -> int:
+    """Build a temp table mapping GISCO ``NSI_CODE`` (INSEE) to ``COMM_ID``.
+
+    Dansmoneau stores communes by INSEE code (e.g. ``07148``) but the NocoDB
+    Municipality table uses GISCO's ``COMM_ID`` (e.g. ``FR11907148``).  We load
+    the GeoJSON once and register the FR-only mapping as a temp table so the
+    subsequent build queries can translate via a simple join.
+    """
+    import json
+
+    logger = get_run_logger()
+    geojson_path = data_directory / "raw" / MUNICIPALITIES_GEOJSON
+    if not geojson_path.exists():
+        logger.warning(
+            f"{geojson_path} not found; skipping INSEE→COMM_ID map (FR zones will"
+            " not be linked to municipalities).  Run 'just extract-municipalities'"
+            " + 'just transform-geojson' first."
+        )
+        conn.execute(
+            "CREATE OR REPLACE TEMP TABLE _fr_insee_to_comm (insee VARCHAR, comm_id VARCHAR)"
+        )
+        return 0
+
+    with open(geojson_path, "r") as fh:
+        geo = json.load(fh)
+
+    rows = [
+        (p.get("NSI_CODE"), p.get("COMM_ID"))
+        for feat in geo.get("features", [])
+        for p in [feat.get("properties", {})]
+        if p.get("CNTR_CODE") == "FR" and p.get("NSI_CODE") and p.get("COMM_ID")
+    ]
+    import pandas as pd
+    df = pd.DataFrame(rows, columns=["insee", "comm_id"])
+    conn.execute("CREATE OR REPLACE TEMP TABLE _fr_insee_to_comm AS SELECT * FROM df")
+    logger.info(f"INSEE→COMM_ID map: {len(df)} FR communes")
+    return len(df)
 
 
 def _attach_dansmoneau(conn: duckdb.DuckDBPyConnection, dmeau_path: Path) -> None:
@@ -45,16 +86,31 @@ def build_distribution_zones(conn: duckdb.DuckDBPyConnection) -> int:
     logger = get_run_logger()
     conn.execute("""
         CREATE OR REPLACE TABLE staging."DistributionZone_fr" AS
+        WITH exploded AS (
+            SELECT
+                u.cdreseau,
+                u.nomreseaux,
+                unnest(str_split(u.inseecommunes, ',')) AS insee
+            FROM data.main.int__udi u
+            WHERE u.cdreseau IS NOT NULL
+        ),
+        mapped AS (
+            SELECT e.cdreseau,
+                   any_value(e.nomreseaux) AS nomreseaux,
+                   list(m.comm_id) FILTER (WHERE m.comm_id IS NOT NULL) AS comm_ids
+            FROM exploded e
+            LEFT JOIN _fr_insee_to_comm m ON m.insee = e.insee
+            GROUP BY e.cdreseau
+        )
         SELECT
-            u.cdreseau   AS "Code",
-            COALESCE(u.nomreseaux, u.cdreseau) AS "Name",
+            m.cdreseau   AS "Code",
+            COALESCE(m.nomreseaux, m.cdreseau) AS "Name",
             'FR'         AS "CountryCode",
             'Distribution' AS "Type",
-            str_split(u.inseecommunes, ',') AS "Municipalities",
+            m.comm_ids   AS "Municipalities",
             g.geom::VARCHAR AS "Geometry"
-        FROM data.main.int__udi u
-        LEFT JOIN data.main.int__udi_geom g ON u.cdreseau = g.code_udi
-        WHERE u.cdreseau IS NOT NULL
+        FROM mapped m
+        LEFT JOIN data.main.int__udi_geom g ON m.cdreseau = g.code_udi
     """)
     count = conn.execute('SELECT count(*) FROM staging."DistributionZone_fr"').fetchone()[0]
     logger.info(f"DistributionZone_fr: {count} zones")
@@ -244,6 +300,7 @@ def fr_build(data_directory: Path = Path("data")) -> None:
     conn = staging_db.get_connection(data_directory)
     try:
         _attach_dansmoneau(conn, dmeau_path)
+        build_insee_comm_map(conn, data_directory)
         build_distribution_zones(conn)
         build_water_companies(conn)
         build_analysis_dansmoneau(conn)
