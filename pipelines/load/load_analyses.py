@@ -28,8 +28,13 @@ def load_staging_analyses(conn) -> list[dict]:
     logger = get_run_logger()
     tables = conn.execute(
         "SELECT table_catalog, table_name FROM information_schema.tables "
-        "WHERE table_name LIKE 'Analysis_%'"
+        "WHERE table_catalog = 'staging' AND table_name LIKE 'Analysis_%'"
     ).fetchall()
+    # Only load final per-country tables (e.g. Analysis_fr, Analysis_de).
+    # Intermediate tables like Analysis_fr_dansmoneau have an extra "_" and
+    # must be excluded to avoid processing rows ~3× (once from the merged
+    # table plus once from each source table).
+    tables = [(cat, tn) for cat, tn in tables if tn.count("_") == 1]
 
     if not tables:
         logger.warning("No Analysis_* tables found in staging")
