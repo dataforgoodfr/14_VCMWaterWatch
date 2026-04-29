@@ -89,10 +89,10 @@ class TestApplyVcmLevels:
     def _zones(self):
         return [
             {"Id": "id-1", "Code": "UDI001", "VCM Level": "Unknown"},
-            {"Id": "id-2", "Code": "UDI002", "VCM Level": "Low"},
+            {"Id": "id-2", "Code": "UDI002", "VCM Level": "< 0.5 mcg/L"},
             {"Id": "id-3", "Code": "UDI003", "VCM Level": None},
             # Zone not in level_map → should become 'Unknown'
-            {"Id": "id-4", "Code": "UDI_ABSENT", "VCM Level": "High"},
+            {"Id": "id-4", "Code": "UDI_ABSENT", "VCM Level": "> 0.5 mcg/L"},
         ]
 
     def _level_map(self):
@@ -101,7 +101,7 @@ class TestApplyVcmLevels:
     def test_high_zone_updated(self):
         updates = apply_vcm_levels(self._zones(), self._level_map())
         udi001 = next(u for u in updates if u["Id"] == "id-1")
-        assert udi001["VCM Level"] == "High"
+        assert udi001["VCM Level"] == "> 0.5 mcg/L"
 
     def test_unchanged_zone_not_in_updates(self):
         """UDI002 already has Low → should not appear in updates."""

@@ -19,7 +19,7 @@ from prefect.cache_policies import NO_CACHE
 
 from pipelines.common import services, staging_db
 
-BATCH_SIZE = 500
+BATCH_SIZE = 10
 
 
 @task(name="load_analyses_load_staging", cache_policy=NO_CACHE)
@@ -75,30 +75,28 @@ def load_staging_analyses(conn) -> list[dict]:
 
 
 @task(name="load_analyses_prefetch_zones", cache_policy=NO_CACHE)
-def prefetch_distribution_zones(db_helper, country_code: str = "FR") -> dict[str, str]:
-    """Return a Code → Id map for all DistributionZone records for *country_code*."""
+def prefetch_distribution_zones(db_helper) -> dict[str, str]:
+    """Return a Code → Id map for all DistributionZone records."""
     logger = get_run_logger()
     records = db_helper.load_all_records(
         table_name="DistributionZone",
         fields=["Code", "Id"],
-        condition={"CountryCode": country_code} if country_code else None,
     )
     code_to_id = {r["Code"]: r["Id"] for r in records if r.get("Code") and r.get("Id")}
-    logger.info(f"Prefetched {len(code_to_id)} DistributionZone codes for {country_code}")
+    logger.info(f"Prefetched {len(code_to_id)} DistributionZone codes")
     return code_to_id
 
 
 @task(name="load_analyses_prefetch_municipalities", cache_policy=NO_CACHE)
-def prefetch_municipalities(db_helper, country_code: str = "FR") -> dict[str, str]:
-    """Return a Code → Id map for all Municipality records for *country_code*."""
+def prefetch_municipalities(db_helper) -> dict[str, str]:
+    """Return a Code → Id map for all Municipality records."""
     logger = get_run_logger()
     records = db_helper.load_all_records(
         table_name="Municipality",
         fields=["Code", "Id"],
-        condition={"CountryCode": country_code} if country_code else None,
     )
     code_to_id = {r["Code"]: r["Id"] for r in records if r.get("Code") and r.get("Id")}
-    logger.info(f"Prefetched {len(code_to_id)} Municipality codes for {country_code}")
+    logger.info(f"Prefetched {len(code_to_id)} Municipality codes")
     return code_to_id
 
 
@@ -181,6 +179,8 @@ def prepare_records(
             "CVMMeasure": _round_safe(row.get("CVMMeasure"), 6),
             "Date": str(row.get("Date", "")),
             "Source": row.get("Source", ""),
+            "SourceRef": row.get("SourceRef", ""),
+            "DistributionZone_id": zone_id,
             "_zone_id": zone_id,
             "_muni_id": muni_id,
         }
@@ -305,8 +305,8 @@ def load_analyses(data_directory: Path = Path("data")) -> None:
     inserted = insert_analyses(to_insert, db)
     update_analyses(to_update, db)
 
-    link_to_distribution_zones(inserted, db)
-    link_to_municipalities(inserted, db)
+    # DistributionZone_id is set directly via FK column in insert payload.
+    # Municipality link is not yet supported in the NocoDB schema.
 
     logger.info(
         f"load_analyses complete: {len(inserted)} inserted, "
