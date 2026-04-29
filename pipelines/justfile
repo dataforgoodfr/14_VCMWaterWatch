@@ -100,5 +100,35 @@ export-all-images:
   @just pipelines export-country-images
   @just pipelines export-team-images
 
+# Download the dansmoneau DuckDB (~2.6 GB). Skip if already present and size matches.
+extract-fr-dansmoneau:
+  uv run python -m pipelines.extract.fr_dansmoneau ${DATA_DIR}
+
+# Parse Outline regional Excel files into raw.outline_cvm_samples.
+extract-fr-outline:
+  uv run python -m pipelines.extract.fr_outline ${DATA_DIR}
+
+# Build France staging tables (DistributionZone_fr, WaterCompany_fr, Analysis_fr*).
+transform-fr:
+  uv run python -m pipelines.transform.fr_build ${DATA_DIR}
+
+# Load CVM analysis rows from staging into NocoDB Analysis table.
+load-analyses:
+  uv run python -m pipelines.load.load_analyses ${DATA_DIR}
+
+# Compute and write VCM Level for all French DistributionZones.
+tasks-deduce-vcm-level:
+  uv run python -m pipelines.tasks.deduce_vcm_level ${DATA_DIR}
+
+# Full France import pipeline (requires extract-municipalities + load-zones-municipality already done).
+import-fr:
+  @just pipelines extract-fr-dansmoneau
+  @just pipelines extract-fr-outline
+  @just pipelines transform-fr
+  @just pipelines load-zones-distribution
+  @just pipelines load-water-companies
+  @just pipelines load-analyses
+  @just pipelines tasks-deduce-vcm-level
+
 test:
   uv run python -m pytest
