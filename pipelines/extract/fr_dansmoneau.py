@@ -38,11 +38,13 @@ def download_duckdb(data_directory: Path) -> Path:
     logger.info(
         f"Downloading dansmoneau DuckDB ({remote_size / 1e9:.2f} GB) → {dest}"
     )
+    tmp_dest = dest.with_suffix(".duckdb.tmp")
     with httpx.stream("GET", DANSMONEAU_URL, follow_redirects=True, timeout=None) as resp:
         resp.raise_for_status()
-        with dest.open("wb") as fh:
+        with tmp_dest.open("wb") as fh:
             for chunk in resp.iter_bytes(chunk_size=1 << 20):
                 fh.write(chunk)
+    tmp_dest.rename(dest)
 
     logger.info(f"Download complete: {dest.stat().st_size} bytes")
     return dest
