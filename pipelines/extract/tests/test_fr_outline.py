@@ -207,6 +207,4 @@ def test_choose_parser_normandie(tmp_path):
 def test_choose_parser_aquitaine(tmp_path):
     path = tmp_path / "Annexe G (Nouvelle-Aquitaine).xlsx"
     path.touch()
-    assert _choose_parser(path) is _parse_generic or _choose_parser(path).__name__ in (
-        "_parse_nouvelle_aquitaine", "_parse_generic"
-    )
+    assert _choose_parser(path).__name__ in ("_parse_nouvelle_aquitaine", "_parse_generic")
