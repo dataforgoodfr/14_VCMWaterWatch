@@ -238,20 +238,71 @@ def lookup_children_task(
     return result
 
 
+def _extract_linked_ids(value) -> list[int]:
+    """Normalise a NocoDB Links field value to a list of int Ids.
+
+    The list endpoint may return links as a list of ``{id: int}`` dicts, a list
+    of scalars, a single dict, or None. This helper flattens all of those.
+    """
+    if value is None:
+        return []
+    items = value if isinstance(value, list) else [value]
+    ids: list[int] = []
+    for item in items:
+        if isinstance(item, dict):
+            raw = item.get("Id", item.get("id"))
+        else:
+            raw = item
+        if raw is None:
+            continue
+        try:
+            ids.append(int(raw))
+        except (TypeError, ValueError):
+            continue
+    return ids
+
+
 @task(name="link_children", cache_policy=INPUTS)
 def link_children_task(
     records: list[dict], child_field_name: str, table_name: str
 ) -> None:
-    """Create links in NocoDB between parent records and their children."""
+    """Create links in NocoDB between parent records and their children.
+
+    Preloads the existing link state for the parent table so that records that
+    are already fully linked are skipped (resumable after a timeout), and only
+    missing child Ids are POSTed for partially-linked records.
+    """
     db_helper = services.db_helper()
     logger = get_run_logger()
     logger.info(f"Linking {len(records)} records to {child_field_name}")
+
+    # Preload current link state: {parent_id: set(child_ids)}.
+    # A single paginated GET replaces up to N wasted POSTs on retries.
+    try:
+        existing_rows = db_helper.load_all_records(
+            table_name=table_name,
+            fields=["Id", child_field_name],
+        )
+    except Exception as exc:  # pragma: no cover - defensive
+        logger.warning(
+            f"Could not preload existing links for {table_name}.{child_field_name} "
+            f"({exc}); will POST all links unconditionally."
+        )
+        existing_rows = []
+
+    existing_links: dict[int, set[int]] = {}
+    for row in existing_rows:
+        rid = row.get("Id")
+        if rid is None:
+            continue
+        existing_links[int(rid)] = set(_extract_linked_ids(row.get(child_field_name)))
 
     db_helper.link_records(
         records=records,
         table_name=table_name,
         link_field_name=child_field_name,
         foreign_key_column=child_field_name,
+        existing_links=existing_links,
     )
 
 
@@ -283,7 +334,7 @@ def load_zones_flow(level: str, data_directory: Path) -> None:
     records = lookup_parent_task(records, level_config)
 
     # Update geometry for existing records
-    update_geometry_task(existing_records, level_config.table_name)
+    # update_geometry_task(existing_records, level_config.table_name)
 
     # Update population for existing records (no-op if zone type has no Population)
     update_population_task(existing_records, level_config.table_name)

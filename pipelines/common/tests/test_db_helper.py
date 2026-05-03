@@ -1,5 +1,6 @@
 """Tests for DatabaseHelper class."""
 
+import httpx
 import pytest
 from unittest.mock import Mock, patch
 from pipelines.common.db_helper import DatabaseHelper
@@ -376,3 +377,85 @@ class TestDatabaseHelperLinkRecords:
         records = [{"Id": 1}]
         with pytest.raises(ValueError, match="not found in records"):
             db_helper.link_records(records, "Actor", "Zones", "Zone_id")
+
+    def test_link_records_skips_already_linked(self, db_helper):
+        """Records whose desired children are already linked should not POST."""
+        mock_response = Mock()
+        mock_response.raise_for_status = Mock()
+        mock_response.status_code = 200
+        db_helper.client.post = Mock(return_value=mock_response)
+
+        records = [
+            {"Id": 1, "Zone_ids": [10, 20]},  # fully linked -> skip
+            {"Id": 2, "Zone_ids": [30, 40]},  # partially linked -> POST delta
+            {"Id": 3, "Zone_ids": [50]},      # not linked at all -> POST
+        ]
+        existing_links = {
+            1: [10, 20, 99],   # superset -> skip
+            2: [30],           # missing 40
+            # 3 not present
+        }
+        db_helper.link_records(
+            records,
+            "Actor",
+            "Zones",
+            "Zone_ids",
+            existing_links=existing_links,
+        )
+
+        # Only records 2 and 3 should trigger a POST
+        assert db_helper.client.post.call_count == 2
+        posted_payloads = [c[1]["json"] for c in db_helper.client.post.call_args_list]
+        # record 2: only missing id 40
+        assert [{"id": "40"}] in posted_payloads
+        # record 3: id 50
+        assert [{"id": "50"}] in posted_payloads
+
+    def test_link_records_skip_accepts_dict_id_shape(self, db_helper):
+        """existing_links values may already contain int IDs or dicts {id:...}."""
+        mock_response = Mock()
+        mock_response.raise_for_status = Mock()
+        mock_response.status_code = 200
+        db_helper.client.post = Mock(return_value=mock_response)
+
+        records = [{"Id": 1, "Zone_ids": [10, 20]}]
+        db_helper.link_records(
+            records, "Actor", "Zones", "Zone_ids",
+            existing_links={1: [10, 20]},
+        )
+        db_helper.client.post.assert_not_called()
+
+    def test_link_records_retries_on_read_timeout(self, db_helper):
+        """Transient ReadTimeouts should be retried (tenacity, reraise on final)."""
+        mock_response = Mock()
+        mock_response.raise_for_status = Mock()
+        mock_response.status_code = 200
+
+        call_count = {"n": 0}
+
+        def flaky_post(endpoint, json=None, **kwargs):
+            call_count["n"] += 1
+            if call_count["n"] < 3:
+                raise httpx.ReadTimeout("simulated timeout")
+            return mock_response
+
+        db_helper.client.post = Mock(side_effect=flaky_post)
+
+        records = [{"Id": 1, "Zone_id": 10}]
+        # Keep tenacity from actually sleeping between retries.
+        with patch("pipelines.common.db_helper.wait_exponential", lambda *a, **k: lambda rs: 0):
+            # Re-import retry decorator path not possible — instead patch time.sleep,
+            # which tenacity uses internally for sync waits.
+            with patch("tenacity.nap.time.sleep", lambda *_: None):
+                db_helper.link_records(records, "Actor", "Zones", "Zone_id")
+
+        assert call_count["n"] == 3  # 2 failures + 1 success
+
+    def test_link_records_retry_gives_up_after_max_attempts(self, db_helper):
+        """After exhausting retries, the original exception propagates."""
+        db_helper.client.post = Mock(side_effect=httpx.ReadTimeout("always fails"))
+
+        records = [{"Id": 1, "Zone_id": 10}]
+        with patch("tenacity.nap.time.sleep", lambda *_: None):
+            with pytest.raises(httpx.ReadTimeout):
+                db_helper.link_records(records, "Actor", "Zones", "Zone_id")

@@ -1,7 +1,27 @@
 """Database helper module for loading and inserting data using NocoDB API."""
 
-from typing import Dict, List, Optional, Any
+import logging
+from typing import Dict, List, Optional, Any, Iterable
+
 import httpx
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
+
+logger = logging.getLogger(__name__)
+
+# Transient HTTP failures worth retrying on.
+_RETRYABLE_EXC = (
+    httpx.ReadTimeout,
+    httpx.ConnectTimeout,
+    httpx.WriteTimeout,
+    httpx.PoolTimeout,
+    httpx.ConnectError,
+    httpx.RemoteProtocolError,
+)
 
 
 class DatabaseHelper:
@@ -297,9 +317,20 @@ class DatabaseHelper:
         table_name: str,
         link_field_name: str,
         foreign_key_column: str,
+        existing_links: Optional[Dict[int, Iterable]] = None,
     ) -> None:
         """
         Link records in a parent table to records in a related table.
+
+        When ``existing_links`` is provided (mapping parent record Id -> iterable of
+        already-linked child Ids), records whose desired link set is already a
+        subset of the existing set are skipped, and otherwise only the missing
+        Ids are POSTed. This makes the call safely resumable after a failure or
+        timeout.
+
+        Each POST is wrapped in tenacity retry (exponential backoff) so that
+        transient ``ReadTimeout``/``ConnectError`` failures do not abort the
+        whole loop.
         """
         if table_name not in self.link_field_ids:
             raise ValueError(
@@ -336,20 +367,64 @@ class DatabaseHelper:
         if not records_to_link:
             return
 
-        endpoint_template = f"/data/{self.base_id}/{table_id}/links/{link_field_id}/{{record_id}}"
+        endpoint_template = (
+            f"/data/{self.base_id}/{table_id}/links/{link_field_id}/{{record_id}}"
+        )
 
+        # Normalise existing_links values to sets of ints for fast diffing.
+        existing: Dict[int, set] = {}
+        if existing_links:
+            for rid, ids in existing_links.items():
+                try:
+                    existing[int(rid)] = {int(x) for x in ids if x is not None}
+                except (TypeError, ValueError):
+                    continue
+
+        @retry(
+            retry=retry_if_exception_type(_RETRYABLE_EXC),
+            wait=wait_exponential(multiplier=1, min=2, max=30),
+            stop=stop_after_attempt(5),
+            reraise=True,
+        )
+        def _post(endpoint: str, payload: list[dict]) -> None:
+            response = self.client.post(endpoint, json=payload)
+            response.raise_for_status()
+
+        posted = skipped = 0
         for row in records_to_link:
             record_id = row["Id"]
             foreign_value = row[foreign_key_column]
 
             if isinstance(foreign_value, list):
-                link_payload = [{"id": str(v)} for v in foreign_value]
+                desired_ids = {int(v) for v in foreign_value if v is not None}
+            elif foreign_value is not None:
+                desired_ids = {int(foreign_value)}
             else:
-                link_payload = [{"id": str(foreign_value)}]
+                desired_ids = set()
 
+            if not desired_ids:
+                continue
+
+            current = existing.get(int(record_id), set())
+            missing = desired_ids - current
+            if not missing:
+                skipped += 1
+                continue
+
+            link_payload = [{"id": str(v)} for v in missing]
             endpoint = endpoint_template.format(record_id=record_id)
-            response = self.client.post(endpoint, json=link_payload)
-            response.raise_for_status()
+            _post(endpoint, link_payload)
+            posted += 1
+
+        if existing_links is not None:
+            logger.info(
+                "link_records %s.%s: posted=%d skipped_already_linked=%d total=%d",
+                table_name,
+                link_field_name,
+                posted,
+                skipped,
+                len(records_to_link),
+            )
 
     def __del__(self):
         """Close the HTTP client when the object is destroyed."""
