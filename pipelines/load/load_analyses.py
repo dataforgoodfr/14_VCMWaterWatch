@@ -69,7 +69,9 @@ def load_staging_analyses(conn) -> list[dict]:
         )
 
     union_sql = " UNION ALL ".join(queries)
-    rows = conn.execute(union_sql).fetchdf().to_dict(orient="records")
+    result = conn.execute(union_sql)
+    col_names = [d[0] for d in result.description]
+    rows = [dict(zip(col_names, r)) for r in result.fetchall()]
     logger.info(f"Loaded {len(rows)} rows from Analysis_* staging tables")
     return rows
 
@@ -165,7 +167,7 @@ def prepare_records(
         # Dedup key
         dedup_key = (
             zone_code,
-            str(row.get("Date", "")),
+            row.get("Date"),
             _round_safe(row.get("CVMMeasure"), 3),
             row.get("SourceRef", ""),
         )
@@ -177,7 +179,7 @@ def prepare_records(
         record = {
             "Description": description,
             "CVMMeasure": _round_safe(row.get("CVMMeasure"), 6),
-            "Date": str(row.get("Date", "")),
+            "Date": row["Date"].isoformat() if row.get("Date") else None,
             "Source": row.get("Source", ""),
             "SourceRef": row.get("SourceRef", ""),
             "DistributionZone_id": zone_id,
