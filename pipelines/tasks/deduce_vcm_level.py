@@ -2,7 +2,7 @@
 Prefect task for deducing the VCM Level per French DistributionZone.
 
 Reads staging.Analysis_fr (produced by fr_build.py) and computes:
-  - 'High'    if any sample > 0.5 µg/L
+  - 'High'    if any sample > 0.5 μg/L
   - 'Low'     if ≥1 sample present and none exceed 0.5
   - 'Unknown' if no samples exist for the zone
 
@@ -18,13 +18,13 @@ from prefect.cache_policies import NO_CACHE
 
 from pipelines.common import services, staging_db
 
-# CVM threshold in µg/L above which a zone is classified as High
+# CVM threshold in μg/L above which a zone is classified as High
 CVM_THRESHOLD_UGL = 0.5
 
 # Map internal level names to NocoDB SingleSelect option titles
 _LEVEL_TO_NOCO = {
-    "High": "> 0.5 mcg/L",
-    "Low": "< 0.5 mcg/L",
+    "High": "> 0.5 μg/L",
+    "Low": "< 0.5 μg/L",
     "Unknown": "Unknown",
 }
 
