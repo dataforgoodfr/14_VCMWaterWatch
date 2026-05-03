@@ -7,15 +7,16 @@ const TIER_ORDER: MapRiskTier[] = ['confirme', 'probable', 'absent', 'inconnu']
 
 const FILTERS = TIER_ORDER.map(id => {
 	const t = riskTierConfig[id]
+
 	return {
 		id,
 		label: t.label,
 		style: {
 			borderColor: t.border,
 			backgroundColor: t.bg,
-			color: t.border,
+			color: t.border
 		},
-		ringColor: t.border,
+		ringColor: t.border
 	}
 })
 
@@ -44,7 +45,7 @@ export function MapRiskFilters({ active, onChange }: MapRiskFiltersProps) {
 							borderColor: f.style.borderColor,
 							backgroundColor: f.style.backgroundColor,
 							color: f.style.color,
-							...(isOn ? { boxShadow: `0 0 0 2px #fff, 0 0 0 4px ${f.ringColor}` } : {}),
+							...(isOn ? { boxShadow: `0 0 0 2px #fff, 0 0 0 4px ${f.ringColor}` } : {})
 						}}
 					>
 						{f.label}
