@@ -18,6 +18,7 @@ generic parser handles Bretagne / Normandie / Nouvelle-Aquitaine despite their
 schema differences.
 """
 
+import logging
 import re
 import unicodedata
 from pathlib import Path
@@ -28,6 +29,8 @@ from prefect import flow, get_run_logger, task
 from prefect.cache_policies import NO_CACHE
 
 from pipelines.common import staging_db
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -197,7 +200,13 @@ def parse_xlsx(conn: duckdb.DuckDBPyConnection, path: Path) -> list[dict]:
             normalize_commune_name(
                 trim({_qid(commune_col)})
             )                                        AS commune_name_norm,
-            TRY_CAST({_qid(date_col)} AS DATE)       AS plv_date,
+            {_qid(date_col)}                                 AS _raw_date,
+            COALESCE(
+                DATE '1899-12-30' + TRY_CAST({_qid(date_col)} AS INTEGER),
+                TRY_CAST({_qid(date_col)} AS DATE),
+                TRY_STRPTIME({_qid(date_col)}, '%d/%m/%Y')::DATE,
+                TRY_STRPTIME({_qid(date_col)}, '%Y-%m-%d')::DATE
+            )                                        AS plv_date,
             {value_expr}                             AS value_ugl,
             '{path.name.replace("'", "''")}'         AS source_file
         FROM {read_expr}
@@ -205,6 +214,18 @@ def parse_xlsx(conn: duckdb.DuckDBPyConnection, path: Path) -> list[dict]:
     """
     df = conn.execute(sql).fetchdf()
     df = df[df["dept"].notna() & (df["dept"].astype(str).str.len() > 0)]
+
+    # Warn on date cells that are non-empty but failed all parse branches.
+    unparsed = df[df["plv_date"].isna() & df["_raw_date"].astype(str).str.strip().ne("")]
+    if len(unparsed) > 0:
+        sample = unparsed["_raw_date"].astype(str).head(5).tolist()
+        logger.warning(
+            f"{path.name}: {len(unparsed)} date cell(s) failed all parse "
+            f"branches (serial/ISO/DD-MM-YYYY). Samples: {sample}"
+        )
+
+    # Drop the raw date helper column before building the canonical records.
+    df = df.drop(columns=["_raw_date"])
 
     # Sanity-check dept values: INSEE codes are numeric (optionally with
     # 2A/2B for Corsica).  If the column holds department names (e.g. 'AIN',
