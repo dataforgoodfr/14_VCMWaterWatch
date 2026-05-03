@@ -1,10 +1,7 @@
 declare module 'react-map-gl/maplibre' {
-	import type {
-		Map as MaplibreMap,
-		MapLayerMouseEvent,
-		MapLibreEvent,
-	} from 'maplibre-gl'
 	import type { FC } from 'react'
+
+	import type { Map as MaplibreMap, MapLayerMouseEvent, MapLibreEvent } from 'maplibre-gl'
 
 	export interface MapRef {
 		getMap(): MaplibreMap
@@ -52,6 +49,7 @@ declare module 'react-map-gl/maplibre' {
 	}
 
 	const Map: FC<MapProps>
+
 	export default Map
 
 	export const Source: FC<Record<string, unknown>>

@@ -18,6 +18,9 @@ import useLocale from '@/hooks/useLocale'
 import { ROUTES } from '@/routes/routes'
 import { distributionZoneTierFilter, type MapRiskTier } from '@/lib/map/distributionZoneRisk'
 import { createBaseMapStyle, COUNTRIES_FILL_LAYER_ID, MAP_DISTRIBUTION_ZONES_MIN_ZOOM } from '@/lib/map/mapStyle'
+
+const mapStyle = createBaseMapStyle()
+
 import {
 	pvcCountryTooltipBadgeFromTileProperty,
 	pvcTooltipBadgeFromTileProperty,
@@ -199,8 +202,6 @@ export function MapView() {
 
 		return { x, y }
 	}, [zoneCardScreenSnap])
-
-	const mapStyle = useMemo(() => createBaseMapStyle(), [])
 
 	useEffect(() => {
 		if (!protocolRegistered) {
@@ -434,6 +435,7 @@ export function MapView() {
 			<div className='relative h-full w-full'>
 				<Map
 					ref={mapRef}
+					attributionControl={true}
 					cursor={mapCursor}
 					initialViewState={{
 						longitude: MAP_INTRO_VIEW_STATE.longitude,

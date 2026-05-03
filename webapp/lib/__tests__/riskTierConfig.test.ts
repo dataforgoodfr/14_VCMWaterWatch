@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+
 import { colorCodeConfig, riskTierConfig, type MapRiskTier } from '../colorCode'
 
 describe('riskTierConfig', () => {
@@ -8,8 +9,9 @@ describe('riskTierConfig', () => {
 		expect(Object.keys(riskTierConfig).sort()).toEqual([...EXPECTED_TIERS].sort())
 	})
 
-	it.each(EXPECTED_TIERS)('%s has label, bg, border as hex strings', (tier) => {
+	it.each(EXPECTED_TIERS)('%s has label, bg, border as hex strings', tier => {
 		const c = riskTierConfig[tier]
+
 		expect(c.label).toBeTruthy()
 		expect(c.bg).toMatch(/^#[0-9a-fA-F]{6}$/)
 		expect(c.border).toMatch(/^#[0-9a-fA-F]{6}$/)
