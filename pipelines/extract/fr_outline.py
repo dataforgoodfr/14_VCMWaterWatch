@@ -216,7 +216,9 @@ def parse_xlsx(conn: duckdb.DuckDBPyConnection, path: Path) -> list[dict]:
     df = df[df["dept"].notna() & (df["dept"].astype(str).str.len() > 0)]
 
     # Warn on date cells that are non-empty but failed all parse branches.
-    unparsed = df[df["plv_date"].isna() & df["_raw_date"].astype(str).str.strip().ne("")]
+    # Guard with .notna() so NULL date cells don't trigger a false-positive
+    # (NaN converted to the string "nan" would otherwise pass the ne("") check).
+    unparsed = df[df["plv_date"].isna() & df["_raw_date"].notna() & df["_raw_date"].astype(str).str.strip().ne("")]
     if len(unparsed) > 0:
         sample = unparsed["_raw_date"].astype(str).head(5).tolist()
         logger.warning(
