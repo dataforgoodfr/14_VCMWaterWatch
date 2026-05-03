@@ -4,7 +4,6 @@ import datetime
 from unittest.mock import MagicMock
 
 import duckdb
-import pandas as pd
 
 from pipelines.load.load_analyses import (
     load_staging_analyses,
@@ -20,14 +19,31 @@ from pipelines.load.load_analyses import (
 # ---------------------------------------------------------------------------
 
 def _make_conn(*tables: tuple[str, list[dict]]) -> duckdb.DuckDBPyConnection:
-    """In-memory DuckDB with a staging schema seeded with the given tables."""
+    """In-memory DuckDB with a staging schema seeded with the given tables.
+
+    Uses DuckDB parameterized INSERT so Python native types (e.g. datetime.date)
+    are stored with matching DuckDB types (DATE, not TIMESTAMP).
+    """
     conn = duckdb.connect()
     conn.execute("ATTACH ':memory:' AS staging")
     for table_name, records in tables:
         if not records:
             continue
-        _df = pd.DataFrame(records)
-        conn.execute(f'CREATE OR REPLACE TABLE staging."{table_name}" AS SELECT * FROM _df')
+        cols = list(records[0].keys())
+        col_defs = ", ".join(f'"{c}"' for c in cols)
+        placeholders = ", ".join("?" * len(cols))
+        # Create table using the first row so DuckDB infers types from Python values
+        first_vals = [records[0][c] for c in cols]
+        conn.execute(
+            f'CREATE TABLE staging."{table_name}" AS '
+            f'SELECT {col_defs} FROM (VALUES ({placeholders})) AS t({col_defs})',
+            first_vals,
+        )
+        for r in records[1:]:
+            conn.execute(
+                f'INSERT INTO staging."{table_name}" ({col_defs}) VALUES ({placeholders})',
+                [r[c] for c in cols],
+            )
     return conn
 
 
@@ -207,3 +223,78 @@ class TestUpdateAnalyses:
         call_args = db.update_records.call_args[0][0]
         for r in call_args:
             assert "_zone_id" not in r
+
+
+# ---------------------------------------------------------------------------
+# Regression tests: no NaT / None strings leak through
+# ---------------------------------------------------------------------------
+
+class TestPrepareRecordsDateHandling:
+    """Ensure NaT / None strings never appear in output records."""
+
+    def setup_method(self):
+        self.zone_map = {"UDI001": "z1"}
+        self.muni_map = {}
+        self.existing_map = {}
+
+    def test_datetime_date_serialised_to_isoformat(self):
+        rows = [{
+            "DistributionZoneCode": "UDI001",
+            "MunicipalityCode": None,
+            "Date": datetime.date(2022, 6, 8),
+            "CVMMeasure": 0.25,
+            "Source": "outline",
+            "SourceRef": "REF1",
+        }]
+        to_insert, _, _ = prepare_records(rows, self.zone_map, self.muni_map, self.existing_map)
+        assert len(to_insert) == 1
+        assert to_insert[0]["Date"] == "2022-06-08"
+
+    def test_none_date_stays_none(self):
+        rows = [{
+            "DistributionZoneCode": "UDI001",
+            "MunicipalityCode": None,
+            "Date": None,
+            "CVMMeasure": 0.25,
+            "Source": "outline",
+            "SourceRef": "REF2",
+        }]
+        to_insert, _, _ = prepare_records(rows, self.zone_map, self.muni_map, self.existing_map)
+        assert len(to_insert) == 1
+        assert to_insert[0]["Date"] is None
+
+    def test_no_nat_string_in_output(self):
+        """'NaT' must never appear as a string value in any record field."""
+        rows = [{
+            "DistributionZoneCode": "UDI001",
+            "MunicipalityCode": None,
+            "Date": None,
+            "CVMMeasure": 0.5,
+            "Source": "outline",
+            "SourceRef": "REF3",
+        }]
+        to_insert, _, _ = prepare_records(rows, self.zone_map, self.muni_map, self.existing_map)
+        for record in to_insert:
+            for key, val in record.items():
+                assert val != "NaT", f"Field {key!r} contains literal 'NaT'"
+                assert val != "None", f"Field {key!r} contains literal 'None'"
+
+
+class TestLoadStagingAnalysesNativeTypes:
+    """load_staging_analyses must return native Python types, not pandas Timestamps."""
+
+    def test_date_is_python_date_not_timestamp(self):
+        """DuckDB native fetch → datetime.date, not pandas.Timestamp or NaT."""
+        import datetime as dt
+        rows_data = [{
+            "DistributionZoneCode": "UDI001",
+            "Date": dt.date(2023, 5, 10),
+            "CVMMeasure": 0.25,
+        }]
+        conn = _make_conn(("Analysis_fr", rows_data))
+        result = load_staging_analyses(conn)
+        assert len(result) == 1
+        date_val = result[0]["Date"]
+        # Must be exactly datetime.date, not a datetime.datetime subclass or pandas Timestamp
+        assert type(date_val) is dt.date, f"Expected datetime.date, got {type(date_val)}: {date_val!r}"
+        assert str(date_val) != "NaT", "Date must not be NaT"
