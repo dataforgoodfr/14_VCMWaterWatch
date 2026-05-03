@@ -226,3 +226,56 @@ def test_non_numeric_dept_skipped(conn, tmp_path):
         ],
     )
     assert parse_xlsx(conn, p) == []
+
+
+# ---------------------------------------------------------------------------
+# Serial-number date parsing (Excel stores dates as integer serials)
+# ---------------------------------------------------------------------------
+
+def test_excel_serial_date_parsed(conn, tmp_path):
+    """Excel serial-number date strings are parsed to the correct date.
+
+    Serial 44727 = 2022-06-15 (DATE '1899-12-30' + 44727 days).
+    all_varchar=true returns the cell value as a string, so the extractor
+    must handle integer-looking strings in the date column.
+    """
+    # Pass the serial as a plain string so it lands in the xlsx as a text cell
+    p = _write_xlsx(
+        conn,
+        tmp_path / "Annexe serial.xlsx",
+        ["Département", "Commune", "Date", "CVM (µg/L)"],
+        [
+            ("029", "Brest", "44727", "0.25"),
+            ("029", "Quimper", "45044", "0.10"),
+        ],
+    )
+    rows = parse_xlsx(conn, p)
+    assert len(rows) == 2
+    brest = next(r for r in rows if r["commune_name_raw"] == "Brest")
+    assert brest["plv_date"] == datetime.date(2022, 6, 15), (
+        f"Expected 2022-06-15, got {brest['plv_date']}"
+    )
+    quimper = next(r for r in rows if r["commune_name_raw"] == "Quimper")
+    assert quimper["plv_date"] == datetime.date(2023, 4, 28), (
+        f"Expected 2023-04-28, got {quimper['plv_date']}"
+    )
+
+
+def test_garbage_date_logs_warning(conn, tmp_path, caplog):
+    """Cells with unparseable date values fire a WARNING log."""
+    import logging
+    p = _write_xlsx(
+        conn,
+        tmp_path / "Annexe garbage.xlsx",
+        ["Département", "Commune", "Date", "CVM (µg/L)"],
+        [
+            ("029", "Brest", "not-a-date", "0.25"),
+            ("029", "Quimper", "2023-06-01", "0.10"),
+        ],
+    )
+    with caplog.at_level(logging.WARNING, logger="pipelines.extract.fr_outline"):
+        parse_xlsx(conn, p)
+
+    assert any("failed all parse" in r.message for r in caplog.records), (
+        f"Expected warning about unparsed date, got: {[r.message for r in caplog.records]}"
+    )
