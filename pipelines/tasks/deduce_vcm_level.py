@@ -28,6 +28,15 @@ _LEVEL_TO_NOCO = {
     "Unknown": "Unknown",
 }
 
+# Map internal level names to NocoDB 'Map Color' SingleSelect values
+_LEVEL_TO_COLOR = {
+    "High": "Red",
+    "Low": "Green",
+}
+
+# Constant value to write to 'PVC Level' for French zones
+_PVC_LEVEL_VALUE = "PVC, Unknown date"
+
 @task(name="deduce_vcm_level_compute", cache_policy=NO_CACHE)
 def compute_vcm_levels(conn: duckdb.DuckDBPyConnection) -> dict[str, str]:
     """Compute VCM Level per DistributionZone from staging.Analysis_fr.
@@ -69,11 +78,19 @@ def compute_vcm_levels(conn: duckdb.DuckDBPyConnection) -> dict[str, str]:
 
 @task(name="deduce_vcm_level_fetch_zones", cache_policy=NO_CACHE)
 def fetch_fr_distribution_zones(db_helper) -> list[dict]:
-    """Fetch all French DistributionZone records (Id, Code, VCM Level)."""
+    """Fetch French DistributionZone records (Id, Code, VCM Level, Map Color, PVC Level)."""
     logger = get_run_logger()
+    countries = db_helper.load_all_records(
+        table_name="Country", fields=["Id", "Code"]
+    )
+    fr = next((c for c in countries if c.get("Code") == "FR"), None)
+    if not fr:
+        logger.warning("Country 'FR' not found in NocoDB; no zones fetched")
+        return []
     records = db_helper.load_all_records(
         table_name="DistributionZone",
-        fields=["Id", "Code", "VCM Level"],
+        fields=["Id", "Code", "VCM Level", "Map Color", "PVC Level"],
+        condition={"Country_id": fr["Id"]},
     )
     logger.info(f"Fetched {len(records)} French DistributionZone records")
     return records
@@ -86,18 +103,25 @@ def apply_vcm_levels(
 ) -> list[dict]:
     """Build the update payload for NocoDB.
 
-    Zones with no entry in *level_map* are set to 'Unknown'.
+    Zones with no entry in *level_map* are skipped entirely.
     """
     updates = []
     for zone in zones:
         code = zone.get("Code")
         zone_id = zone.get("Id")
-        if not zone_id:
+        if not zone_id or code not in level_map:
             continue
-        new_level = _LEVEL_TO_NOCO.get(level_map.get(code, "Unknown"), "Unknown")
-        current_level = zone.get("VCM Level")
-        if current_level != new_level:
-            updates.append({"Id": zone_id, "VCM Level": new_level})
+        level = level_map[code]
+        new_vcm = _LEVEL_TO_NOCO.get(level, "Unknown")
+        new_color = _LEVEL_TO_COLOR.get(level, "Orange")
+        desired = {
+            "VCM Level": new_vcm,
+            "Map Color": new_color,
+            "PVC Level": _PVC_LEVEL_VALUE,
+        }
+        changed = {k: v for k, v in desired.items() if zone.get(k) != v}
+        if changed:
+            updates.append({"Id": zone_id, **changed})
     return updates
 
 

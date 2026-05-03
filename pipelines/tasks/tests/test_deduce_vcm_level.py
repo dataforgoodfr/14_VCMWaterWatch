@@ -88,44 +88,51 @@ class TestComputeVcmLevels:
 class TestApplyVcmLevels:
     def _zones(self):
         return [
-            {"Id": "id-1", "Code": "UDI001", "VCM Level": "Unknown"},
-            {"Id": "id-2", "Code": "UDI002", "VCM Level": "< 0.5 μg/L"},
-            {"Id": "id-3", "Code": "UDI003", "VCM Level": None},
-            # Zone not in level_map → should become 'Unknown'
-            {"Id": "id-4", "Code": "UDI_ABSENT", "VCM Level": "> 0.5 μg/L"},
+            {"Id": "id-1", "Code": "UDI001", "VCM Level": "Unknown",
+             "Map Color": None, "PVC Level": None},
+            {"Id": "id-2", "Code": "UDI002", "VCM Level": "< 0.5 μg/L",
+             "Map Color": "Green", "PVC Level": "PVC, Unknown date"},
+            {"Id": "id-3", "Code": "UDI003", "VCM Level": None,
+             "Map Color": None, "PVC Level": None},
+            # Zone not in level_map → should be skipped entirely
+            {"Id": "id-4", "Code": "UDI_ABSENT", "VCM Level": "> 0.5 μg/L",
+             "Map Color": "Red", "PVC Level": "PVC, Unknown date"},
         ]
 
     def _level_map(self):
         return {"UDI001": "High", "UDI002": "Low", "UDI003": "Low"}
 
-    def test_high_zone_updated(self):
+    def test_high_zone_updated_with_red_color(self):
         updates = apply_vcm_levels(self._zones(), self._level_map())
         udi001 = next(u for u in updates if u["Id"] == "id-1")
         assert udi001["VCM Level"] == "> 0.5 μg/L"
+        assert udi001["Map Color"] == "Red"
+        assert udi001["PVC Level"] == "PVC, Unknown date"
 
     def test_unchanged_zone_not_in_updates(self):
-        """UDI002 already has Low → should not appear in updates."""
+        """UDI002 already has Low/green/PVC → should not appear in updates."""
         updates = apply_vcm_levels(self._zones(), self._level_map())
         ids_updated = {u["Id"] for u in updates}
         assert "id-2" not in ids_updated
 
-    def test_absent_zone_gets_unknown(self):
-        updates = apply_vcm_levels(self._zones(), self._level_map())
-        udi_absent = next(u for u in updates if u["Id"] == "id-4")
-        assert udi_absent["VCM Level"] == "Unknown"
-
-    def test_none_current_level_triggers_update(self):
+    def test_absent_zone_skipped(self):
         updates = apply_vcm_levels(self._zones(), self._level_map())
         ids_updated = {u["Id"] for u in updates}
-        assert "id-3" in ids_updated
+        assert "id-4" not in ids_updated
+
+    def test_low_zone_gets_green(self):
+        updates = apply_vcm_levels(self._zones(), self._level_map())
+        udi003 = next(u for u in updates if u["Id"] == "id-3")
+        assert udi003["VCM Level"] == "< 0.5 μg/L"
+        assert udi003["Map Color"] == "Green"
+        assert udi003["PVC Level"] == "PVC, Unknown date"
 
     def test_empty_zones_returns_empty(self):
         assert apply_vcm_levels([], {"UDI001": "High"}) == []
 
-    def test_empty_level_map_all_unknown(self):
+    def test_empty_level_map_no_updates(self):
         zones = [{"Id": "id-1", "Code": "UDI001", "VCM Level": "High"}]
-        updates = apply_vcm_levels(zones, {})
-        assert updates[0]["VCM Level"] == "Unknown"
+        assert apply_vcm_levels(zones, {}) == []
 
 
 # ---------------------------------------------------------------------------
