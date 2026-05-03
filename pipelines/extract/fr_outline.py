@@ -19,12 +19,14 @@ schema differences.
 """
 
 import logging
+import math
 import re
 import unicodedata
 from pathlib import Path
 from typing import Optional
 
 import duckdb
+import pandas as pd
 from prefect import flow, get_run_logger, task
 from prefect.cache_policies import NO_CACHE
 
@@ -148,9 +150,6 @@ def parse_xlsx(conn: duckdb.DuckDBPyConnection, path: Path) -> list[dict]:
 
     Callers should surface empty results as a warning.
     """
-    import math
-    import pandas as pd
-
     _ensure_udf(conn)
     conn.execute("INSTALL excel; LOAD excel;")
 
